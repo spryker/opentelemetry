@@ -5,13 +5,9 @@
  * Use of this software requires acceptance of the Evaluation License Agreement. See LICENSE file.
  */
 
-namespace Spryker\Zed\OpenTelemetry\Business\Generator\ContentCreator;
+namespace Spryker\Zed\Opentelemetry\Business\Generator\ContentCreator;
 
-use OpenTelemetry\API\Trace\Propagation\TraceContextPropagator;
-use OpenTelemetry\API\Trace\Span;
-use OpenTelemetry\API\Trace\StatusCode;
-use OpenTelemetry\Context\Context;
-use Spryker\Zed\OpenTelemetry\OpenTelemetryConfig;
+use Spryker\Zed\Opentelemetry\OpentelemetryConfig;
 
 class HookContentCreator implements HookContentCreatorInterface
 {
@@ -36,14 +32,14 @@ class HookContentCreator implements HookContentCreatorInterface
     protected const METHODS_KEY = 'methods';
 
     /**
-     * @var \Spryker\Zed\OpenTelemetry\OpenTelemetryConfig
+     * @var \Spryker\Zed\Opentelemetry\OpentelemetryConfig
      */
-    protected OpenTelemetryConfig $config;
+    protected OpentelemetryConfig $config;
 
     /**
-     * @param \Spryker\Zed\OpenTelemetry\OpenTelemetryConfig $config
+     * @param \Spryker\Zed\Opentelemetry\OpentelemetryConfig $config
      */
-    public function __construct(OpenTelemetryConfig $config)
+    public function __construct(OpentelemetryConfig $config)
     {
         $this->config = $config;
     }
@@ -64,7 +60,7 @@ class HookContentCreator implements HookContentCreatorInterface
                 class: \\' . $class[static::NAMESPACE_KEY] . '\\' . $class[static::CLASS_NAME_KEY] . '::class,
                 function: \'' . $method . '\',
                 pre: static function ($instance, array $params, string $class, string $function, ?string $filename, ?int $lineno) use ($envVars) {
-                    $context = \\OpenTelemetry\\Context\\::getCurrent();
+                    $context = \\OpenTelemetry\\Context\\Context::getCurrent();
                     $envVars = ' . var_export($envVars, true) . ';
 
                     $extractTraceIdFromEnv = function(array $envVars): array {

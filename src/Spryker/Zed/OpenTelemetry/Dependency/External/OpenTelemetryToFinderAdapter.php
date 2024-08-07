@@ -5,11 +5,11 @@
  * Use of this software requires acceptance of the Evaluation License Agreement. See LICENSE file.
  */
 
-namespace Spryker\Zed\OpenTelemetry\Dependency\External;
+namespace Spryker\Zed\Opentelemetry\Dependency\External;
 
 use Symfony\Component\Finder\Finder;
 
-class OpenTelemetryToFinderAdapter implements OpenTelemetryToFinderInterface
+class OpentelemetryToFinderAdapter implements OpentelemetryToFinderInterface
 {
     /**
      * @var \Symfony\Component\Finder\Finder

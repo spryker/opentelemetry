@@ -5,11 +5,11 @@
  * Use of this software requires acceptance of the Evaluation License Agreement. See LICENSE file.
  */
 
-namespace Spryker\Zed\OpenTelemetry;
+namespace Spryker\Zed\Opentelemetry;
 
 use Spryker\Zed\Kernel\AbstractBundleConfig;
 
-class OpenTelemetryConfig extends AbstractBundleConfig
+class OpentelemetryConfig extends AbstractBundleConfig
 {
     /**
      * Specification:

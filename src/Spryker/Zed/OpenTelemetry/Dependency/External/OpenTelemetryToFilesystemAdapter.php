@@ -5,13 +5,13 @@
  * Use of this software requires acceptance of the Evaluation License Agreement. See LICENSE file.
  */
 
-namespace Spryker\Zed\OpenTelemetry\Dependency\External;
+namespace Spryker\Zed\Opentelemetry\Dependency\External;
 
-use Spryker\Glue\DocumentationGeneratorApi\Exception\IOException;
+use Spryker\Zed\Opentelemetry\Business\Exception\IOException;
 use Symfony\Component\Filesystem\Exception\IOException as SymfonyIOException;
 use Symfony\Component\Filesystem\Filesystem;
 
-class OpenTelemetryToFilesystemAdapter implements OpenTelemetryToFilesystemInterface
+class OpentelemetryToFilesystemAdapter implements OpentelemetryToFilesystemInterface
 {
     /**
      * @var \Symfony\Component\Filesystem\Filesystem
@@ -26,7 +26,7 @@ class OpenTelemetryToFilesystemAdapter implements OpenTelemetryToFilesystemInter
     /**
      * @param string $filename
      *
-     * @throws \Spryker\Glue\DocumentationGeneratorApi\Exception\IOException
+     * @throws \Spryker\Zed\Opentelemetry\Business\Exception\IOException
      *
      * @return void
      */
@@ -42,7 +42,7 @@ class OpenTelemetryToFilesystemAdapter implements OpenTelemetryToFilesystemInter
     /**
      * @param string $filename
      *
-     * @throws \Spryker\Glue\DocumentationGeneratorApi\Exception\IOException
+     * @throws \Spryker\Zed\Opentelemetry\Business\Exception\IOException
      *
      * @return bool
      */
@@ -59,7 +59,7 @@ class OpenTelemetryToFilesystemAdapter implements OpenTelemetryToFilesystemInter
      * @param iterable<string>|string $dirs
      * @param int $mode
      *
-     * @throws \Spryker\Glue\DocumentationGeneratorApi\Exception\IOException
+     * @throws \Spryker\Zed\Opentelemetry\Business\Exception\IOException
      *
      * @return void
      */

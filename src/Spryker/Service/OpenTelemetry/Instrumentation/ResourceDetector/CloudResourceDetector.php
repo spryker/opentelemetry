@@ -5,7 +5,7 @@
  * Use of this software requires acceptance of the Evaluation License Agreement. See LICENSE file.
  */
 
-namespace Spryker\Service\OpenTelemetry\Instrumentation\ResourceDetector;
+namespace Spryker\Service\Opentelemetry\Instrumentation\ResourceDetector;
 
 use OpenTelemetry\SDK\Common\Attribute\Attributes;
 use OpenTelemetry\SDK\Resource\ResourceDetectorInterface;

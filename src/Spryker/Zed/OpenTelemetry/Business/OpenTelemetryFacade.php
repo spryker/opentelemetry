@@ -5,16 +5,16 @@
  * Use of this software requires acceptance of the Evaluation License Agreement. See LICENSE file.
  */
 
-namespace Spryker\Zed\OpenTelemetry\Business;
+namespace Spryker\Zed\Opentelemetry\Business;
 
 use Spryker\Zed\Kernel\Business\AbstractFacade;
 
 /**
  * @api
  *
- * @method \Spryker\Zed\OpenTelemetry\Business\OpenTelemetryBusinessFactory getFactory()
+ * @method \Spryker\Zed\Opentelemetry\Business\OpentelemetryBusinessFactory getFactory()
  */
-class OpenTelemetryFacade extends AbstractFacade implements OpenTelemetryFacadeInterface
+class OpentelemetryFacade extends AbstractFacade implements OpentelemetryFacadeInterface
 {
     /**
      * {@inheritDoc}

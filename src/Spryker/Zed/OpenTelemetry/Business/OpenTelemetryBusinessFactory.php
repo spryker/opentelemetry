@@ -5,28 +5,28 @@
  * Use of this software requires acceptance of the Evaluation License Agreement. See LICENSE file.
  */
 
-namespace Spryker\Zed\OpenTelemetry\Business;
+namespace Spryker\Zed\Opentelemetry\Business;
 
 use Spryker\Zed\Kernel\Business\AbstractBusinessFactory;
-use Spryker\Zed\OpenTelemetry\Business\Generator\Collector\ClassCollector;
-use Spryker\Zed\OpenTelemetry\Business\Generator\Collector\ClassCollectorInterface;
-use Spryker\Zed\OpenTelemetry\Business\Generator\ContentCreator\HookContentCreator;
-use Spryker\Zed\OpenTelemetry\Business\Generator\ContentCreator\HookContentCreatorInterface;
-use Spryker\Zed\OpenTelemetry\Business\Generator\HookGenerator;
-use Spryker\Zed\OpenTelemetry\Business\Generator\HookGeneratorInterface;
-use Spryker\Zed\OpenTelemetry\Business\Remover\HookRemover;
-use Spryker\Zed\OpenTelemetry\Business\Remover\HookRemoverInterface;
-use Spryker\Zed\OpenTelemetry\Dependency\External\OpenTelemetryToFilesystemInterface;
-use Spryker\Zed\OpenTelemetry\Dependency\External\OpenTelemetryToFinderInterface;
-use Spryker\Zed\OpenTelemetry\OpenTelemetryDependencyProvider;
+use Spryker\Zed\Opentelemetry\Business\Generator\Collector\ClassCollector;
+use Spryker\Zed\Opentelemetry\Business\Generator\Collector\ClassCollectorInterface;
+use Spryker\Zed\Opentelemetry\Business\Generator\ContentCreator\HookContentCreator;
+use Spryker\Zed\Opentelemetry\Business\Generator\ContentCreator\HookContentCreatorInterface;
+use Spryker\Zed\Opentelemetry\Business\Generator\HookGenerator;
+use Spryker\Zed\Opentelemetry\Business\Generator\HookGeneratorInterface;
+use Spryker\Zed\Opentelemetry\Business\Remover\HookRemover;
+use Spryker\Zed\Opentelemetry\Business\Remover\HookRemoverInterface;
+use Spryker\Zed\Opentelemetry\Dependency\External\OpentelemetryToFilesystemInterface;
+use Spryker\Zed\Opentelemetry\Dependency\External\OpentelemetryToFinderInterface;
+use Spryker\Zed\Opentelemetry\OpentelemetryDependencyProvider;
 
 /**
- * @method \Spryker\Zed\OpenTelemetry\OpenTelemetryConfig getConfig()
+ * @method \Spryker\Zed\Opentelemetry\OpentelemetryConfig getConfig()
  */
-class OpenTelemetryBusinessFactory extends AbstractBusinessFactory
+class OpentelemetryBusinessFactory extends AbstractBusinessFactory
 {
     /**
-     * @return \Spryker\Zed\OpenTelemetry\Business\Generator\HookGeneratorInterface
+     * @return \Spryker\Zed\Opentelemetry\Business\Generator\HookGeneratorInterface
      */
     public function createHookGenerator(): HookGeneratorInterface
     {
@@ -39,7 +39,7 @@ class OpenTelemetryBusinessFactory extends AbstractBusinessFactory
     }
 
     /**
-     * @return \Spryker\Zed\OpenTelemetry\Business\Remover\HookRemoverInterface
+     * @return \Spryker\Zed\Opentelemetry\Business\Remover\HookRemoverInterface
      */
     public function createHookRemover(): HookRemoverInterface
     {
@@ -50,7 +50,7 @@ class OpenTelemetryBusinessFactory extends AbstractBusinessFactory
     }
 
     /**
-     * @return \Spryker\Zed\OpenTelemetry\Business\Generator\Collector\ClassCollectorInterface
+     * @return \Spryker\Zed\Opentelemetry\Business\Generator\Collector\ClassCollectorInterface
      */
     public function createClassCollector(): ClassCollectorInterface
     {
@@ -61,7 +61,7 @@ class OpenTelemetryBusinessFactory extends AbstractBusinessFactory
     }
 
     /**
-     * @return \Spryker\Zed\OpenTelemetry\Business\Generator\ContentCreator\HookContentCreatorInterface
+     * @return \Spryker\Zed\Opentelemetry\Business\Generator\ContentCreator\HookContentCreatorInterface
      */
     public function createHookContentCreator(): HookContentCreatorInterface
     {
@@ -71,18 +71,18 @@ class OpenTelemetryBusinessFactory extends AbstractBusinessFactory
     }
 
     /**
-     * @return \Spryker\Zed\OpenTelemetry\Dependency\External\OpenTelemetryToFinderInterface
+     * @return \Spryker\Zed\Opentelemetry\Dependency\External\OpentelemetryToFinderInterface
      */
-    public function getFinder(): OpenTelemetryToFinderInterface
+    public function getFinder(): OpentelemetryToFinderInterface
     {
-        return $this->getProvidedDependency(OpenTelemetryDependencyProvider::FINDER);
+        return $this->getProvidedDependency(OpentelemetryDependencyProvider::FINDER);
     }
 
     /**
-     * @return \Spryker\Zed\OpenTelemetry\Dependency\External\OpenTelemetryToFilesystemInterface
+     * @return \Spryker\Zed\Opentelemetry\Dependency\External\OpentelemetryToFilesystemInterface
      */
-    public function getFileSystem(): OpenTelemetryToFilesystemInterface
+    public function getFileSystem(): OpentelemetryToFilesystemInterface
     {
-        return $this->getProvidedDependency(OpenTelemetryDependencyProvider::FILESYSTEM);
+        return $this->getProvidedDependency(OpentelemetryDependencyProvider::FILESYSTEM);
     }
 }

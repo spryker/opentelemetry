@@ -5,13 +5,13 @@
  * Use of this software requires acceptance of the Evaluation License Agreement. See LICENSE file.
  */
 
-namespace Spryker\Zed\OpenTelemetry\Business;
+namespace Spryker\Zed\Opentelemetry\Business;
 
-interface OpenTelemetryFacadeInterface
+interface OpentelemetryFacadeInterface
 {
     /**
      * Specification:
-     * - Generates hooks for OpenTelemetry.
+     * - Generates hooks for Open Telemetry.
      *
      * @api
      *
@@ -21,7 +21,7 @@ interface OpenTelemetryFacadeInterface
 
     /**
      * Specification:
-     * - Deletes hooks for OpenTelemetry.
+     * - Deletes hooks for Open Telemetry.
      *
      * @api
      *

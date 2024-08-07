@@ -5,16 +5,16 @@
  * Use of this software requires acceptance of the Evaluation License Agreement. See LICENSE file.
  */
 
-namespace Spryker\Zed\OpenTelemetry\Communication\Plugin\Console;
+namespace Spryker\Zed\Opentelemetry\Communication\Plugin\Console;
 
 use Spryker\Zed\Kernel\Communication\Console\Console;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
- * @method \Spryker\Zed\OpenTelemetry\Business\OpenTelemetryFacadeInterface getFacade()
+ * @method \Spryker\Zed\Opentelemetry\Business\OpentelemetryFacadeInterface getFacade()
  */
-class OpenTelemetryGeneratorConsole extends Console
+class OpentelemetryGeneratorConsole extends Console
 {
     /**
      * @var string
@@ -24,7 +24,7 @@ class OpenTelemetryGeneratorConsole extends Console
     /**
      * @var string
      */
-    public const COMMAND_DESCRIPTION = 'Generates OpenTelemetry hooks for Spryker classes and methods to be instrumented.';
+    public const COMMAND_DESCRIPTION = 'Generates Open Telemetry hooks for Spryker classes and methods to be instrumented.';
 
     /**
      * @return void

@@ -5,12 +5,10 @@
  * Use of this software requires acceptance of the Evaluation License Agreement. See LICENSE file.
  */
 
-namespace Spryker\Zed\Opentelemetry\Business\Remover;
+namespace Spryker\Service\Opentelemetry;
 
-interface HookRemoverInterface
+use Spryker\Service\Kernel\AbstractBundleDependencyProvider;
+
+class OpentelemetryDependencyProvider extends AbstractBundleDependencyProvider
 {
-    /**
-     * @return void
-     */
-    public function remove(): void;
 }

@@ -5,7 +5,7 @@
  * Use of this software requires acceptance of the Evaluation License Agreement. See LICENSE file.
  */
 
-namespace Spryker\Zed\OpenTelemetry\Business\Generator\Instrumentation;
+namespace Spryker\Zed\Opentelemetry\Business\Generator\Instrumentation;
 
 use OpenTelemetry\API\Instrumentation\CachedInstrumentation as OpenTelemetryCachedInstrumentation;
 

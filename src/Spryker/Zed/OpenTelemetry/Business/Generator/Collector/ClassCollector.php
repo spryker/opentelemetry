@@ -5,11 +5,11 @@
  * Use of this software requires acceptance of the Evaluation License Agreement. See LICENSE file.
  */
 
-namespace Spryker\Zed\OpenTelemetry\Business\Generator\Collector;
+namespace Spryker\Zed\Opentelemetry\Business\Generator\Collector;
 
-use Spryker\Zed\OpenTelemetry\Business\Exception\ProcessingFileException;
-use Spryker\Zed\OpenTelemetry\Dependency\External\OpenTelemetryToFinderInterface;
-use Spryker\Zed\OpenTelemetry\OpenTelemetryConfig;
+use Spryker\Zed\Opentelemetry\Business\Exception\ProcessingFileException;
+use Spryker\Zed\Opentelemetry\Dependency\External\OpentelemetryToFinderInterface;
+use Spryker\Zed\Opentelemetry\OpentelemetryConfig;
 use Symfony\Component\Finder\Finder;
 use Throwable;
 
@@ -46,31 +46,31 @@ class ClassCollector implements ClassCollectorInterface
     protected const METHODS_KEY = 'methods';
 
     /**
-     * @var \Spryker\Zed\OpenTelemetry\OpenTelemetryConfig
+     * @var \Spryker\Zed\Opentelemetry\OpentelemetryConfig
      */
-    protected OpenTelemetryConfig $config;
+    protected OpentelemetryConfig $config;
 
     /**
-     * @var \Spryker\Zed\OpenTelemetry\Dependency\External\OpenTelemetryToFinderInterface
+     * @var \Spryker\Zed\Opentelemetry\Dependency\External\OpentelemetryToFinderInterface
      */
-    protected OpenTelemetryToFinderInterface $finder;
+    protected OpentelemetryToFinderInterface $finder;
 
     /**
-     * @param \Spryker\Zed\OpenTelemetry\OpenTelemetryConfig $config
-     * @param \Spryker\Zed\OpenTelemetry\Dependency\External\OpenTelemetryToFinderInterface $finder
+     * @param \Spryker\Zed\Opentelemetry\OpentelemetryConfig $config
+     * @param \Spryker\Zed\Opentelemetry\Dependency\External\OpentelemetryToFinderInterface $finder
      */
     public function __construct(
-        OpenTelemetryConfig $config,
-        OpenTelemetryToFinderInterface $finder
+        OpentelemetryConfig $config,
+        OpentelemetryToFinderInterface $finder
     ) {
         $this->config = $config;
         $this->finder = $finder;
     }
 
     /**
-     * @throws \Spryker\Zed\OpenTelemetry\Business\Exception\ProcessingFileException
-     *
      * @return array<string, array<string>>
+     *@throws \Spryker\Zed\Opentelemetry\Business\Exception\ProcessingFileException
+     *
      */
     public function collectClasses(): array
     {

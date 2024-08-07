@@ -5,7 +5,7 @@
  * Use of this software requires acceptance of the Evaluation License Agreement. See LICENSE file.
  */
 
-namespace Spryker\Zed\OpenTelemetry\Business\Generator;
+namespace Spryker\Zed\Opentelemetry\Business\Generator;
 
 interface HookGeneratorInterface
 {

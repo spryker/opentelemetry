@@ -5,12 +5,12 @@
  * Use of this software requires acceptance of the Evaluation License Agreement. See LICENSE file.
  */
 
-namespace Spryker\Zed\OpenTelemetry\Business\Generator;
+namespace Spryker\Zed\Opentelemetry\Business\Generator;
 
-use Spryker\Zed\OpenTelemetry\Business\Generator\Collector\ClassCollectorInterface;
-use Spryker\Zed\OpenTelemetry\Business\Generator\ContentCreator\HookContentCreatorInterface;
-use Spryker\Zed\OpenTelemetry\Dependency\External\OpenTelemetryToFilesystemInterface;
-use Spryker\Zed\OpenTelemetry\OpenTelemetryConfig;
+use Spryker\Zed\Opentelemetry\Business\Generator\Collector\ClassCollectorInterface;
+use Spryker\Zed\Opentelemetry\Business\Generator\ContentCreator\HookContentCreatorInterface;
+use Spryker\Zed\Opentelemetry\Dependency\External\OpentelemetryToFilesystemInterface;
+use Spryker\Zed\Opentelemetry\OpentelemetryConfig;
 
 class HookGenerator implements HookGeneratorInterface
 {
@@ -35,36 +35,36 @@ class HookGenerator implements HookGeneratorInterface
     protected const CLASS_NAME_KEY = 'className';
 
     /**
-     * @var \Spryker\Zed\OpenTelemetry\Business\Generator\Collector\ClassCollectorInterface
+     * @var \Spryker\Zed\Opentelemetry\Business\Generator\Collector\ClassCollectorInterface
      */
     protected ClassCollectorInterface $collector;
 
     /**
-     * @var \Spryker\Zed\OpenTelemetry\Business\Generator\ContentCreator\HookContentCreatorInterface
+     * @var \Spryker\Zed\Opentelemetry\Business\Generator\ContentCreator\HookContentCreatorInterface
      */
     protected HookContentCreatorInterface $contentCreator;
 
     /**
-     * @var \Spryker\Zed\OpenTelemetry\Dependency\External\OpenTelemetryToFilesystemInterface
+     * @var \Spryker\Zed\Opentelemetry\Dependency\External\OpentelemetryToFilesystemInterface
      */
-    protected OpenTelemetryToFilesystemInterface $fileSystem;
+    protected OpentelemetryToFilesystemInterface $fileSystem;
 
     /**
-     * @var \Spryker\Zed\OpenTelemetry\OpenTelemetryConfig
+     * @var \Spryker\Zed\Opentelemetry\OpentelemetryConfig
      */
-    protected OpenTelemetryConfig $config;
+    protected OpentelemetryConfig $config;
 
     /**
-     * @param \Spryker\Zed\OpenTelemetry\Business\Generator\Collector\ClassCollectorInterface $collector
-     * @param \Spryker\Zed\OpenTelemetry\Business\Generator\ContentCreator\HookContentCreatorInterface $contentCreator
-     * @param \Spryker\Zed\OpenTelemetry\Dependency\External\OpenTelemetryToFilesystemInterface $fileSystem
-     * @param \Spryker\Zed\OpenTelemetry\OpenTelemetryConfig $config
+     * @param \Spryker\Zed\Opentelemetry\Business\Generator\Collector\ClassCollectorInterface $collector
+     * @param \Spryker\Zed\Opentelemetry\Business\Generator\ContentCreator\HookContentCreatorInterface $contentCreator
+     * @param \Spryker\Zed\Opentelemetry\Dependency\External\OpentelemetryToFilesystemInterface $fileSystem
+     * @param \Spryker\Zed\Opentelemetry\OpentelemetryConfig $config
      */
     public function __construct(
         ClassCollectorInterface $collector,
         HookContentCreatorInterface $contentCreator,
-        OpenTelemetryToFilesystemInterface $fileSystem,
-        OpenTelemetryConfig $config
+        OpentelemetryToFilesystemInterface $fileSystem,
+        OpentelemetryConfig $config
     ) {
         $this->collector = $collector;
         $this->contentCreator = $contentCreator;

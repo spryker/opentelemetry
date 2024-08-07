@@ -5,9 +5,9 @@
  * Use of this software requires acceptance of the Evaluation License Agreement. See LICENSE file.
  */
 
-namespace Spryker\Zed\OpenTelemetry\Dependency\External;
+namespace Spryker\Zed\Opentelemetry\Dependency\External;
 
-interface OpenTelemetryToFilesystemInterface
+interface OpentelemetryToFilesystemInterface
 {
     /**
      * @var int

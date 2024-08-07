@@ -1,4 +1,4 @@
-namespace: OpenTelemetry
+namespace: Opentelemetry
 actor: Tester
 paths:
     tests: tests

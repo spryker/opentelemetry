@@ -4,10 +4,16 @@
     "description": "OpenTelemetry module",
     "license": "proprietary",
     "require": {
+        "php": ">=8.1",
+        "open-telemetry/api": "*",
+        "open-telemetry/sdk": "*",
+        "open-telemetry/sem-conv": "*",
+        "spryker/kernel": "*",
+        "spryker/monitoring-extension": "*",
+        "spryker/symfony": "*"
     },
     "require-dev": {
-        "spryker/code-sniffer": "*",
-        "spryker/testify": "*"
+        "open-telemetry/sdk": "*"
     },
     "autoload": {
         "psr-4": {
@@ -24,8 +30,7 @@
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
-    "scripts": {
-    },
+    "scripts": {},
     "extra": {
         "branch-alias": {
             "dev-master": "1.0.x-dev"

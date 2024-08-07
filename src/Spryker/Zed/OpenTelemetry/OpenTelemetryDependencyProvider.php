@@ -5,17 +5,17 @@
  * Use of this software requires acceptance of the Evaluation License Agreement. See LICENSE file.
  */
 
-namespace Spryker\Zed\OpenTelemetry;
+namespace Spryker\Zed\Opentelemetry;
 
 use Spryker\Zed\Kernel\AbstractBundleDependencyProvider;
 use Spryker\Zed\Kernel\Container;
-use Spryker\Zed\OpenTelemetry\Dependency\External\OpenTelemetryToFilesystemAdapter;
-use Spryker\Zed\OpenTelemetry\Dependency\External\OpenTelemetryToFinderAdapter;
+use Spryker\Zed\Opentelemetry\Dependency\External\OpentelemetryToFilesystemAdapter;
+use Spryker\Zed\Opentelemetry\Dependency\External\OpentelemetryToFinderAdapter;
 
 /**
- * @method \Spryker\Zed\OpenTelemetry\OpenTelemetryConfig getConfig()
+ * @method \Spryker\Zed\Opentelemetry\OpentelemetryConfig getConfig()
  */
-class OpenTelemetryDependencyProvider extends AbstractBundleDependencyProvider
+class OpentelemetryDependencyProvider extends AbstractBundleDependencyProvider
 {
     /**
      * @var string
@@ -50,7 +50,7 @@ class OpenTelemetryDependencyProvider extends AbstractBundleDependencyProvider
     protected function addFinder(Container $container): Container
     {
         $container->set(static::FINDER, function () {
-            return new OpenTelemetryToFinderAdapter();
+            return new OpentelemetryToFinderAdapter();
         });
 
         return $container;
@@ -64,7 +64,7 @@ class OpenTelemetryDependencyProvider extends AbstractBundleDependencyProvider
     protected function addFileSystem(Container $container): Container
     {
         $container->set(static::FILESYSTEM, function () {
-            return new OpenTelemetryToFilesystemAdapter();
+            return new OpentelemetryToFilesystemAdapter();
         });
 
         return $container;
