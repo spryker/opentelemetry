@@ -18,7 +18,11 @@
     "autoload": {
         "psr-4": {
             "Spryker\\": "src/Spryker/"
-        }
+        },
+        "files": [
+            "autoload.php",
+            "_register.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {
