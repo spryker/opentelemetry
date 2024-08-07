@@ -59,7 +59,7 @@ class HookContentCreator implements HookContentCreatorInterface
             \\OpenTelemetry\\Instrumentation\\hook(
                 class: \\' . $class[static::NAMESPACE_KEY] . '\\' . $class[static::CLASS_NAME_KEY] . '::class,
                 function: \'' . $method . '\',
-                pre: static function ($instance, array $params, string $class, string $function, ?string $filename, ?int $lineno) use ($envVars) {
+                pre: static function ($instance, array $params, string $class, string $function, ?string $filename, ?int $lineno) {
                     $context = \\OpenTelemetry\\Context\\Context::getCurrent();
                     $envVars = ' . var_export($envVars, true) . ';
 
@@ -70,7 +70,7 @@ class HookContentCreator implements HookContentCreatorInterface
                             }
                         }
                         return [];
-                    }
+                    };
 
                     $traceId = $extractTraceIdFromEnv($envVars);
                     if ($traceId !== []) {
