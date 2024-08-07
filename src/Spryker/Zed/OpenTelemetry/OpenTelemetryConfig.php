@@ -68,4 +68,24 @@ class OpenTelemetryConfig extends AbstractBundleConfig
     {
         return APPLICATION_SOURCE_DIR . '/Generated/OpenTelemetry/Hooks/';
     }
+
+    /**
+     * Specification:
+     * - Returns the list of environment variables that should be used for trace propagation.
+     *
+     * @api
+     *
+     * @return array<string>
+     */
+    public function getOtelEnvVars(): array
+    {
+        return [
+            'cli_trace_id' => 'OTEL_CLI_TRACE_ID',
+            'merchant_portal_trace_id' => 'OTEL_MERCHANT_PORTAL_TRACE_ID',
+            'glue_trace_id' => 'OTEL_GLUE_TRACE_ID',
+            'application_trace_id' => 'OTEL_APPLICATION_TRACE_ID',
+            'backoffice_trace_id' => 'OTEL_BACKOFFICE_TRACE_ID',
+            'yves_trace_id' => 'OTEL_YVES_TRACE_ID',
+        ];
+    }
 }

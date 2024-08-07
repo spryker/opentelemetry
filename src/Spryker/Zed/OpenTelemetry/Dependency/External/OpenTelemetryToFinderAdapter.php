@@ -22,6 +22,14 @@ class OpenTelemetryToFinderAdapter implements OpenTelemetryToFinderInterface
     }
 
     /**
+     * @return void
+     */
+    public function __clone()
+    {
+        $this->finder = Finder::create();
+    }
+
+    /**
      * @return $this
      */
     public function files()

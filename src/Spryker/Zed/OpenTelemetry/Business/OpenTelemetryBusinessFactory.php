@@ -65,7 +65,9 @@ class OpenTelemetryBusinessFactory extends AbstractBusinessFactory
      */
     public function createHookContentCreator(): HookContentCreatorInterface
     {
-        return new HookContentCreator();
+        return new HookContentCreator(
+            $this->getConfig(),
+        );
     }
 
     /**

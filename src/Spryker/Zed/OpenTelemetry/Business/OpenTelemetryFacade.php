@@ -37,6 +37,6 @@ class OpenTelemetryFacade extends AbstractFacade implements OpenTelemetryFacadeI
      */
     public function deleteHooks(): void
     {
-        $this->getFactory()->createHookRemover()->clear();
+        $this->getFactory()->createHookRemover()->remove();
     }
 }
