@@ -247,7 +247,7 @@ class ClassCollector implements ClassCollectorInterface
             '*Adapter.php',
             '*Constants.php',
             '*Exception.php',
-            '*ConsoleBootstrap.php',
+            '*Bootstrap.php',
             'AbstractSpy*.php',
             '*Interface.php',
         ];

@@ -22,6 +22,7 @@ class OpentelemetryConfig extends AbstractBundleConfig
     public function getExcludedDirs(): array
     {
         return [
+            'Opentelemetry',
             'OpenTelemetry',
             'Container',
             'Kernel',
@@ -80,12 +81,12 @@ class OpentelemetryConfig extends AbstractBundleConfig
     public function getOtelEnvVars(): array
     {
         return [
+            'backoffice_trace_id' => 'OTEL_BACKOFFICE_TRACE_ID',
             'cli_trace_id' => 'OTEL_CLI_TRACE_ID',
             'merchant_portal_trace_id' => 'OTEL_MERCHANT_PORTAL_TRACE_ID',
             'glue_trace_id' => 'OTEL_GLUE_TRACE_ID',
-            'application_trace_id' => 'OTEL_APPLICATION_TRACE_ID',
-            'backoffice_trace_id' => 'OTEL_BACKOFFICE_TRACE_ID',
             'yves_trace_id' => 'OTEL_YVES_TRACE_ID',
+            'application_trace_id' => 'OTEL_APPLICATION_TRACE_ID',
         ];
     }
 }
