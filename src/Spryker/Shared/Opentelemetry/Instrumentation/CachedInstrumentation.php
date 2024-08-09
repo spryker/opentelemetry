@@ -5,11 +5,11 @@
  * Use of this software requires acceptance of the Evaluation License Agreement. See LICENSE file.
  */
 
-namespace Spryker\Zed\Opentelemetry\Business\Generator\Instrumentation;
+namespace Spryker\Shared\Opentelemetry\Instrumentation;
 
 use OpenTelemetry\API\Instrumentation\CachedInstrumentation as OpenTelemetryCachedInstrumentation;
 
-class CachedInstrumentation
+class CachedInstrumentation implements CachedInstrumentationInterface
 {
     /**
      * @var string
@@ -27,14 +27,6 @@ class CachedInstrumentation
     protected static ?OpenTelemetryCachedInstrumentation $instrumentation = null;
 
     /**
-     * @return void
-     */
-    public static function setCachedInstrumentation(): void
-    {
-        static::$instrumentation = (new OpenTelemetryCachedInstrumentation(static::INSTRUMENTATION_NAME, static::INSTRUMENTATION_VERSION));
-    }
-
-    /**
      * @return \OpenTelemetry\API\Instrumentation\CachedInstrumentation
      */
     public static function getCachedInstrumentation(): OpenTelemetryCachedInstrumentation
@@ -44,5 +36,16 @@ class CachedInstrumentation
         }
 
         return static::$instrumentation;
+    }
+
+    /**
+     * @return void
+     */
+    protected static function setCachedInstrumentation(): void
+    {
+        static::$instrumentation = (new OpenTelemetryCachedInstrumentation(
+            static::INSTRUMENTATION_NAME,
+            static::INSTRUMENTATION_VERSION,
+        ));
     }
 }

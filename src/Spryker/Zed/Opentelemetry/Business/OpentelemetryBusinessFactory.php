@@ -70,7 +70,7 @@ class OpentelemetryBusinessFactory extends AbstractBusinessFactory
             $this->getConfig(),
         );
     }
-    
+
     public function createCachedInstrumentation()
     {
         return new CachedInstrumentation();

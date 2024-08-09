@@ -79,9 +79,9 @@ class HookContentCreator implements HookContentCreatorInterface
 
                     $type = $params[1] ?? \\Symfony\\Component\\HttpKernel\\HttpKernelInterface::MAIN_REQUEST;
 
-                    $request = \\Spryker\\Zed\\OpenTelemetry\\Business\\Generator\\Request\\RequestProcessor::getRequest();
+                    $request = \\Spryker\\Shared\\OpenTelemetry\\Request\\RequestProcessor::getRequest();
 
-                    $span = \\Spryker\\Zed\\OpenTelemetry\\Business\\Generator\\Instrumentation\\CachedInstrumentation::getCachedInstrumentation()
+                    $span = \\Spryker\\Shared\\OpenTelemetry\\Instrumentation\\CachedInstrumentation::getCachedInstrumentation()
                         ->tracer()
                         ->spanBuilder($request->getMethod() . \' ' . $class[static::MODULE_KEY] . '-' . $class[static::CLASS_NAME_KEY] . '::' . $method . '\')
                         ->setParent($context)

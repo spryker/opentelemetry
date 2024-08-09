@@ -10,7 +10,6 @@ namespace Spryker\Zed\Opentelemetry\Business\Generator\Collector;
 use Spryker\Zed\Opentelemetry\Business\Exception\ProcessingFileException;
 use Spryker\Zed\Opentelemetry\Dependency\External\OpentelemetryToFinderInterface;
 use Spryker\Zed\Opentelemetry\OpentelemetryConfig;
-use Symfony\Component\Finder\Finder;
 use Throwable;
 
 class ClassCollector implements ClassCollectorInterface
@@ -68,9 +67,9 @@ class ClassCollector implements ClassCollectorInterface
     }
 
     /**
-     * @return array<string, array<string>>
-     *@throws \Spryker\Zed\Opentelemetry\Business\Exception\ProcessingFileException
+     * @throws \Spryker\Zed\Opentelemetry\Business\Exception\ProcessingFileException
      *
+     * @return array<string, array<string>>
      */
     public function collectClasses(): array
     {

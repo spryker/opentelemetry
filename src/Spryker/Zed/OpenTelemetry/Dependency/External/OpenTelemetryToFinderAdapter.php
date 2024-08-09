@@ -16,9 +16,6 @@ class OpentelemetryToFinderAdapter implements OpentelemetryToFinderInterface
      */
     protected Finder $finder;
 
-    /**
-     * @return void
-     */
     public function __construct()
     {
         $this->finder = Finder::create();

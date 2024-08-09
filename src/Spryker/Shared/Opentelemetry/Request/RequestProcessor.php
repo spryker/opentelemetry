@@ -5,24 +5,16 @@
  * Use of this software requires acceptance of the Evaluation License Agreement. See LICENSE file.
  */
 
-namespace Spryker\Zed\Opentelemetry\Business\Generator\Request;
+namespace Spryker\Shared\Opentelemetry\Request;
 
 use Symfony\Component\HttpFoundation\Request;
 
-class RequestProcessor
+class RequestProcessor implements RequestProcessorInterface
 {
     /**
      * @var \Symfony\Component\HttpFoundation\Request|null
      */
     protected static ?Request $request = null;
-
-    /**
-     * @return void
-     */
-    public static function setRequest(): void
-    {
-        static::$request = Request::createFromGlobals();
-    }
 
     /**
      * @return \Symfony\Component\HttpFoundation\Request
@@ -34,5 +26,13 @@ class RequestProcessor
         }
 
         return static::$request;
+    }
+
+    /**
+     * @return void
+     */
+    protected static function setRequest(): void
+    {
+        static::$request = Request::createFromGlobals();
     }
 }

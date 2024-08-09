@@ -7,8 +7,6 @@
 
 namespace Spryker\Service\Opentelemetry\Plugin;
 
-use OpenTelemetry\API\Trace\SpanInterface;
-use OpenTelemetry\API\Trace\TracerInterface;
 use Spryker\Service\MonitoringExtension\Dependency\Plugin\MonitoringExtensionPluginInterface;
 
 class OpentelemetryMonitoringExtensionPlugin implements MonitoringExtensionPluginInterface
@@ -18,22 +16,8 @@ class OpentelemetryMonitoringExtensionPlugin implements MonitoringExtensionPlugi
      */
     protected $application;
 
-    /**
-     * @var bool
-     */
-    protected $isActive;
-
-    protected TracerInterface $tracer;
-
-    protected ?SpanInterface $currentSpan = null;
-
     public function __construct()
     {
-//        $this->tracer = Globals::tracerProvider()->getTracer(
-//            'Spryker Opentelemetry Monitoring Plugin',
-//            '0.0.1',
-//            'https://opentelemetry.io/schemas/1.24.0'
-//        );
     }
 
     /**

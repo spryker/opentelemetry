@@ -48,7 +48,6 @@ class OpentelemetryConfig extends AbstractBundleConfig
      */
     public function getPathPatterns(): array
     {
-        dd(APPLICATION_VENDOR_DIR . DIRECTORY_SEPARATOR);
         /** @TO-DO fix paths for demo-shops */
         return [
             '#^vendor/spryker/spryker/Bundles/.*/.*/.*/.*/.*/(Business|Communication)#',
