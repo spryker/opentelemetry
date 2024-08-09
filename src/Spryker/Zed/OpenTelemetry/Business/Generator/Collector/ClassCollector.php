@@ -74,8 +74,8 @@ class ClassCollector implements ClassCollectorInterface
      */
     public function collectClasses(): array
     {
-        /** @TO-DO fix */
-        $finder = Finder::create()
+        $finder = $this->finder
+            ->getFinder()
             ->files()
             ->in(APPLICATION_ROOT_DIR)
             ->path($this->config->getPathPatterns())

@@ -16,17 +16,20 @@ class OpentelemetryToFinderAdapter implements OpentelemetryToFinderInterface
      */
     protected Finder $finder;
 
+    /**
+     * @return void
+     */
     public function __construct()
     {
         $this->finder = Finder::create();
     }
 
     /**
-     * @return void
+     * @return \Symfony\Component\Finder\Finder
      */
-    public function __clone()
+    public function getFinder(): Finder
     {
-        $this->finder = Finder::create();
+        return $this->finder;
     }
 
     /**

@@ -7,8 +7,15 @@
 
 namespace Spryker\Zed\Opentelemetry\Dependency\External;
 
+use Symfony\Component\Finder\Finder;
+
 interface OpentelemetryToFinderInterface
 {
+    /**
+     * @return \Symfony\Component\Finder\Finder
+     */
+    public function getFinder(): Finder;
+    
     /**
      * @param array<string>|string $dirs
      *

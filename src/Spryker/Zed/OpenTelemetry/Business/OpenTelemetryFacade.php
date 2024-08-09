@@ -39,4 +39,9 @@ class OpentelemetryFacade extends AbstractFacade implements OpentelemetryFacadeI
     {
         $this->getFactory()->createHookRemover()->remove();
     }
+    
+    public function getCachedInstrumentation()
+    {
+        return $this->getFactory()->createCachedInstrumentation();
+    }
 }
