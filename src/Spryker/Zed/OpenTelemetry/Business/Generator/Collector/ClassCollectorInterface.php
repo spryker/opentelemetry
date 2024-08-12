@@ -10,7 +10,7 @@ namespace Spryker\Zed\Opentelemetry\Business\Generator\Collector;
 interface ClassCollectorInterface
 {
     /**
-     * @return array<string, mixed>
+     * @return array<int, array<string, mixed>>
      */
     public function collectClasses(): array;
 }

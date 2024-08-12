@@ -12,7 +12,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
- * @method \Spryker\Zed\Opentelemetr\Business\OpentelemetryFacadeInterface getFacade()
+ * @method \Spryker\Zed\Opentelemetry\Business\OpentelemetryFacadeInterface getFacade()
  */
 class OpentelemetryGeneratorConsole extends Console
 {

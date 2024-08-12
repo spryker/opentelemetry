@@ -17,7 +17,7 @@ class OpentelemetryConfig extends AbstractBundleConfig
      *
      * @api
      *
-     * @return array
+     * @return array<string>
      */
     public function getExcludedDirs(): array
     {
@@ -48,7 +48,6 @@ class OpentelemetryConfig extends AbstractBundleConfig
      */
     public function getPathPatterns(): array
     {
-        /** @TO-DO fix paths for demo-shops */
         return [
             '#^vendor/spryker/spryker/Bundles/.*/.*/.*/.*/.*/(Business|Communication)#',
             '#^vendor/spryker/spryker/Bundles/Glue.*#',
@@ -63,7 +62,7 @@ class OpentelemetryConfig extends AbstractBundleConfig
      *
      * @api
      *
-     * @return array<string>
+     * @return string
      */
     public function getOutputDir(): string
     {

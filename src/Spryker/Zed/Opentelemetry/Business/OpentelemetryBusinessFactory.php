@@ -71,11 +71,6 @@ class OpentelemetryBusinessFactory extends AbstractBusinessFactory
         );
     }
 
-    public function createCachedInstrumentation()
-    {
-        return new CachedInstrumentation();
-    }
-
     /**
      * @return \Spryker\Zed\Opentelemetry\Dependency\External\OpentelemetryToFinderInterface
      */

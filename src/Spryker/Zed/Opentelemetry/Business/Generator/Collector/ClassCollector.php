@@ -69,7 +69,7 @@ class ClassCollector implements ClassCollectorInterface
     /**
      * @throws \Spryker\Zed\Opentelemetry\Business\Exception\ProcessingFileException
      *
-     * @return array<string, array<string>>
+     * @return array<int, array<string, mixed>>
      */
     public function collectClasses(): array
     {
@@ -104,11 +104,16 @@ class ClassCollector implements ClassCollectorInterface
     /**
      * @param string $filePath
      *
-     * @return array<string>
+     * @return array<string, array<string>|string>
      */
     protected function extractClassDetailsFromFile(string $filePath): array
     {
         $content = file_get_contents($filePath);
+
+        if ($content === false) {
+            return [];
+        }
+
         $tokens = token_get_all($content);
         $namespace = $this->parseNamespace($tokens);
         $class = $this->parseClassName($tokens);

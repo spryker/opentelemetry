@@ -27,9 +27,9 @@ class CachedInstrumentation implements CachedInstrumentationInterface
     protected static ?OpenTelemetryCachedInstrumentation $instrumentation = null;
 
     /**
-     * @return \OpenTelemetry\API\Instrumentation\CachedInstrumentation
+     * @return \OpenTelemetry\API\Instrumentation\CachedInstrumentation|null
      */
-    public static function getCachedInstrumentation(): OpenTelemetryCachedInstrumentation
+    public static function getCachedInstrumentation(): ?OpenTelemetryCachedInstrumentation
     {
         if (static::$instrumentation === null) {
             static::setCachedInstrumentation();

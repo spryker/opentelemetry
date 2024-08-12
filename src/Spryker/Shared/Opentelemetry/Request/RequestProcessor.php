@@ -17,9 +17,9 @@ class RequestProcessor implements RequestProcessorInterface
     protected static ?Request $request = null;
 
     /**
-     * @return \Symfony\Component\HttpFoundation\Request
+     * @return \Symfony\Component\HttpFoundation\Request|null
      */
-    public static function getRequest(): Request
+    public static function getRequest(): ?Request
     {
         if (static::$request === null) {
             static::setRequest();

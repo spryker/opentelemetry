@@ -12,15 +12,6 @@ use Spryker\Service\MonitoringExtension\Dependency\Plugin\MonitoringExtensionPlu
 class OpentelemetryMonitoringExtensionPlugin implements MonitoringExtensionPluginInterface
 {
     /**
-     * @var string
-     */
-    protected $application;
-
-    public function __construct()
-    {
-    }
-
-    /**
      * @param string $message
      * @param \Exception|\Throwable $exception
      *
@@ -39,7 +30,6 @@ class OpentelemetryMonitoringExtensionPlugin implements MonitoringExtensionPlugi
      */
     public function setApplicationName(?string $application = null, ?string $store = null, ?string $environment = null): void
     {
-        $this->applicationName = $application . '-' . $store . ' (' . $environment . ')';
     }
 
     /**
