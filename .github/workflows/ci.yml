@@ -63,7 +63,7 @@ jobs:
               uses: codecov/codecov-action@v1
 
             - name: PHPStan checks
-              run: composer stan
+              run: composer phpstan
 
             - name: CodeStyle checks
               run: composer cs-check
