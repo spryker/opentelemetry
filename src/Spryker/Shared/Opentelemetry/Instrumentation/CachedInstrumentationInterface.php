@@ -12,7 +12,7 @@ use OpenTelemetry\API\Instrumentation\CachedInstrumentation as OpenTelemetryCach
 interface CachedInstrumentationInterface
 {
     /**
-     * @return \OpenTelemetry\API\Instrumentation\CachedInstrumentation
+     * @return \OpenTelemetry\API\Instrumentation\CachedInstrumentation|null
      */
-    public static function getCachedInstrumentation(): OpenTelemetryCachedInstrumentation;
+    public static function getCachedInstrumentation(): ?OpenTelemetryCachedInstrumentation;
 }

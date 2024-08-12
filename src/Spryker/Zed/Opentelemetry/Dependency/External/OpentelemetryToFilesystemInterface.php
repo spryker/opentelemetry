@@ -17,7 +17,7 @@ interface OpentelemetryToFilesystemInterface
     /**
      * @param string $filename
      *
-     * @throws \Symfony\Component\Filesystem\Exception\IOException
+     * @throws \Spryker\Zed\Opentelemetry\Business\Exception\IOException
      *
      * @return void
      */
@@ -26,7 +26,7 @@ interface OpentelemetryToFilesystemInterface
     /**
      * @param string $filename
      *
-     * @throws \Spryker\Glue\DocumentationGeneratorApi\Exception\IOException
+     * @throws \Spryker\Zed\Opentelemetry\Business\Exception\IOException
      *
      * @return bool
      */
@@ -36,7 +36,7 @@ interface OpentelemetryToFilesystemInterface
      * @param iterable<string>|string $dirs
      * @param int $mode
      *
-     * @throws \Symfony\Component\Filesystem\Exception\IOException
+     * @throws \Spryker\Zed\Opentelemetry\Business\Exception\IOException
      *
      * @return void
      */

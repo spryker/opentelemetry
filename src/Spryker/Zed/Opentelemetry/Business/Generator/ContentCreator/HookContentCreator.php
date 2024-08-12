@@ -32,6 +32,11 @@ class HookContentCreator implements HookContentCreatorInterface
     protected const METHODS_KEY = 'methods';
 
     /**
+     * @var string
+     */
+    protected const METHOD_HOOK_NAME = '%s-%s::%s';
+
+    /**
      * @var \Spryker\Zed\Opentelemetry\OpentelemetryConfig
      */
     protected OpentelemetryConfig $config;
@@ -45,7 +50,7 @@ class HookContentCreator implements HookContentCreatorInterface
     }
 
     /**
-     * @param array<string, array<string>> $class
+     * @param array<string, mixed> $class
      *
      * @return string
      */
@@ -55,13 +60,13 @@ class HookContentCreator implements HookContentCreatorInterface
         $envVars = $this->config->getOtelEnvVars();
 
         foreach ($class[static::METHODS_KEY] as $method) {
-            $hooks[] = '
+            $hooks[] = sprintf('
             \\OpenTelemetry\\Instrumentation\\hook(
-                class: \\' . $class[static::NAMESPACE_KEY] . '\\' . $class[static::CLASS_NAME_KEY] . '::class,
-                function: \'' . $method . '\',
+                class: \\%s\\%s::class,
+                function: \'%s\',
                 pre: static function ($instance, array $params, string $class, string $function, ?string $filename, ?int $lineno) {
                     $context = \\OpenTelemetry\\Context\\Context::getCurrent();
-                    $envVars = ' . var_export($envVars, true) . ';
+                    $envVars = %s;
 
                     $extractTraceIdFromEnv = function(array $envVars): array {
                         foreach ($envVars as $key => $envVar) {
@@ -83,7 +88,7 @@ class HookContentCreator implements HookContentCreatorInterface
 
                     $span = \\Spryker\\Shared\\OpenTelemetry\\Instrumentation\\CachedInstrumentation::getCachedInstrumentation()
                         ->tracer()
-                        ->spanBuilder($request->getMethod() . \' ' . $class[static::MODULE_KEY] . '-' . $class[static::CLASS_NAME_KEY] . '::' . $method . '\')
+                        ->spanBuilder($request->getMethod() . \' %s\')
                         ->setParent($context)
                         ->setSpanKind(($type === \\Symfony\\Component\\HttpKernel\\HttpKernelInterface::SUB_REQUEST) ? \\OpenTelemetry\\API\\Trace\\SpanKind::KIND_INTERNAL : \\OpenTelemetry\\API\\Trace\\SpanKind::KIND_SERVER)
                         ->setAttribute(\\OpenTelemetry\\SemConv\\TraceAttributes::CODE_FUNCTION, $function)
@@ -106,7 +111,7 @@ class HookContentCreator implements HookContentCreatorInterface
 
                     if (is_array($error) && in_array($error[\'type\'], [E_ERROR, E_CORE_ERROR, E_COMPILE_ERROR, E_PARSE], true)) {
                         $exception = new \Exception(
-                            sprintf(\'Error: %s in %s on line %d\', $error[\'message\'], $error[\'file\'], $error[\'line\'])
+                            \'Error: \' . $error[\'message\'] . \' in \' . $error[\'file\'] . \' on line \' . $error[\'line\']
                         );
                     }
 
@@ -123,9 +128,30 @@ class HookContentCreator implements HookContentCreatorInterface
 
                     $span->end();
                 }
-            );';
+            );',
+                $class[static::NAMESPACE_KEY],
+                $class[static::CLASS_NAME_KEY],
+                $method,
+                var_export($envVars, true),
+                $this->buildMethodHookName($class, $method)
+            );
         }
 
         return '<?php' . PHP_EOL . implode(PHP_EOL, $hooks) . PHP_EOL;
+    }
+
+    /**
+     * @param array<string, mixed> $class
+     * @param string $method
+     *
+     * @return string
+     */
+    protected function buildMethodHookName(array $class, string $method): string
+    {
+        return sprintf(static::METHOD_HOOK_NAME,
+            $class[static::MODULE_KEY],
+            $class[static::CLASS_NAME_KEY],
+            $method
+        );
     }
 }

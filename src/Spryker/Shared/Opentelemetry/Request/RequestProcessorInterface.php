@@ -12,7 +12,7 @@ use Symfony\Component\HttpFoundation\Request;
 interface RequestProcessorInterface
 {
     /**
-     * @return \Symfony\Component\HttpFoundation\Request
+     * @return \Symfony\Component\HttpFoundation\Request|null
      */
-    public static function getRequest(): Request;
+    public static function getRequest(): ?Request;
 }
