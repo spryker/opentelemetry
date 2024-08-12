@@ -14,7 +14,6 @@ use Spryker\Zed\Opentelemetry\Business\Generator\ContentCreator\HookContentCreat
 use Spryker\Zed\Opentelemetry\Business\Generator\ContentCreator\HookContentCreatorInterface;
 use Spryker\Zed\Opentelemetry\Business\Generator\HookGenerator;
 use Spryker\Zed\Opentelemetry\Business\Generator\HookGeneratorInterface;
-use Spryker\Zed\Opentelemetry\Business\Generator\Instrumentation\CachedInstrumentation;
 use Spryker\Zed\Opentelemetry\Business\Remover\HookRemover;
 use Spryker\Zed\Opentelemetry\Business\Remover\HookRemoverInterface;
 use Spryker\Zed\Opentelemetry\Dependency\External\OpentelemetryToFilesystemInterface;

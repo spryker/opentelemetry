@@ -60,7 +60,8 @@ class HookContentCreator implements HookContentCreatorInterface
         $envVars = $this->config->getOtelEnvVars();
 
         foreach ($class[static::METHODS_KEY] as $method) {
-            $hooks[] = sprintf('
+            $hooks[] = sprintf(
+                '
             \\OpenTelemetry\\Instrumentation\\hook(
                 class: \\%s\\%s::class,
                 function: \'%s\',
@@ -133,7 +134,7 @@ class HookContentCreator implements HookContentCreatorInterface
                 $class[static::CLASS_NAME_KEY],
                 $method,
                 var_export($envVars, true),
-                $this->buildMethodHookName($class, $method)
+                $this->buildMethodHookName($class, $method),
             );
         }
 
@@ -148,10 +149,11 @@ class HookContentCreator implements HookContentCreatorInterface
      */
     protected function buildMethodHookName(array $class, string $method): string
     {
-        return sprintf(static::METHOD_HOOK_NAME,
+        return sprintf(
+            static::METHOD_HOOK_NAME,
             $class[static::MODULE_KEY],
             $class[static::CLASS_NAME_KEY],
-            $method
+            $method,
         );
     }
 }
