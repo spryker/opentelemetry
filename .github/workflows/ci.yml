@@ -1,20 +1,5 @@
 name: CI
 
-env:
-    APPLICATION_ENV: 'development'
-    APPLICATION_STORE: 'DE'
-    PROJECT: 'Opentelemetry '
-    DATABASE_VERSION: 10.2
-    DATABASE_HOST: 127.0.0.1
-    DATABASE_PORT: 3306
-    DATABASE_NAME: eu-docker
-    DATABASE_USERNAME: spryker
-    DATABASE_PASSWORD: secret
-    DATABASE_ROOT_PASSWORD: secret
-    DATABASE_ALLOW_EMPTY_PASSWORD: false
-    DATABASE_CHARACTER_SET: utf8
-    DATABASE_COLLATE: utf8_general_ci
-
 on:
     pull_request:
     push:
@@ -29,40 +14,30 @@ jobs:
             fail-fast: false
             matrix:
                 php-version: [
-                    '8.1',
+                    '8.0',
                     '8.2'
                 ]
-        
+
         steps:
-            - uses: actions/checkout@v2
-
-            - uses: getong/mariadb-action@v1.1
-              with:
-                  host port: ${{ env.DATABASE_PORT }}
-                  container port: ${{ env.DATABASE_PORT }}
-                  character set server: ${{ env.DATABASE_CHARACTER_SET }}
-                  collation server: ${{ env.DATABASE_COLLATE }}
-                  mariadb version: ${{ env.DATABASE_VERSION }}
-                  mysql database: ${{ env.DATABASE_NAME }}
-                  mysql root password: ${{ env.DATABASE_ROOT_PASSWORD }}
-                  mysql user: ${{ env.DATABASE_USERNAME }}
-                  mysql password: ${{ env.DATABASE_PASSWORD }}
-
             - name: Setup PHP
               uses: shivammathur/setup-php@v2
               with:
                   php-version: ${{ matrix.php-version }}
                   extensions: mbstring, intl, pdo_mysql
 
-            - name: Validate composer.json and composer.lock
+            - name: Checkout
+              uses: actions/checkout@v2
+
+            - name: Composer validate
               run: composer validate
 
-            - name: Get Composer Cache Directory
+            - name: Composer get cache directory
               id: composer-cache
               run: |
                   echo "::set-output name=dir::$(composer config cache-files-dir)"
 
-            - uses: actions/cache@v2
+            - name: Composer cache
+              uses: actions/cache@v2
               with:
                   path: ${{ steps.composer-cache.outputs.dir }}
                   key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
@@ -74,40 +49,37 @@ jobs:
                   composer --version
                   composer install --optimize-autoloader
 
-            - name: Run tests (failing right now)
-              run: composer test || true
+            - name: Codeception tests
+              run: |
+                  if [[ ${{ matrix.php-version }} == '8.0' ]]; then
+                    vendor/bin/codecept build
+                    XDEBUG_MODE=coverage vendor/bin/codecept run --coverage-xml
+                  else
+                    composer test
+                  fi
+
+            - name: Code Coverage Report
+              if: success() && matrix.php-version == '8.0'
+              uses: codecov/codecov-action@v1
 
             - name: PHPStan checks
-              run: |
-                  composer stan-setup
-                  composer stan
+              run: composer stan
 
             - name: CodeStyle checks
               run: composer cs-check
-    
+
     prefer-lowest:
         runs-on: ubuntu-20.04
         strategy:
             fail-fast: false
             matrix:
                 php-version: [
-                    '8.1'
+                    '8.0'
                 ]
-        
-        steps:
-            - uses: actions/checkout@v2
 
-            - uses: getong/mariadb-action@v1.1
-              with:
-                  host port: ${{ env.DATABASE_PORT }}
-                  container port: ${{ env.DATABASE_PORT }}
-                  character set server: ${{ env.DATABASE_CHARACTER_SET }}
-                  collation server: ${{ env.DATABASE_COLLATE }}
-                  mariadb version: ${{ env.DATABASE_VERSION }}
-                  mysql database: ${{ env.DATABASE_NAME }}
-                  mysql root password: ${{ env.DATABASE_ROOT_PASSWORD }}
-                  mysql user: ${{ env.DATABASE_USERNAME }}
-                  mysql password: ${{ env.DATABASE_PASSWORD }}
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v2
 
             - name: Setup PHP
               uses: shivammathur/setup-php@v2
@@ -120,20 +92,15 @@ jobs:
               run: |
                   echo "::set-output name=dir::$(composer config cache-files-dir)"
 
-            - uses: actions/cache@v2
+            - name: Composer cache
+              uses: actions/cache@v2
               with:
                   path: ${{ steps.composer-cache.outputs.dir }}
                   key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-                  restore-keys: |
-                      ${{ runner.os }}-composer-
+                  restore-keys: ${{ runner.os }}-composer-
 
             - name: Composer prefer-lowest
               run: composer update --prefer-dist --no-interaction --prefer-lowest --prefer-stable -o
 
-            - name: Run tests (failing right now)
-              run: composer test || true
-
-            - name: PHPStan checks (failing right now due to failing tests)
-              run: |
-                  composer stan-setup
-                  composer stan || true
+            - name: Codecept run test
+              run: composer test
