@@ -21,7 +21,6 @@ suites:
                 - \SprykerTest\Shared\Testify\Helper\Environment:
                       isolated: true
                 - \SprykerTest\Shared\Testify\Helper\ConfigHelper
-                - \SprykerTest\Shared\Testify\Helper\VirtualFilesystemHelper
                 - \SprykerTest\Zed\Testify\Helper\BusinessHelper
                 - \SprykerTest\Shared\Testify\Helper\LocatorHelper:
                       coreNamespaces:
