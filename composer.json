@@ -16,7 +16,8 @@
         "codeception/codeception": "*",
         "codeception/module-asserts": "*",
         "phpstan/phpstan": "*",
-        "spryker/code-sniffer": "*"
+        "spryker/code-sniffer": "*",
+        "spryker/testify": "*"
     },
     "autoload": {
         "psr-4": {
