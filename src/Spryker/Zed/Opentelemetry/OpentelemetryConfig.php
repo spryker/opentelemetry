@@ -48,9 +48,10 @@ class OpentelemetryConfig extends AbstractBundleConfig
     public function getPathPatterns(): array
     {
         return [
-            '#^vendor/spryker/spryker/Bundles/.*/.*/.*/.*/.*/(Business|Communication)#',
-            '#^vendor/spryker/spryker/Bundles/Glue.*#',
-            '#^vendor/spryker/spryker-shop/Bundles/.*#',
+            '#^vendor/spryker/[^/]+/.*/.*/.*/.*/(Business|Communication)#',
+            '#^vendor/spryker/[^/]+/Glue.*#',
+            '#^vendor/spryker-shop/[^/]+/.*#',
+            '#^vendor/spryker-eco/[^/]+/.*#',
             '#^src/Pyz/.*#',
         ];
     }
@@ -85,6 +86,7 @@ class OpentelemetryConfig extends AbstractBundleConfig
             'glue_trace_id' => 'OTEL_GLUE_TRACE_ID',
             'yves_trace_id' => 'OTEL_YVES_TRACE_ID',
             'application_trace_id' => 'OTEL_APPLICATION_TRACE_ID',
+            'backend_gateway_trace_id' => 'OTEL_BACKEND_GATEWAY_TRACE_ID',
         ];
     }
 }
