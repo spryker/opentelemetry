@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use OpenTelemetry\SDK\Sdk;
+use RuntimeException;
 use Spryker\Service\Opentelemetry\Instrumentation\SprykerInstrumentationBootstrap;
 
 if (class_exists(Sdk::class) && Sdk::isInstrumentationDisabled(SprykerInstrumentationBootstrap::NAME) === true) {
@@ -10,7 +11,7 @@ if (class_exists(Sdk::class) && Sdk::isInstrumentationDisabled(SprykerInstrument
 }
 
 if (extension_loaded('opentelemetry') === false) {
-    trigger_error('The opentelemetry extension must be loaded in order to autoload the OpenTelemetry Spryker Framework auto-instrumentation', E_USER_WARNING);
+    throw new RuntimeException('The opentelemetry extension must be loaded in order to autoload the OpenTelemetry Spryker Framework auto-instrumentation', E_USER_WARNING);
 
     return;
 }
