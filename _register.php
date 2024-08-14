@@ -16,5 +16,3 @@ if (extension_loaded('opentelemetry') === false) {
 }
 
 SprykerInstrumentationBootstrap::register();
-
-

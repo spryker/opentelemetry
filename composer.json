@@ -13,9 +13,6 @@
         "spryker/symfony": "^3.0.0"
     },
     "require-dev": {
-        "codeception/codeception": "*",
-        "codeception/module-asserts": "*",
-        "phpstan/phpstan": "*",
         "spryker/code-sniffer": "*",
         "spryker/testify": "^3.47.0"
     },
@@ -34,6 +31,12 @@
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
+    "scripts": {
+        "cs-check": "phpcs -p -s --standard=vendor/spryker/code-sniffer/SprykerStrict/ruleset.xml --ignore=/tests/_data/,/_support/ src/ tests/",
+        "cs-fix": "phpcbf -p --standard=vendor/spryker/code-sniffer/SprykerStrict/ruleset.xml --ignore=/tests/_data/,/_support/ src/ tests/",
+        "phpstan": "phpstan analyze",
+        "test": "codecept build && codecept run"
+    },
     "extra": {
         "branch-alias": {
             "dev-master": "1.0.x-dev"
@@ -51,12 +54,6 @@
             "homepage": "https://spryker.com"
         }
     ],
-    "scripts": {
-        "cs-check": "phpcs --colors -p -s --extensions=php --standard=vendor/spryker/code-sniffer/Spryker/ruleset.xml --ignore=/tests/_data/,/_support/ src/ tests/",
-        "cs-fix": "phpcbf --colors -p --extensions=php --standard=vendor/spryker/code-sniffer/Spryker/ruleset.xml --ignore=/tests/_data/,/_support/ src/ tests/",
-        "phpstan": "phpstan analyze",
-        "test": "codecept build && codecept run"
-    },
     "include-path": [
         "src/"
     ]
