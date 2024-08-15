@@ -50,7 +50,8 @@ class OpentelemetryConfig extends AbstractBundleConfig
         return [
             '#^vendor/spryker/[^/]+/.*/.*/.*/.*/(Business|Communication)#',
             '#^vendor/spryker/[^/]+/Glue.*#',
-            '#^vendor/spryker-shop/[^/]+/.*#',
+//            '#^vendor/spryker-shop/[^/]+/.*#',
+            '#^vendor/spryker(?:/spryker)?-shop/[^/]+/.*#',
             '#^vendor/spryker-eco/[^/]+/.*#',
             '#^src/Pyz/.*#',
         ];
