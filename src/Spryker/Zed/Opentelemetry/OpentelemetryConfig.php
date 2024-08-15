@@ -31,6 +31,8 @@ class OpentelemetryConfig extends AbstractBundleConfig
             'Config',
             'Queue',
             'PropelReplicationCache',
+            'GitHook',
+            'ArchitectureSniffer',
             'templates',
             'config',
             'tests',
@@ -48,9 +50,8 @@ class OpentelemetryConfig extends AbstractBundleConfig
     public function getPathPatterns(): array
     {
         return [
-            '#^vendor/spryker/[^/]+/.*/.*/.*/.*/(Business|Communication)#',
+            '#^vendor/spryker/[^/]+/.*/.*/(Zed|Client|Shared)/.*/(?!Persistence|Presentation)[^/]+/.*#',
             '#^vendor/spryker/[^/]+/Glue.*#',
-//            '#^vendor/spryker-shop/[^/]+/.*#',
             '#^vendor/spryker(?:/spryker)?-shop/[^/]+/.*#',
             '#^vendor/spryker-eco/[^/]+/.*#',
             '#^src/Pyz/.*#',
