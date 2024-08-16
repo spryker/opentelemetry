@@ -92,7 +92,6 @@ class OpentelemetryConfig extends AbstractBundleConfig
             'merchant_portal_trace_id' => 'OTEL_MERCHANT_PORTAL_TRACE_ID',
             'glue_trace_id' => 'OTEL_GLUE_TRACE_ID',
             'yves_trace_id' => 'OTEL_YVES_TRACE_ID',
-            'application_trace_id' => 'OTEL_APPLICATION_TRACE_ID',
             'backend_gateway_trace_id' => 'OTEL_BACKEND_GATEWAY_TRACE_ID',
         ];
     }
