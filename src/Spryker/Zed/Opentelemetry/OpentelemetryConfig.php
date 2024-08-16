@@ -33,6 +33,11 @@ class OpentelemetryConfig extends AbstractBundleConfig
             'PropelReplicationCache',
             'GitHook',
             'ArchitectureSniffer',
+            'Router',
+            'ZedNavigation',
+            'Acl',
+            'Twig',
+            'WebProfiler',
             'templates',
             'config',
             'tests',
@@ -50,7 +55,7 @@ class OpentelemetryConfig extends AbstractBundleConfig
     public function getPathPatterns(): array
     {
         return [
-            '#^vendor/spryker/[^/]+/.*/.*/(Zed|Client|Shared)/.*/(?!Persistence|Presentation)[^/]+/.*#',
+            '#^vendor/spryker/[^/]+/.*/.*/(Zed|Shared)/.*/(?!Persistence|Presentation)[^/]+/.*#',
             '#^vendor/spryker/[^/]+/Glue.*#',
             '#^vendor/spryker(?:/spryker)?-shop/[^/]+/.*#',
             '#^vendor/spryker-eco/[^/]+/.*#',

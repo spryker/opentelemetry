@@ -7,9 +7,13 @@
 
 namespace Spryker\Service\Opentelemetry\Plugin;
 
+use Spryker\Service\Kernel\AbstractPlugin;
 use Spryker\Service\MonitoringExtension\Dependency\Plugin\MonitoringExtensionPluginInterface;
 
-class OpentelemetryMonitoringExtensionPlugin implements MonitoringExtensionPluginInterface
+/**
+ * @method \Spryker\Service\Opentelemetry\OpentelemetryService getService()
+ */
+class OpentelemetryMonitoringExtensionPlugin extends AbstractPlugin implements MonitoringExtensionPluginInterface
 {
     /**
      * @param string $message
@@ -70,6 +74,11 @@ class OpentelemetryMonitoringExtensionPlugin implements MonitoringExtensionPlugi
     }
 
     /**
+     * Specification:
+     * - Adds a custom parameter to the monitoring.
+     *
+     * @api
+     *
      * @param string $key
      * @param mixed $value
      *
@@ -77,6 +86,7 @@ class OpentelemetryMonitoringExtensionPlugin implements MonitoringExtensionPlugi
      */
     public function addCustomParameter(string $key, $value): void
     {
+        $this->getService()->setAttribute($key, $value);
     }
 
     /**
