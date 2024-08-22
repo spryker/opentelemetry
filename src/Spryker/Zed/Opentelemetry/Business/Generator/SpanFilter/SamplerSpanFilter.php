@@ -24,7 +24,7 @@ class SamplerSpanFilter implements SpanFilterInterface
         $shouldBeSampled = $forceToShow ||
             (
                 $isSampled
-                && 
+                &&
                 !(
                     $span->getDuration() < $thresholdNanos
                     && $span->toSpanData()->getParentSpanId()
