@@ -13,6 +13,16 @@ class OpentelemetryConfig extends AbstractBundleConfig
 {
     /**
      * Specification:
+     * - The threshold in nanoseconds for the span to be sampled.
+     *
+     * @api
+     *
+     * @var int
+     */
+    public const THRESHOLD_NANOS = 1000000;
+
+    /**
+     * Specification:
      * - Returns the list of modules that should be excluded from instrumentation.
      *
      * @api
