@@ -126,6 +126,9 @@ class HookContentCreator implements HookContentCreatorInterface
                     $span->setAttribute(\'error_message\', isset($exception) ? $exception->getMessage() : \'\');
                     $span->setAttribute(\'error_code\', isset($exception) ? $exception->getCode() : \'\');
                     $span->setStatus(isset($exception) ? \\OpenTelemetry\\API\\Trace\\StatusCode::STATUS_ERROR : \\OpenTelemetry\\API\\Trace\\StatusCode::STATUS_OK);
+                    $isSampled = $span->getContext()->isSampled();
+                    $thresholdNanos = 10000000;
+                    \ReflectionProperty($span->getContext(), \'isSampled\')->setValue($span->getContext(), $isSampled && $span->getDuration() < $thresholdNano && $span->toSpanData()->getParentSpanId() && $span->toSpanData()->getStatus()->getCode() === \\OpenTelemetry\\API\\Trace\\StatusCode::STATUS_OK);
 
                     $span->end();
                 }
