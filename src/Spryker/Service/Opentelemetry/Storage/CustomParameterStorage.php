@@ -2,16 +2,16 @@
 
 namespace Spryker\Service\Opentelemetry\Storage;
 
-class AttributesStorage implements AttributesStorageInterface
+class CustomParameterStorage implements CustomParameterStorageInterface
 {
-    private static ?AttributesStorage $instance = null;
+    private static ?CustomParameterStorage $instance = null;
 
     /**
      * @var array
      */
     protected array $attributes = [];
 
-    public static function getInstance(): AttributesStorage
+    public static function getInstance(): CustomParameterStorage
     {
         if (self::$instance === null) {
             self::$instance = new self();

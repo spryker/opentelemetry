@@ -8,16 +8,16 @@
 namespace Spryker\Service\Opentelemetry;
 
 use Spryker\Service\Kernel\AbstractServiceFactory;
-use Spryker\Service\Opentelemetry\Storage\AttributesStorage;
-use Spryker\Service\Opentelemetry\Storage\AttributesStorageInterface;
+use Spryker\Service\Opentelemetry\Storage\CustomParameterStorage;
+use Spryker\Service\Opentelemetry\Storage\CustomParameterStorageInterface;
 
 class OpentelemetryServiceFactory extends AbstractServiceFactory
 {
     /**
-     * @return \Spryker\Service\Opentelemetry\Storage\AttributesStorageInterface
+     * @return \Spryker\Service\Opentelemetry\Storage\CustomParameterStorageInterface
      */
-    public function createAttributesStorage(): AttributesStorageInterface
+    public function createCustomParameterStorage(): CustomParameterStorageInterface
     {
-        return AttributesStorage::getInstance();
+        return CustomParameterStorage::getInstance();
     }
 }

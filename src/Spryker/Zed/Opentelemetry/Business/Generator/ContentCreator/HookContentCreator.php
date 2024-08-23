@@ -127,6 +127,8 @@ class HookContentCreator implements HookContentCreatorInterface
                     $span->setAttribute(\'error_code\', isset($exception) ? $exception->getCode() : \'\');
                     $span->setStatus(isset($exception) ? \\OpenTelemetry\\API\\Trace\\StatusCode::STATUS_ERROR : \\OpenTelemetry\\API\\Trace\\StatusCode::STATUS_OK);
 
+                    $span = \\Spryker\\Zed\\Opentelemetry\\Business\\Generator\\SpanFilter\\SamplerSpanFilter::filter($span);
+
                     $span->end();
                 }
             );',

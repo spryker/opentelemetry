@@ -11,7 +11,8 @@ interface OpentelemetryServiceInterface
 {
     /**
      * Specification:
-     * - Sets an attribute to the current span.
+     * - Sets custom parameter from Monitoring service to an internal storage.
+     * - Params will be attached to the root span of the current trace.
      *
      * @api
      *
@@ -20,5 +21,5 @@ interface OpentelemetryServiceInterface
      *
      * @return void
      */
-    public function setAttribute(string $key, $value): void;
+    public function setCustomParameter(string $key, $value): void;
 }

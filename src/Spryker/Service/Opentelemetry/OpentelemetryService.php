@@ -24,8 +24,8 @@ class OpentelemetryService extends AbstractService implements OpentelemetryServi
      *
      * @return void
      */
-    public function setAttribute(string $key, $value): void
+    public function setCustomParameter(string $key, $value): void
     {
-        $this->getFactory()->createAttributesStorage()->setAttribute($key, $value);
+        $this->getFactory()->createCustomParameterStorage()->setAttribute($key, $value);
     }
 }

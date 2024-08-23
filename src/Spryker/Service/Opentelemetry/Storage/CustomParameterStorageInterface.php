@@ -2,9 +2,9 @@
 
 namespace Spryker\Service\Opentelemetry\Storage;
 
-interface AttributesStorageInterface
+interface CustomParameterStorageInterface
 {
-    public static function getInstance(): AttributesStorage;
+    public static function getInstance(): CustomParameterStorage;
 
     /**
      * @param string $key

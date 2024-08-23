@@ -86,7 +86,7 @@ class OpentelemetryMonitoringExtensionPlugin extends AbstractPlugin implements M
      */
     public function addCustomParameter(string $key, $value): void
     {
-        $this->getService()->setAttribute($key, $value);
+        $this->getService()->setCustomParameter($key, $value);
     }
 
     /**
