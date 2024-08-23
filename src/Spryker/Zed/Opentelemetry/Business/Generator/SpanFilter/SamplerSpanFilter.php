@@ -1,26 +1,31 @@
 <?php
 
+/**
+ * Copyright © 2016-present Spryker Systems GmbH. All rights reserved.
+ * Use of this software requires acceptance of the Evaluation License Agreement. See LICENSE file.
+ */
+
 namespace Spryker\Zed\Opentelemetry\Business\Generator\SpanFilter;
 
-use OpenTelemetry\API\Trace\SpanInterface;
-use Spryker\Shared\Config\Config;
-use Spryker\Zed\Opentelemetry\Business\Generator\SpanFilter\SpanFilterInterface;
+use OpenTelemetry\API\Trace\StatusCode;
+use OpenTelemetry\SDK\Trace\ReadableSpanInterface;
+use ReflectionProperty;
 use Spryker\Zed\Opentelemetry\OpentelemetryConfig;
 
 class SamplerSpanFilter implements SpanFilterInterface
 {
     /**
-     * @param \OpenTelemetry\API\Trace\SpanInterface $span
+     * @param \OpenTelemetry\SDK\Trace\ReadableSpanInterface $span
      * @param bool $forceToShow
      *
-     * @return \OpenTelemetry\API\Trace\SpanInterface
+     * @return \OpenTelemetry\SDK\Trace\ReadableSpanInterface
      */
-    public static function filter(SpanInterface $span, bool $forceToShow = false): SpanInterface
+    public static function filter(ReadableSpanInterface $span, bool $forceToShow = false): ReadableSpanInterface
     {
         $contextToChange = $span->getContext();
         $isSampled = $contextToChange->isSampled();
         $thresholdNanos = OpentelemetryConfig::THRESHOLD_NANOS;
-        $reflectionProperty = new \ReflectionProperty($contextToChange, 'isSampled');
+        $reflectionProperty = new ReflectionProperty($contextToChange, 'isSampled');
         $shouldBeSampled = $forceToShow ||
             (
                 $isSampled
@@ -28,7 +33,7 @@ class SamplerSpanFilter implements SpanFilterInterface
                 !(
                     $span->getDuration() < $thresholdNanos
                     && $span->toSpanData()->getParentSpanId()
-                    && $span->toSpanData()->getStatus()->getCode() === \OpenTelemetry\API\Trace\StatusCode::STATUS_OK
+                    && $span->toSpanData()->getStatus()->getCode() === StatusCode::STATUS_OK
                 )
             );
         $reflectionProperty->setValue($contextToChange, $shouldBeSampled);
