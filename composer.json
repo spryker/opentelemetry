@@ -1,0 +1,60 @@
+{
+    "name": "spryker/opentelemetry",
+    "type": "library",
+    "description": "Opentelemetry module",
+    "license": "proprietary",
+    "require": {
+        "open-telemetry/api": "^1.0",
+        "open-telemetry/sdk": "^1.0",
+        "open-telemetry/sem-conv": "^1.0",
+        "php": ">=8.1",
+        "spryker/kernel": "^3.30.0",
+        "spryker/monitoring-extension": "^1.0.0",
+        "spryker/symfony": "^3.0.0"
+    },
+    "require-dev": {
+        "spryker/code-sniffer": "*",
+        "spryker/testify": "^3.47.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Spryker\\": "src/Spryker/"
+        },
+        "files": [
+            "_register.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "SprykerTest\\": "tests/SprykerTest/"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "scripts": {
+        "cs-check": "phpcs -p -s --standard=vendor/spryker/code-sniffer/SprykerStrict/ruleset.xml --ignore=/tests/_data/,/_support/ src/ tests/",
+        "cs-fix": "phpcbf -p --standard=vendor/spryker/code-sniffer/SprykerStrict/ruleset.xml --ignore=/tests/_data/,/_support/ src/ tests/",
+        "phpstan": "phpstan analyze",
+        "test": "codecept build && codecept run"
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.0.x-dev"
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
+    },
+    "authors": [
+        {
+            "name": "Spryker",
+            "homepage": "https://spryker.com"
+        }
+    ],
+    "include-path": [
+        "src/"
+    ]
+}
