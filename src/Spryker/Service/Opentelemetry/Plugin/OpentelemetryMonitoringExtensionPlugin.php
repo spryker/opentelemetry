@@ -16,6 +16,11 @@ use Spryker\Service\MonitoringExtension\Dependency\Plugin\MonitoringExtensionPlu
 class OpentelemetryMonitoringExtensionPlugin extends AbstractPlugin implements MonitoringExtensionPluginInterface
 {
     /**
+     * Specification:
+     * - Will be fixed in stable version. Not in use for now
+     *
+     * @api
+     *
      * @param string $message
      * @param \Exception|\Throwable $exception
      *
@@ -26,6 +31,11 @@ class OpentelemetryMonitoringExtensionPlugin extends AbstractPlugin implements M
     }
 
     /**
+     * Specification:
+     * - Will be fixed in stable version. Not in use for now
+     *
+     * @api
+     *
      * @param string|null $application
      * @param string|null $store
      * @param string|null $environment
@@ -37,6 +47,11 @@ class OpentelemetryMonitoringExtensionPlugin extends AbstractPlugin implements M
     }
 
     /**
+     * Specification:
+     * - Will be fixed in stable version. Not in use for now
+     *
+     * @api
+     *
      * @param string $name
      *
      * @return void
@@ -46,6 +61,11 @@ class OpentelemetryMonitoringExtensionPlugin extends AbstractPlugin implements M
     }
 
     /**
+     * Specification:
+     * - Will be fixed in stable version. Not in use for now
+     *
+     * @api
+     *
      * @return void
      */
     public function markStartTransaction(): void
@@ -53,6 +73,11 @@ class OpentelemetryMonitoringExtensionPlugin extends AbstractPlugin implements M
     }
 
     /**
+     * Specification:
+     * - Will be fixed in stable version. Not in use for now
+     *
+     * @api
+     *
      * @return void
      */
     public function markEndOfTransaction(): void
@@ -60,6 +85,11 @@ class OpentelemetryMonitoringExtensionPlugin extends AbstractPlugin implements M
     }
 
     /**
+     * Specification:
+     * - Will be fixed in stable version. Not in use for now
+     *
+     * @api
+     *
      * @return void
      */
     public function markIgnoreTransaction(): void
@@ -67,6 +97,11 @@ class OpentelemetryMonitoringExtensionPlugin extends AbstractPlugin implements M
     }
 
     /**
+     * Specification:
+     * - Will be fixed in stable version. Not in use for now
+     *
+     * @api
+     *
      * @return void
      */
     public function markAsConsoleCommand(): void
@@ -90,6 +125,11 @@ class OpentelemetryMonitoringExtensionPlugin extends AbstractPlugin implements M
     }
 
     /**
+     * Specification:
+     * - Will be fixed in stable version. Not in use for now
+     *
+     * @api
+     *
      * @param string $tracer
      *
      * @return void
