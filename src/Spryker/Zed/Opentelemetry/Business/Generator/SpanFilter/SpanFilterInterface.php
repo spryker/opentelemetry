@@ -7,15 +7,15 @@
 
 namespace Spryker\Zed\Opentelemetry\Business\Generator\SpanFilter;
 
-use OpenTelemetry\SDK\Trace\ReadableSpanInterface;
+use OpenTelemetry\API\Trace\SpanInterface;
 
 interface SpanFilterInterface
 {
     /**
-     * @param \OpenTelemetry\SDK\Trace\ReadableSpanInterface $span
+     * @param \OpenTelemetry\API\Trace\SpanInterface|\OpenTelemetry\SDK\Trace\ReadableSpanInterface $span
      * @param bool $forceToShow
      *
      * @return \OpenTelemetry\SDK\Trace\ReadableSpanInterface
      */
-    public static function filter(ReadableSpanInterface $span, bool $forceToShow = false): ReadableSpanInterface;
+    public static function filter(SpanInterface $span, bool $forceToShow = false): SpanInterface;
 }

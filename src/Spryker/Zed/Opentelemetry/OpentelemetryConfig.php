@@ -7,6 +7,7 @@
 
 namespace Spryker\Zed\Opentelemetry;
 
+use Spryker\Shared\Config\Config;
 use Spryker\Zed\Kernel\AbstractBundleConfig;
 
 class OpentelemetryConfig extends AbstractBundleConfig
@@ -16,6 +17,8 @@ class OpentelemetryConfig extends AbstractBundleConfig
      * - The threshold in nanoseconds for the span to be sampled.
      *
      * @api
+     *
+     * @deprecated Will be removed as a public API. Please use getSamplerThresholdNano() instead.
      *
      * @var int
      */
@@ -34,6 +37,7 @@ class OpentelemetryConfig extends AbstractBundleConfig
         return [
             'Opentelemetry',
             'Container',
+            'Transfer',
             'Kernel',
             'Application',
             'Installer',
@@ -104,5 +108,20 @@ class OpentelemetryConfig extends AbstractBundleConfig
             'yves_trace_id' => 'OTEL_YVES_TRACE_ID',
             'backend_gateway_trace_id' => 'OTEL_BACKEND_GATEWAY_TRACE_ID',
         ];
+    }
+
+    /**
+     * Specification:
+     * - The threshold in nanoseconds for the span to be sampled.
+     *
+     * @api
+     *
+     * return int
+     */
+    public static function getSamplerThresholdNano(): int
+    {
+        $multiplicator = getenv('OTEL_BSP_MIN_SPAN_DURATION_THRESHOLD') ?: 1;
+
+        return $multiplicator * static::THRESHOLD_NANOS;
     }
 }
