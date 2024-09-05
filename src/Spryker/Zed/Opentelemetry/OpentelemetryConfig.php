@@ -7,7 +7,6 @@
 
 namespace Spryker\Zed\Opentelemetry;
 
-use Spryker\Shared\Config\Config;
 use Spryker\Zed\Kernel\AbstractBundleConfig;
 
 class OpentelemetryConfig extends AbstractBundleConfig
