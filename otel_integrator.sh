@@ -145,4 +145,4 @@ use Spryker\\\\Zed\\\\Opentelemetry\\\\Communication\\\\Plugin\\\\Console\\\\Ope
     fi
 fi
 
-composer update --ignore-platform-req=ext-grpc --ignore-platform-req=ext-opentelemetry --ignore-platform-req=ext-redis
+composer update
