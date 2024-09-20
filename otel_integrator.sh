@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Prerequisites: jq tool should be installed in the system.
+
 project_namespace=${1:-Pyz}
 
 wget https://raw.githubusercontent.com/spryker/opentelemetry/master/otel-autoload-example.php -O otel-autoload.php
