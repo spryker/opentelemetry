@@ -69,11 +69,11 @@ class OpentelemetryConfig extends AbstractBundleConfig
     public function getPathPatterns(): array
     {
         return [
-            '#^vendor/spryker/[^/]+/.*/.*/(Zed|Shared)/.*/(?!Persistence|Presentation)[^/]+/.*#',
-            '#^vendor/spryker/[^/]+/Glue.*#',
-            '#^vendor/spryker(?:/spryker)?-shop/[^/]+/.*#',
-            '#^vendor/spryker-eco/[^/]+/.*#',
-            '#^src/Pyz/.*#',
+            '#/vendor/spryker/[//]+/.*/.*/(Zed|Shared)/.*/(?!Persistence|Presentation)[//]+/.*#',
+            '#/vendor/spryker/[//]+/Glue.*#',
+            '#/vendor/spryker(?:/spryker)?-shop/[//]+/.*#',
+            '#/vendor/spryker-eco/[//]+/.*#',
+            '#/src/Pyz/.*#',
         ];
     }
 
@@ -123,5 +123,63 @@ class OpentelemetryConfig extends AbstractBundleConfig
         $multiplicator = getenv('OTEL_BSP_MIN_SPAN_DURATION_THRESHOLD') ?: 1;
 
         return $multiplicator * static::THRESHOLD_NANOS;
+    }
+
+    /**
+     * @api
+     *
+     * @return string
+     */
+    public static function getServiceNamespace(): string
+    {
+        return getenv('OTEL_SERVICE_NAMESPACE') ?: 'spryker';
+    }
+
+    /**
+     * @api
+     *
+     * @return string
+     */
+    public static function getServiceName(): string
+    {
+        return getenv('OTEL_SERVICE_NAME') ?: 'Test';
+    }
+
+    /**
+     * @api
+     *
+     * @return string
+     */
+    public static function getExporterEndpoint(): string
+    {
+        return getenv('OTEL_EXPORTER_OTLP_ENDPOINT') ?: 'http://collector:4317';
+    }
+
+    /**
+     * @return array
+     */
+    public static function getExcludedURLs(): array
+    {
+        $urls = getenv('OTEL_PHP_EXCLUDED_URLS') ?: [];
+
+        return explode(',', $urls);
+    }
+
+    public static function getServiceNameMapping(): array
+    {
+        $mapping = getenv('OTEL_SERVICE_NAME_MAPPING') ?: '{}';
+        $mapping = json_decode($mapping, true);
+
+        if ($mapping === []) {
+            return [
+                '/(?:https?:\/\/)?(yves)\./' => 'Yves',
+                '/(?:https?:\/\/)?(backoffice)\./' => 'Backoffice',
+                '/(?:https?:\/\/)?(glue)\./' => 'Legacy Glue',
+                '/(?:https?:\/\/)?(merchant)\./' => 'Merchant Portal',
+                '/(?:https?:\/\/)?(backend-gateway)\./' => 'Backend Gateway',
+                '/(?:https?:\/\/)?(glue-storefront)\./' => 'Glue Storefront',
+                '/(?:https?:\/\/)?(glue-backend)\./' => 'Glue Backend',
+            ];
+        }
     }
 }

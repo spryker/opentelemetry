@@ -23,26 +23,6 @@ class SamplerSpanFilter implements SpanFilterInterface
      */
     public static function filter(SpanInterface $span, bool $forceToShow = false): SpanInterface
     {
-        if (!$span instanceof ReadableSpanInterface) {
-            return $span;
-        }
-
-        $contextToChange = $span->getContext();
-        $isSampled = $contextToChange->isSampled();
-        $thresholdNanos = OpentelemetryConfig::getSamplerThresholdNano();
-        $reflectionProperty = new ReflectionProperty($contextToChange, 'isSampled');
-        $shouldBeSampled = $forceToShow ||
-            (
-                $isSampled
-                &&
-                !(
-                    $span->getDuration() < $thresholdNanos
-                    && $span->toSpanData()->getParentSpanId()
-                    && $span->toSpanData()->getStatus()->getCode() === StatusCode::STATUS_OK
-                )
-            );
-        $reflectionProperty->setValue($contextToChange, $shouldBeSampled);
-
         return $span;
     }
 }
