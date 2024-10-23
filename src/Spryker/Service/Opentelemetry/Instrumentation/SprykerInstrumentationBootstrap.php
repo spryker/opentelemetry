@@ -15,7 +15,6 @@ use OpenTelemetry\Contrib\Otlp\OtlpUtil;
 use OpenTelemetry\Contrib\Otlp\SpanExporter;
 use OpenTelemetry\SDK\Common\Attribute\Attributes;
 use OpenTelemetry\SDK\Metrics\MeterProviderFactory;
-use OpenTelemetry\SDK\Registry;
 use OpenTelemetry\SDK\Resource\ResourceInfo;
 use OpenTelemetry\SDK\Resource\ResourceInfoFactory;
 use OpenTelemetry\SDK\Sdk;
@@ -24,8 +23,6 @@ use OpenTelemetry\SDK\Trace\Sampler\ParentBased;
 use OpenTelemetry\SDK\Trace\TracerProvider;
 use OpenTelemetry\SDK\Trace\TracerProviderInterface;
 use OpenTelemetry\SemConv\ResourceAttributes;
-use Spryker\Service\Opentelemetry\Instrumentation\ResourceDetector\CloudResourceDetector;
-use Spryker\Service\Opentelemetry\Instrumentation\ResourceDetector\NameResourceDetector;
 use Spryker\Service\Opentelemetry\Instrumentation\SpanProcessor\PostFilterBatchSpanProcessor;
 use Spryker\Shared\Opentelemetry\Request\RequestProcessor;
 use Spryker\Zed\Opentelemetry\OpentelemetryConfig;
@@ -39,11 +36,6 @@ class SprykerInstrumentationBootstrap
      * @var string
      */
     public const NAME = 'spryker';
-
-    /**
-     * @var string
-     */
-    protected const INSTANCE_ID = 'instance.id';
 
     /**
      * @var string
@@ -118,7 +110,7 @@ class SprykerInstrumentationBootstrap
                 return $serviceName;
             }
         }
-        
+
         return 'Undefined service';
     }
 }

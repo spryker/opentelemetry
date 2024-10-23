@@ -13,4 +13,8 @@ if (extension_loaded('opentelemetry') === false) {
     return;
 }
 
+if (getenv('OTEL_SDK_DISABLED')) {
+    return;
+}
+
 SprykerInstrumentationBootstrap::register();
