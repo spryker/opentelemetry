@@ -69,11 +69,11 @@ class OpentelemetryConfig extends AbstractBundleConfig
     public function getPathPatterns(): array
     {
         return [
-            '#/vendor/spryker/[//]+/.*/.*/(Zed|Shared)/.*/(?!Persistence|Presentation)[//]+/.*#',
-            '#/vendor/spryker/[//]+/Glue.*#',
-            '#/vendor/spryker(?:/spryker)?-shop/[//]+/.*#',
-            '#/vendor/spryker-eco/[//]+/.*#',
-            '#/src/Pyz/.*#',
+            '#^vendor/spryker/[^/]+/.*/.*/(Zed|Shared)/.*/(?!Persistence|Presentation)[^/]+/.*#',
+            '#^vendor/spryker/[^/]+/Glue.*#',
+            '#^vendor/spryker(?:/spryker)?-shop/[^/]+/.*#',
+            '#^vendor/spryker-eco/[^/]+/.*#',
+            '#^src/Pyz/.*#',
         ];
     }
 
