@@ -182,4 +182,14 @@ class OpentelemetryConfig extends AbstractBundleConfig
             ];
         }
     }
+
+    /**
+     * @return float
+     */
+    public static function getSamplerProbability(): float
+    {
+        $probability = getenv('OTEL_TRACES_SAMPLER_ARG') ?: 1.0;
+
+        return (float)$probability;
+    }
 }

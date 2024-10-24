@@ -18,8 +18,8 @@ use OpenTelemetry\SDK\Metrics\MeterProviderFactory;
 use OpenTelemetry\SDK\Resource\ResourceInfo;
 use OpenTelemetry\SDK\Resource\ResourceInfoFactory;
 use OpenTelemetry\SDK\Sdk;
-use OpenTelemetry\SDK\Trace\Sampler\AlwaysOnSampler;
 use OpenTelemetry\SDK\Trace\Sampler\ParentBased;
+use OpenTelemetry\SDK\Trace\Sampler\TraceIdRatioBasedSampler;
 use OpenTelemetry\SDK\Trace\TracerProvider;
 use OpenTelemetry\SDK\Trace\TracerProviderInterface;
 use OpenTelemetry\SemConv\ResourceAttributes;
@@ -82,7 +82,7 @@ class SprykerInstrumentationBootstrap
                 ),
             )
             ->setResource($resource)
-            ->setSampler(new ParentBased(new AlwaysOnSampler()))
+            ->setSampler(new ParentBased(new TraceIdRatioBasedSampler(OpentelemetryConfig::getSamplerProbability())))
             ->build();
     }
 
@@ -100,6 +100,7 @@ class SprykerInstrumentationBootstrap
             if ($application === 'console') {
                 return 'CLI ZED';
             }
+
             return 'CLI ' . $application;
         }
 
