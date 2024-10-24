@@ -36,6 +36,7 @@ class OpentelemetryConfig extends AbstractBundleConfig
     {
         return [
             'Opentelemetry',
+            'OpenTelemetry',
             'Container',
             'Transfer',
             'Kernel',
@@ -108,6 +109,14 @@ class OpentelemetryConfig extends AbstractBundleConfig
             'yves_trace_id' => 'OTEL_YVES_TRACE_ID',
             'backend_gateway_trace_id' => 'OTEL_BACKEND_GATEWAY_TRACE_ID',
         ];
+    }
+
+    /**
+     * @return bool
+     */
+    public function areOnlyPublicMethodsInstrumented(): bool
+    {
+        return true;
     }
 
     /**

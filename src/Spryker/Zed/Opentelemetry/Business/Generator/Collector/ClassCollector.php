@@ -199,6 +199,9 @@ class ClassCollector implements ClassCollectorInterface
 
         for ($i = 0; $i < $tokensCount; $i++) {
             if ($tokens[$i][0] === T_FUNCTION) {
+                if (!$this->isMethodAllowed($tokens, $i)) {
+                    break;
+                }
                 $isAnonymousFunction = false;
                 for ($j = $i + 1; $j < $tokensCount; $j++) {
                     if ($tokens[$j] === '(') {
@@ -236,6 +239,27 @@ class ClassCollector implements ClassCollectorInterface
         }
 
         return $methods;
+    }
+
+    protected function isMethodAllowed(array $tokens, int $functionIndex): bool
+    {
+        if (!$this->config->areOnlyPublicMethodsInstrumented()) {
+            return true;
+        }
+
+        if (isset($tokens[$functionIndex - 2][0]) && in_array($tokens[$functionIndex - 2][0], [T_PROTECTED, T_PRIVATE], true)) {
+            return false;
+        }
+
+        if (isset($tokens[$functionIndex - 2][0])
+            && $tokens[$functionIndex - 2][0] === T_STATIC
+            && isset($tokens[$functionIndex - 3][0])
+            && in_array($tokens[$functionIndex - 3][0], [T_PROTECTED, T_PRIVATE], true)
+        ) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
