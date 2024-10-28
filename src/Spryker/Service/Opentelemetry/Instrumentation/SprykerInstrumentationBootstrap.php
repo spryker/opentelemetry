@@ -18,12 +18,11 @@ use OpenTelemetry\SDK\Metrics\MeterProviderFactory;
 use OpenTelemetry\SDK\Resource\ResourceInfo;
 use OpenTelemetry\SDK\Resource\ResourceInfoFactory;
 use OpenTelemetry\SDK\Sdk;
-use OpenTelemetry\SDK\Trace\Sampler\ParentBased;
-use OpenTelemetry\SDK\Trace\Sampler\TraceIdRatioBasedSampler;
-use OpenTelemetry\SDK\Trace\TracerProvider;
 use OpenTelemetry\SDK\Trace\TracerProviderInterface;
 use OpenTelemetry\SemConv\ResourceAttributes;
+use Spryker\Service\Opentelemetry\Instrumentation\Sampler\CriticalSpanTraceIdRatioSampler;
 use Spryker\Service\Opentelemetry\Instrumentation\SpanProcessor\PostFilterBatchSpanProcessor;
+use Spryker\Service\Opentelemetry\Instrumentation\Tracer\TracerProvider;
 use Spryker\Shared\Opentelemetry\Request\RequestProcessor;
 use Spryker\Zed\Opentelemetry\OpentelemetryConfig;
 
@@ -82,7 +81,7 @@ class SprykerInstrumentationBootstrap
                 ),
             )
             ->setResource($resource)
-            ->setSampler(new ParentBased(new TraceIdRatioBasedSampler(OpentelemetryConfig::getSamplerProbability())))
+            ->setSampler(new CriticalSpanTraceIdRatioSampler(OpentelemetryConfig::getSamplerProbability()))
             ->build();
     }
 

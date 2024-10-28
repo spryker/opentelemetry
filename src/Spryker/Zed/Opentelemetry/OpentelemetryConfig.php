@@ -190,6 +190,8 @@ class OpentelemetryConfig extends AbstractBundleConfig
                 '/(?:https?:\/\/)?(glue-backend)\./' => 'Glue Backend',
             ];
         }
+
+        return $mapping;
     }
 
     /**
