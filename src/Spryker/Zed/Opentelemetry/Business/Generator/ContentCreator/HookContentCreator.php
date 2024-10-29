@@ -98,7 +98,7 @@ class HookContentCreator implements HookContentCreatorInterface
                         ->setAttribute(\\OpenTelemetry\\SemConv\\TraceAttributes::CODE_LINENO, $lineno)
                         ->startSpan();
 
-                    \\OpenTelemetry\\Context\\Context::storage()->attach($span->storeInContext(\\OpenTelemetry\\Context\\Context::getCurrent()));
+                    \\OpenTelemetry\\Context\\Context::storage()->attach($span->storeInContext($context));
                 },
 
                 post: static function ($instance, array $params, $returnValue, ?\Throwable $exception) {
@@ -121,13 +121,11 @@ class HookContentCreator implements HookContentCreatorInterface
 
                     if (isset($exception)) {
                         $span->recordException($exception);
+                        $span->setAttribute(\'error_message\', isset($exception) ? $exception->getMessage() : \'\');
+                        $span->setAttribute(\'error_code\', isset($exception) ? $exception->getCode() : \'\');
                     }
 
-                    $span->setAttribute(\'error_message\', isset($exception) ? $exception->getMessage() : \'\');
-                    $span->setAttribute(\'error_code\', isset($exception) ? $exception->getCode() : \'\');
                     $span->setStatus(isset($exception) ? \\OpenTelemetry\\API\\Trace\\StatusCode::STATUS_ERROR : \\OpenTelemetry\\API\\Trace\\StatusCode::STATUS_OK);
-
-                    $span = \\Spryker\\Zed\\Opentelemetry\\Business\\Generator\\SpanFilter\\SamplerSpanFilter::filter($span);
 
                     $span->end();
                 }

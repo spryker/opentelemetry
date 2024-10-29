@@ -149,7 +149,6 @@ class SpanBuilder implements SpanBuilderInterface
                 $this->spanKind,
                 $this->attributesBuilder->build(),
                 $this->links,
-                $parentSpan,
             );
         $samplingDecision = $samplingResult->getDecision();
         $samplingResultTraceState = $samplingResult->getTraceState();

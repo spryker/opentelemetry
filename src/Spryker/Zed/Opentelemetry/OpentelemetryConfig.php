@@ -37,6 +37,9 @@ class OpentelemetryConfig extends AbstractBundleConfig
         return [
             'Opentelemetry',
             'OpenTelemetry',
+            'Dependency',
+            'Acl',
+            'AclEntity',
             'Container',
             'Transfer',
             'Kernel',
