@@ -11,10 +11,12 @@ use OpenTelemetry\API\Common\Time\Clock;
 use OpenTelemetry\API\Signals;
 use OpenTelemetry\API\Trace\Propagation\TraceContextPropagator;
 use OpenTelemetry\Contrib\Grpc\GrpcTransportFactory;
+use OpenTelemetry\Contrib\Otlp\MetricExporterFactory;
 use OpenTelemetry\Contrib\Otlp\OtlpUtil;
 use OpenTelemetry\Contrib\Otlp\SpanExporter;
 use OpenTelemetry\SDK\Common\Attribute\Attributes;
 use OpenTelemetry\SDK\Metrics\MeterProviderFactory;
+use OpenTelemetry\SDK\Registry;
 use OpenTelemetry\SDK\Resource\ResourceInfo;
 use OpenTelemetry\SDK\Resource\ResourceInfoFactory;
 use OpenTelemetry\SDK\Sdk;
@@ -52,6 +54,7 @@ class SprykerInstrumentationBootstrap
             ResourceAttributes::SERVICE_NAME => static::resolveServiceName(),
         ])));
 
+        Registry::registerMetricExporterFactory('otlp', MetricExporterFactory::class);
         $meterProvider = (new MeterProviderFactory())->create($resource);
 
         Sdk::builder()
