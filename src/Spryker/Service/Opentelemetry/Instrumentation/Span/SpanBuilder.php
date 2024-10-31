@@ -19,25 +19,25 @@ use OpenTelemetry\SDK\Trace\TracerSharedState;
 
 class SpanBuilder implements SpanBuilderInterface
 {
-    private ContextInterface|false|null $parentContext = null;
+    protected ContextInterface|false|null $parentContext = null;
 
     /**
      * @psalm-var SpanKind::KIND_*
      */
-    private int $spanKind = SpanKind::KIND_INTERNAL;
+    protected int $spanKind = SpanKind::KIND_INTERNAL;
 
     /** @var list<LinkInterface> */
-    private array $links = [];
+    protected array $links = [];
 
-    private AttributesBuilderInterface $attributesBuilder;
-    private int $totalNumberOfLinksAdded = 0;
-    private int $startEpochNanos = 0;
+    protected AttributesBuilderInterface $attributesBuilder;
+    protected int $totalNumberOfLinksAdded = 0;
+    protected int $startEpochNanos = 0;
 
     /** @param non-empty-string $spanName */
     public function __construct(
-        private readonly string $spanName,
-        private readonly InstrumentationScopeInterface $instrumentationScope,
-        private readonly TracerSharedState $tracerSharedState,
+        protected readonly string $spanName,
+        protected readonly InstrumentationScopeInterface $instrumentationScope,
+        protected readonly TracerSharedState $tracerSharedState,
     ) {
         $this->attributesBuilder = $this->tracerSharedState->getSpanLimits()->getAttributesFactory()->builder();
     }
