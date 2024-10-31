@@ -2,7 +2,6 @@
 
 namespace Spryker\Service\Opentelemetry\Instrumentation\Span;
 
-use OpenTelemetry\SDK\Common\Attribute\AttributesBuilder;
 use OpenTelemetry\SDK\Common\Attribute\AttributesBuilderInterface;
 use OpenTelemetry\SDK\Common\Attribute\AttributesFactoryInterface;
 use OpenTelemetry\SDK\Common\Attribute\AttributeValidator;

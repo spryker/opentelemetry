@@ -6,7 +6,6 @@ use OpenTelemetry\SDK\Trace\IdGeneratorInterface;
 use OpenTelemetry\SDK\Trace\RandomIdGenerator;
 use OpenTelemetry\SDK\Trace\SamplerInterface;
 use OpenTelemetry\SDK\Trace\SpanLimits;
-use OpenTelemetry\SDK\Trace\SpanLimitsBuilder;
 use OpenTelemetry\SDK\Trace\SpanProcessorInterface;
 use OpenTelemetry\SDK\Trace\TracerProviderInterface;
 use OpenTelemetry\SDK\Trace\TracerSharedState;
@@ -18,6 +17,7 @@ use OpenTelemetry\SDK\Common\Instrumentation\InstrumentationScopeFactory;
 use OpenTelemetry\SDK\Common\Instrumentation\InstrumentationScopeFactoryInterface;
 use OpenTelemetry\SDK\Common\InstrumentationScope\Configurator;
 use OpenTelemetry\SDK\Resource\ResourceInfo;
+use Spryker\Service\Opentelemetry\Instrumentation\Span\SpanLimitBuilder;
 use WeakMap;
 
 class TracerProvider implements TracerProviderInterface
@@ -56,7 +56,7 @@ class TracerProvider implements TracerProviderInterface
         protected ?Configurator $configurator = null,
     ) {
         $idGenerator ??= new RandomIdGenerator();
-        $spanLimits ??= (new SpanLimitsBuilder())->build();
+        $spanLimits ??= (new SpanLimitBuilder())->build();
 
         $this->tracerSharedState = new TracerSharedState(
             $idGenerator,

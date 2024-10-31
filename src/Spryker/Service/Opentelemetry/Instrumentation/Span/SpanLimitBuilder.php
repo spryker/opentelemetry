@@ -2,7 +2,6 @@
 
 namespace Spryker\Service\Opentelemetry\Instrumentation\Span;
 
-use OpenTelemetry\SDK\Common\Attribute\Attributes;
 use OpenTelemetry\SDK\Common\Attribute\FilteredAttributesFactory;
 use OpenTelemetry\SDK\Common\Configuration\Configuration;
 use OpenTelemetry\SDK\Common\Configuration\Variables as Env;

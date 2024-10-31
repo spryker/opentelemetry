@@ -3,7 +3,6 @@
 namespace Spryker\Service\Opentelemetry\Instrumentation\Span;
 
 use IteratorAggregate;
-use OpenTelemetry\SDK\Common\Attribute\AttributesFactory;
 use OpenTelemetry\SDK\Common\Attribute\AttributesFactoryInterface;
 use OpenTelemetry\SDK\Common\Attribute\AttributesInterface;
 use Traversable;
