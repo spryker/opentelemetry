@@ -1,22 +1,25 @@
 <?php
 
+/**
+ * Copyright © 2016-present Spryker Systems GmbH. All rights reserved.
+ * Use of this software requires acceptance of the Evaluation License Agreement. See LICENSE file.
+ */
+
 namespace Spryker\Service\Opentelemetry\Instrumentation\Tracer;
 
-use OpenTelemetry\SDK\Trace\IdGeneratorInterface;
-use OpenTelemetry\SDK\Trace\RandomIdGenerator;
-use OpenTelemetry\SDK\Trace\SamplerInterface;
-use OpenTelemetry\SDK\Trace\SpanLimits;
-use OpenTelemetry\SDK\Trace\SpanProcessorInterface;
-use OpenTelemetry\SDK\Trace\TracerProviderInterface;
-use OpenTelemetry\SDK\Trace\TracerSharedState;
-use OpenTelemetry\API\Trace as API;
 use OpenTelemetry\API\Trace\NoopTracer;
-use OpenTelemetry\SDK\Common\Attribute\Attributes;
+use OpenTelemetry\API\Trace\TracerInterface;
 use OpenTelemetry\SDK\Common\Future\CancellationInterface;
 use OpenTelemetry\SDK\Common\Instrumentation\InstrumentationScopeFactory;
 use OpenTelemetry\SDK\Common\Instrumentation\InstrumentationScopeFactoryInterface;
 use OpenTelemetry\SDK\Common\InstrumentationScope\Configurator;
 use OpenTelemetry\SDK\Resource\ResourceInfo;
+use OpenTelemetry\SDK\Trace\RandomIdGenerator;
+use OpenTelemetry\SDK\Trace\SamplerInterface;
+use OpenTelemetry\SDK\Trace\SpanProcessorInterface;
+use OpenTelemetry\SDK\Trace\TracerProviderInterface;
+use OpenTelemetry\SDK\Trace\TracerSharedState;
+use Spryker\Service\Opentelemetry\Instrumentation\Span\Attributes;
 use Spryker\Service\Opentelemetry\Instrumentation\Span\SpanLimitBuilder;
 use WeakMap;
 
@@ -38,6 +41,11 @@ class TracerProvider implements TracerProviderInterface
     protected WeakMap $tracers;
 
     /**
+     * @var \Spryker\Service\Opentelemetry\Instrumentation\Tracer\Tracer|null
+     */
+    protected static $tracer = null;
+
+    /**
      * @param \OpenTelemetry\SDK\Trace\SpanProcessorInterface $spanProcessor
      * @param \OpenTelemetry\SDK\Trace\SamplerInterface $sampler
      * @param \OpenTelemetry\SDK\Resource\ResourceInfo $resource
@@ -50,13 +58,10 @@ class TracerProvider implements TracerProviderInterface
         SpanProcessorInterface $spanProcessor,
         SamplerInterface $sampler,
         ResourceInfo $resource,
-        ?SpanLimits $spanLimits = null,
-        ?IdGeneratorInterface $idGenerator = null,
-        ?InstrumentationScopeFactoryInterface $instrumentationScopeFactory = null,
         protected ?Configurator $configurator = null,
     ) {
-        $idGenerator ??= new RandomIdGenerator();
-        $spanLimits ??= (new SpanLimitBuilder())->build();
+        $idGenerator = new RandomIdGenerator();
+        $spanLimits = (new SpanLimitBuilder())->build();
 
         $this->tracerSharedState = new TracerSharedState(
             $idGenerator,
@@ -65,7 +70,7 @@ class TracerProvider implements TracerProviderInterface
             $sampler,
             [$spanProcessor],
         );
-        $this->instrumentationScopeFactory = $instrumentationScopeFactory ?? new InstrumentationScopeFactory(Attributes::factory());
+        $this->instrumentationScopeFactory = new InstrumentationScopeFactory(Attributes::factory());
         $this->tracers = new WeakMap();
     }
 
@@ -83,7 +88,7 @@ class TracerProvider implements TracerProviderInterface
      * @param string $name
      * @param string|null $version
      * @param string|null $schemaUrl
-     * @param iterable $attributes
+     * @param iterable|array $attributes
      *
      * @return \OpenTelemetry\API\Trace\TracerInterface
      */
@@ -92,9 +97,13 @@ class TracerProvider implements TracerProviderInterface
         ?string $version = null,
         ?string $schemaUrl = null,
         iterable $attributes = [],
-    ): API\TracerInterface {
+    ): TracerInterface {
         if ($this->tracerSharedState->hasShutdown()) {
             return NoopTracer::getInstance();
+        }
+
+        if (static::$tracer) {
+            return static::$tracer;
         }
 
         $scope = $this->instrumentationScopeFactory->create($name, $version, $schemaUrl, $attributes);
@@ -105,7 +114,9 @@ class TracerProvider implements TracerProviderInterface
         );
         $this->tracers->offsetSet($tracer, null);
 
-        return $tracer;
+        static::$tracer = $tracer;
+
+        return static::$tracer;
     }
 
     /**

@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * Copyright © 2016-present Spryker Systems GmbH. All rights reserved.
+ * Use of this software requires acceptance of the Evaluation License Agreement. See LICENSE file.
+ */
+
 namespace Spryker\Service\Opentelemetry\Instrumentation\SpanProcessor;
 
 use OpenTelemetry\API\Trace\StatusCode;
@@ -16,7 +21,8 @@ class PostFilterBatchSpanProcessor extends BatchSpanProcessor
      */
     public function onEnd(ReadableSpanInterface $span): void
     {
-        if ($span->getDuration() < OpentelemetryConfig::getSamplerThresholdNano()
+        if (
+            $span->getDuration() < OpentelemetryConfig::getSamplerThresholdNano()
             && $span->toSpanData()->getParentSpanId()
             && $span->toSpanData()->getStatus()->getCode() === StatusCode::STATUS_OK
         ) {

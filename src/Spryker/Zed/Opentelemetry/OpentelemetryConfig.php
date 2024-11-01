@@ -13,16 +13,9 @@ use Spryker\Zed\Kernel\AbstractBundleConfig;
 class OpentelemetryConfig extends AbstractBundleConfig
 {
     /**
-     * Specification:
-     * - The threshold in nanoseconds for the span to be sampled.
-     *
-     * @api
-     *
-     * @deprecated Will be removed as a public API. Please use getSamplerThresholdNano() instead.
-     *
      * @var int
      */
-    public const THRESHOLD_NANOS = 1000000;
+    protected const THRESHOLD_NANOS = 1000000;
 
     /**
      * Specification:
@@ -115,6 +108,11 @@ class OpentelemetryConfig extends AbstractBundleConfig
     }
 
     /**
+     * Specification:
+     * - Set to false if you want to instrument all methods, including private and protected ones.
+     *
+     * @api
+     *
      * @return bool
      */
     public function areOnlyPublicMethodsInstrumented(): bool
@@ -152,23 +150,15 @@ class OpentelemetryConfig extends AbstractBundleConfig
      *
      * @return string
      */
-    public static function getServiceName(): string
-    {
-        return getenv('OTEL_SERVICE_NAME') ?: 'Test';
-    }
-
-    /**
-     * @api
-     *
-     * @return string
-     */
     public static function getExporterEndpoint(): string
     {
         return getenv('OTEL_EXPORTER_OTLP_ENDPOINT') ?: 'http://collector:4317';
     }
 
     /**
-     * @return array
+     * @api
+     *
+     * @return array<string>
      */
     public static function getExcludedURLs(): array
     {
@@ -177,6 +167,11 @@ class OpentelemetryConfig extends AbstractBundleConfig
         return explode(',', $urls);
     }
 
+    /**
+     * @api
+     *
+     * @return array<string>
+     */
     public static function getServiceNameMapping(): array
     {
         $mapping = getenv('OTEL_SERVICE_NAME_MAPPING') ?: '{}';
@@ -198,6 +193,18 @@ class OpentelemetryConfig extends AbstractBundleConfig
     }
 
     /**
+     * @api
+     *
+     * @return string
+     */
+    public static function getDefaultServiceName(): string
+    {
+        return getenv('OTEL_DEFAULT_SERVICE_NAME') ?: 'Default Service';
+    }
+
+    /**
+     * @api
+     *
      * @return float
      */
     public static function getSamplerProbability(): float

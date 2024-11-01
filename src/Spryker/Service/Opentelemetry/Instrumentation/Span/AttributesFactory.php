@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * Copyright © 2016-present Spryker Systems GmbH. All rights reserved.
+ * Use of this software requires acceptance of the Evaluation License Agreement. See LICENSE file.
+ */
+
 namespace Spryker\Service\Opentelemetry\Instrumentation\Span;
 
 use OpenTelemetry\SDK\Common\Attribute\AttributesBuilderInterface;
@@ -7,14 +12,24 @@ use OpenTelemetry\SDK\Common\Attribute\AttributesFactoryInterface;
 use OpenTelemetry\SDK\Common\Attribute\AttributeValidator;
 use OpenTelemetry\SDK\Common\Attribute\AttributeValidatorInterface;
 
-final class AttributesFactory implements AttributesFactoryInterface
+class AttributesFactory implements AttributesFactoryInterface
 {
+    /**
+     * @param int|null $attributeCountLimit
+     * @param int|null $attributeValueLengthLimit
+     */
     public function __construct(
-        private readonly ?int $attributeCountLimit = null,
-        private readonly ?int $attributeValueLengthLimit = null,
+        protected ?int $attributeCountLimit = null,
+        protected ?int $attributeValueLengthLimit = null,
     ) {
     }
 
+    /**
+     * @param iterable $attributes
+     * @param \OpenTelemetry\SDK\Common\Attribute\AttributeValidatorInterface|null $attributeValidator
+     *
+     * @return \OpenTelemetry\SDK\Common\Attribute\AttributesBuilderInterface
+     */
     public function builder(iterable $attributes = [], ?AttributeValidatorInterface $attributeValidator = null): AttributesBuilderInterface
     {
         $builder = new AttributesBuilder(

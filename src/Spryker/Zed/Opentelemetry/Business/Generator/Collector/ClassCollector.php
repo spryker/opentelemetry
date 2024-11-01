@@ -243,6 +243,17 @@ class ClassCollector implements ClassCollectorInterface
 
     protected function isMethodAllowed(array $tokens, int $functionIndex): bool
     {
+        return $this->checkForPublicMethods($tokens, $functionIndex) && $this->checkForSimpleMethods($tokens, $functionIndex);
+    }
+
+    /**
+     * @param array $tokens
+     * @param int $functionIndex
+     *
+     * @return bool
+     */
+    protected function checkForPublicMethods(array $tokens, int $functionIndex): bool
+    {
         if (!$this->config->areOnlyPublicMethodsInstrumented()) {
             return true;
         }
@@ -257,6 +268,32 @@ class ClassCollector implements ClassCollectorInterface
             && in_array($tokens[$functionIndex - 3][0], [T_PROTECTED, T_PRIVATE], true)
         ) {
             return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * @param array $tokens
+     * @param int $functionIndex
+     *
+     * @return bool
+     */
+    protected function checkForSimpleMethods(array $tokens, int $functionIndex): bool
+    {
+        for ($i = $functionIndex + 1; $i < count($tokens); $i++) {
+            if ($tokens[$i] === '{') {
+                $count = 0;
+                for ($j = $i + 1; $j < count($tokens); $j++) {
+                    $count++;
+                    if ($count < 3 && $tokens[$j][0] === T_RETURN && in_array($tokens[$j + 2][0], [T_STRING, T_ARRAY, T_NEW, ], true)) {
+                        return false;
+                    }
+                    if ($tokens[$j] === '}') {
+                        return true;
+                    }
+                }
+            }
         }
 
         return true;

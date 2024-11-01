@@ -1,10 +1,16 @@
 <?php
 
+/**
+ * Copyright © 2016-present Spryker Systems GmbH. All rights reserved.
+ * Use of this software requires acceptance of the Evaluation License Agreement. See LICENSE file.
+ */
+
 namespace Spryker\Service\Opentelemetry\Instrumentation\Span;
 
 use OpenTelemetry\API\Trace\SpanBuilderInterface;
 use OpenTelemetry\API\Trace\SpanContext;
 use OpenTelemetry\API\Trace\SpanContextInterface;
+use OpenTelemetry\API\Trace\SpanInterface;
 use OpenTelemetry\API\Trace\SpanKind;
 use OpenTelemetry\API\Trace\TraceFlags;
 use OpenTelemetry\Context\Context;
@@ -12,37 +18,61 @@ use OpenTelemetry\Context\ContextInterface;
 use OpenTelemetry\SDK\Common\Attribute\AttributesBuilderInterface;
 use OpenTelemetry\SDK\Common\Instrumentation\InstrumentationScopeInterface;
 use OpenTelemetry\SDK\Trace\Link;
-use OpenTelemetry\SDK\Trace\LinkInterface;
 use OpenTelemetry\SDK\Trace\SamplingResult;
 use OpenTelemetry\SDK\Trace\Span;
 use OpenTelemetry\SDK\Trace\TracerSharedState;
+use Spryker\Service\Opentelemetry\Instrumentation\Sampler\ParentSpanAwareSamplerInterface;
 
 class SpanBuilder implements SpanBuilderInterface
 {
+    /**
+     * @var \OpenTelemetry\Context\ContextInterface|false|null
+     */
     protected ContextInterface|false|null $parentContext = null;
 
     /**
-     * @psalm-var SpanKind::KIND_*
+     * @var int
      */
     protected int $spanKind = SpanKind::KIND_INTERNAL;
 
-    /** @var list<LinkInterface> */
+    /**
+     * @var array<\OpenTelemetry\SDK\Trace\LinkInterface>
+     */
     protected array $links = [];
 
+    /**
+     * @var \OpenTelemetry\SDK\Common\Attribute\AttributesBuilderInterface
+     */
     protected AttributesBuilderInterface $attributesBuilder;
+
+    /**
+     * @var int
+     */
     protected int $totalNumberOfLinksAdded = 0;
+
+    /**
+     * @var int
+     */
     protected int $startEpochNanos = 0;
 
-    /** @param non-empty-string $spanName */
+    /**
+     * @param string $spanName
+     * @param \OpenTelemetry\SDK\Common\Instrumentation\InstrumentationScopeInterface $instrumentationScope
+     * @param \OpenTelemetry\SDK\Trace\TracerSharedState $tracerSharedState
+     */
     public function __construct(
-        protected readonly string $spanName,
-        protected readonly InstrumentationScopeInterface $instrumentationScope,
-        protected readonly TracerSharedState $tracerSharedState,
+        protected string $spanName,
+        protected InstrumentationScopeInterface $instrumentationScope,
+        protected TracerSharedState $tracerSharedState,
     ) {
         $this->attributesBuilder = $this->tracerSharedState->getSpanLimits()->getAttributesFactory()->builder();
     }
 
-    /** @inheritDoc */
+    /**
+     * @param \OpenTelemetry\Context\ContextInterface|false|null $context
+     *
+     * @return \OpenTelemetry\API\Trace\SpanBuilderInterface
+     */
     public function setParent(ContextInterface|false|null $context): SpanBuilderInterface
     {
         $this->parentContext = $context;
@@ -80,15 +110,24 @@ class SpanBuilder implements SpanBuilderInterface
         return $this;
     }
 
-    /** @inheritDoc */
-    public function setAttribute(string $key, mixed $value): SpanBuilderInterface
+    /**
+     * @param string $key
+     * @param mixed $value
+     *
+     * @return \OpenTelemetry\API\Trace\SpanBuilderInterface
+     */
+    public function setAttribute(string $key, $value): SpanBuilderInterface
     {
         $this->attributesBuilder[$key] = $value;
 
         return $this;
     }
 
-    /** @inheritDoc */
+    /**
+     * @param iterable $attributes
+     *
+     * @return \OpenTelemetry\API\Trace\SpanBuilderInterface
+     */
     public function setAttributes(iterable $attributes): SpanBuilderInterface
     {
         foreach ($attributes as $key => $value) {
@@ -99,9 +138,9 @@ class SpanBuilder implements SpanBuilderInterface
     }
 
     /**
-     * @inheritDoc
+     * @param int $spanKind
      *
-     * @psalm-param SpanKind::KIND_* $spanKind
+     * @return \OpenTelemetry\API\Trace\SpanBuilderInterface
      */
     public function setSpanKind(int $spanKind): SpanBuilderInterface
     {
@@ -110,10 +149,14 @@ class SpanBuilder implements SpanBuilderInterface
         return $this;
     }
 
-    /** @inheritDoc */
+    /**
+     * @param int $timestampNanos
+     *
+     * @return \OpenTelemetry\API\Trace\SpanBuilderInterface
+     */
     public function setStartTimestamp(int $timestampNanos): SpanBuilderInterface
     {
-        if (0 > $timestampNanos) {
+        if ($timestampNanos < 0) {
             return $this;
         }
 
@@ -122,51 +165,31 @@ class SpanBuilder implements SpanBuilderInterface
         return $this;
     }
 
-    /** @inheritDoc */
-    public function startSpan(): \OpenTelemetry\API\Trace\SpanInterface
+    /**
+     * @return \OpenTelemetry\API\Trace\SpanInterface
+     */
+    public function startSpan(): SpanInterface
     {
         $parentContext = Context::resolve($this->parentContext);
         $parentSpan = Span::fromContext($parentContext);
         $parentSpanContext = $parentSpan->getContext();
 
         $spanId = $this->tracerSharedState->getIdGenerator()->generateSpanId();
+        $traceId = $parentSpanContext->isValid() ? $parentSpanContext->getTraceId() : $this->tracerSharedState->getIdGenerator()->generateTraceId();
 
-        if (!$parentSpanContext->isValid()) {
-            $traceId = $this->tracerSharedState->getIdGenerator()->generateTraceId();
-        } else {
-            $traceId = $parentSpanContext->getTraceId();
-        }
-
-        $sampler = $this
-            ->tracerSharedState
-            ->getSampler();
-        $sampler->addParentSpan($parentSpan);
-        $samplingResult = $sampler
-            ->shouldSample(
-                $parentContext,
-                $traceId,
-                $this->spanName,
-                $this->spanKind,
-                $this->attributesBuilder->build(),
-                $this->links,
-            );
+        $samplingResult = $this->getSamplingResult($parentSpan, $parentContext, $traceId);
         $samplingDecision = $samplingResult->getDecision();
         $samplingResultTraceState = $samplingResult->getTraceState();
 
         $spanContext = SpanContext::create(
             $traceId,
             $spanId,
-            SamplingResult::RECORD_AND_SAMPLE === $samplingDecision ? TraceFlags::SAMPLED : TraceFlags::DEFAULT,
+            $samplingDecision === SamplingResult::RECORD_AND_SAMPLE ? TraceFlags::SAMPLED : TraceFlags::DEFAULT,
             $samplingResultTraceState,
         );
 
         if (!in_array($samplingDecision, [SamplingResult::RECORD_AND_SAMPLE, SamplingResult::RECORD_ONLY], true)) {
             return Span::wrap($spanContext);
-        }
-
-        $attributesBuilder = clone $this->attributesBuilder;
-        foreach ($samplingResult->getAttributes() as $key => $value) {
-            $attributesBuilder[$key] = $value;
         }
 
         return Span::startSpan(
@@ -179,10 +202,38 @@ class SpanBuilder implements SpanBuilderInterface
             $this->tracerSharedState->getSpanLimits(),
             $this->tracerSharedState->getSpanProcessor(),
             $this->tracerSharedState->getResource(),
-            $attributesBuilder,
+            $this->attributesBuilder,
             $this->links,
             $this->totalNumberOfLinksAdded,
             $this->startEpochNanos,
         );
+    }
+
+    /**
+     * @param \OpenTelemetry\API\Trace\SpanInterface $parentSpan
+     * @param \OpenTelemetry\Context\ContextInterface $parentContext
+     * @param string $traceId
+     *
+     * @return \OpenTelemetry\SDK\Trace\SamplingResult
+     */
+    protected function getSamplingResult(SpanInterface $parentSpan, ContextInterface $parentContext, string $traceId): SamplingResult
+    {
+        $sampler = $this
+            ->tracerSharedState
+            ->getSampler();
+
+        if ($sampler instanceof ParentSpanAwareSamplerInterface) {
+            $sampler->addParentSpan($parentSpan);
+        }
+
+        return $sampler
+            ->shouldSample(
+                $parentContext,
+                $traceId,
+                $this->spanName,
+                $this->spanKind,
+                $this->attributesBuilder->build(),
+                $this->links,
+            );
     }
 }

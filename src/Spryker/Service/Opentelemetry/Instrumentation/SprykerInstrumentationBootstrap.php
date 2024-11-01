@@ -11,15 +11,17 @@ use OpenTelemetry\API\Common\Time\Clock;
 use OpenTelemetry\API\Signals;
 use OpenTelemetry\API\Trace\Propagation\TraceContextPropagator;
 use OpenTelemetry\Contrib\Grpc\GrpcTransportFactory;
-use OpenTelemetry\Contrib\Otlp\MetricExporterFactory;
 use OpenTelemetry\Contrib\Otlp\OtlpUtil;
 use OpenTelemetry\Contrib\Otlp\SpanExporter;
 use OpenTelemetry\SDK\Common\Attribute\Attributes;
 use OpenTelemetry\SDK\Metrics\MeterProviderFactory;
-use OpenTelemetry\SDK\Registry;
+use OpenTelemetry\SDK\Metrics\MeterProviderInterface;
 use OpenTelemetry\SDK\Resource\ResourceInfo;
 use OpenTelemetry\SDK\Resource\ResourceInfoFactory;
 use OpenTelemetry\SDK\Sdk;
+use OpenTelemetry\SDK\Trace\SamplerInterface;
+use OpenTelemetry\SDK\Trace\SpanExporterInterface;
+use OpenTelemetry\SDK\Trace\SpanProcessorInterface;
 use OpenTelemetry\SDK\Trace\TracerProviderInterface;
 use OpenTelemetry\SemConv\ResourceAttributes;
 use Spryker\Service\Opentelemetry\Instrumentation\Sampler\CriticalSpanTraceIdRatioSampler;
@@ -48,44 +50,79 @@ class SprykerInstrumentationBootstrap
      */
     public static function register(): void
     {
-        $resource = ResourceInfoFactory::defaultResource()->merge(ResourceInfo::create(Attributes::create([
-            ResourceAttributes::SERVICE_NAMESPACE => OpentelemetryConfig::getServiceNamespace(),
-            ResourceAttributes::SERVICE_VERSION => static::INSTRUMENTATION_VERSION,
-            ResourceAttributes::SERVICE_NAME => static::resolveServiceName(),
-        ])));
-
-        Registry::registerMetricExporterFactory('otlp', MetricExporterFactory::class);
-        $meterProvider = (new MeterProviderFactory())->create($resource);
+        $resource = static::createResource();
 
         Sdk::builder()
             ->setTracerProvider(static::createTracerProvider($resource))
-            ->setMeterProvider($meterProvider)
+            ->setMeterProvider(static::createMeterProvider($resource))
             ->setPropagator(TraceContextPropagator::getInstance())
             ->setAutoShutdown(true)
             ->buildAndRegisterGlobal();
     }
 
     /**
-     * @param $resource
+     * @return \OpenTelemetry\SDK\Resource\ResourceInfo
+     */
+    protected static function createResource(): ResourceInfo
+    {
+        return ResourceInfoFactory::defaultResource()->merge(ResourceInfo::create(Attributes::create([
+            ResourceAttributes::SERVICE_NAMESPACE => OpentelemetryConfig::getServiceNamespace(),
+            ResourceAttributes::SERVICE_VERSION => static::INSTRUMENTATION_VERSION,
+            ResourceAttributes::SERVICE_NAME => static::resolveServiceName(),
+        ])));
+    }
+
+    /**
+     * @param \OpenTelemetry\SDK\Resource\ResourceInfo $resource
+     *
+     * @return \OpenTelemetry\SDK\Metrics\MeterProviderInterface
+     */
+    protected static function createMeterProvider(ResourceInfo $resource): MeterProviderInterface
+    {
+        return (new MeterProviderFactory())->create($resource);
+    }
+
+    /**
+     * @param \OpenTelemetry\SDK\Resource\ResourceInfo $resource
      *
      * @return \OpenTelemetry\SDK\Trace\TracerProviderInterface
      */
-    protected static function createTracerProvider($resource): TracerProviderInterface
+    protected static function createTracerProvider(ResourceInfo $resource): TracerProviderInterface
     {
-        $spanExporter = new SpanExporter(
-            (new GrpcTransportFactory())->create(OpentelemetryConfig::getExporterEndpoint() . OtlpUtil::method(Signals::TRACE))
-        );
-
         return TracerProvider::builder()
-            ->addSpanProcessor(
-                new PostFilterBatchSpanProcessor(
-                    $spanExporter,
-                    Clock::getDefault(),
-                ),
-            )
+            ->addSpanProcessor(static::createSpanProcessor())
             ->setResource($resource)
-            ->setSampler(new CriticalSpanTraceIdRatioSampler(OpentelemetryConfig::getSamplerProbability()))
+            ->setSampler(static::createSampler())
             ->build();
+    }
+
+    /**
+     * @return \OpenTelemetry\SDK\Trace\SpanExporterInterface
+     */
+    protected static function createSpanExporter(): SpanExporterInterface
+    {
+        return new SpanExporter(
+            (new GrpcTransportFactory())->create(OpentelemetryConfig::getExporterEndpoint() . OtlpUtil::method(Signals::TRACE)),
+        );
+    }
+
+    /**
+     * @return \OpenTelemetry\SDK\Trace\SpanProcessorInterface
+     */
+    protected static function createSpanProcessor(): SpanProcessorInterface
+    {
+        return new PostFilterBatchSpanProcessor(
+            static::createSpanExporter(),
+            Clock::getDefault(),
+        );
+    }
+
+    /**
+     * @return \OpenTelemetry\API\Trace\SamplerInterface
+     */
+    protected static function createSampler(): SamplerInterface
+    {
+        return new CriticalSpanTraceIdRatioSampler(OpentelemetryConfig::getSamplerProbability());
     }
 
     /**
@@ -103,7 +140,7 @@ class SprykerInstrumentationBootstrap
                 return 'CLI ZED';
             }
 
-            return 'CLI ' . $application;
+            return sprintf('CLI %s', strtoupper($application));
         }
 
         $mapping = OpentelemetryConfig::getServiceNameMapping();
@@ -114,6 +151,6 @@ class SprykerInstrumentationBootstrap
             }
         }
 
-        return 'Undefined service';
+        return OpentelemetryConfig::getDefaultServiceName();
     }
 }

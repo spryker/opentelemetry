@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * Copyright © 2016-present Spryker Systems GmbH. All rights reserved.
+ * Use of this software requires acceptance of the Evaluation License Agreement. See LICENSE file.
+ */
+
 namespace Spryker\Service\Opentelemetry\Instrumentation\Span;
 
 use OpenTelemetry\SDK\Common\Attribute\AttributesBuilderInterface;
@@ -10,15 +15,28 @@ use OpenTelemetry\SemConv\TraceAttributes;
 
 class AttributesBuilder implements AttributesBuilderInterface
 {
-    public function __construct(private array $attributes, private ?int $attributeCountLimit, private ?int $attributeValueLengthLimit, private int $droppedAttributesCount, private AttributeValidatorInterface $attributeValidator = new AttributeValidator())
-    {
-    }
+    public function __construct(
+        protected array $attributes,
+        protected ?int $attributeCountLimit,
+        protected ?int $attributeValueLengthLimit,
+        protected int $droppedAttributesCount,
+        protected AttributeValidatorInterface $attributeValidator = new AttributeValidator()
+    ){}
 
+    /**
+     * @return \OpenTelemetry\SDK\Common\Attribute\AttributesInterface
+     */
     public function build(): AttributesInterface
     {
         return new Attributes($this->attributes, $this->droppedAttributesCount);
     }
 
+    /**
+     * @param \OpenTelemetry\SDK\Common\Attribute\AttributesInterface $old
+     * @param \OpenTelemetry\SDK\Common\Attribute\AttributesInterface $updating
+     *
+     * @return \OpenTelemetry\SDK\Common\Attribute\AttributesInterface
+     */
     public function merge(AttributesInterface $old, AttributesInterface $updating): AttributesInterface
     {
         $new = $old->toArray();
@@ -34,21 +52,31 @@ class AttributesBuilder implements AttributesBuilderInterface
         return new Attributes($new, $dropped);
     }
 
+    /**
+     * @param mixed $offset
+     *
+     * @return bool
+     */
     public function offsetExists($offset): bool
     {
         return array_key_exists($offset, $this->attributes);
     }
 
     /**
-     * @phan-suppress PhanUndeclaredClassAttribute
+     * @param mixed $offset
+     *
+     * @return mixed
      */
-    public function offsetGet($offset): mixed
+    public function offsetGet($offset)
     {
         return $this->attributes[$offset] ?? null;
     }
 
     /**
-     * @phan-suppress PhanUndeclaredClassAttribute
+     * @param mixed $offset
+     * @param mixed $value
+     *
+     * @return void
      */
     public function offsetSet($offset, $value): void
     {
@@ -75,7 +103,9 @@ class AttributesBuilder implements AttributesBuilderInterface
     }
 
     /**
-     * @phan-suppress PhanUndeclaredClassAttribute
+     * @param mixed $offset
+     *
+     * @return void
      */
     public function offsetUnset($offset): void
     {
@@ -83,7 +113,7 @@ class AttributesBuilder implements AttributesBuilderInterface
     }
 
     /**
-     * @return array
+     * @return array<string>
      */
     protected function getSafeAttributes(): array
     {

@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * Copyright © 2016-present Spryker Systems GmbH. All rights reserved.
+ * Use of this software requires acceptance of the Evaluation License Agreement. See LICENSE file.
+ */
+
 namespace Spryker\Service\Opentelemetry\Instrumentation\Span;
 
 use OpenTelemetry\SDK\Common\Attribute\FilteredAttributesFactory;
@@ -10,30 +15,42 @@ use OpenTelemetry\SemConv\TraceAttributes;
 
 class SpanLimitBuilder
 {
-    /** @var ?int Maximum allowed attribute count per record */
+    /**
+     * @var int|null
+     */
     protected ?int $attributeCountLimit = null;
 
-    /** @var ?int Maximum allowed attribute value length */
+    /**
+     * @var int|null
+     */
     protected ?int $attributeValueLengthLimit = null;
 
-    /** @var ?int Maximum allowed span event count */
+    /**
+     * @var int|null
+     */
     protected ?int $eventCountLimit = null;
 
-    /** @var ?int Maximum allowed span link count */
+    /**
+     * @var int|null
+     */
     protected ?int $linkCountLimit = null;
 
-    /** @var ?int Maximum allowed attribute per span event count */
+    /**
+     * @var int|null
+     */
     protected ?int $attributePerEventCountLimit = null;
 
-    /** @var ?int Maximum allowed attribute per span link count */
+    /**
+     * @var int|null
+     */
     protected ?int $attributePerLinkCountLimit = null;
 
-    protected bool $retainGeneralIdentityAttributes = false;
-
     /**
-     * @param int $attributeCountLimit Maximum allowed attribute count per record
+     * @param int $attributeCountLimit
+     *
+     * @return $this
      */
-    public function setAttributeCountLimit(int $attributeCountLimit): SpanLimitsBuilder
+    public function setAttributeCountLimit(int $attributeCountLimit)
     {
         $this->attributeCountLimit = $attributeCountLimit;
 
@@ -41,9 +58,11 @@ class SpanLimitBuilder
     }
 
     /**
-     * @param int $attributeValueLengthLimit Maximum allowed attribute value length
+     * @param int $attributeValueLengthLimit
+     *
+     * @return $this
      */
-    public function setAttributeValueLengthLimit(int $attributeValueLengthLimit): SpanLimitsBuilder
+    public function setAttributeValueLengthLimit(int $attributeValueLengthLimit)
     {
         $this->attributeValueLengthLimit = $attributeValueLengthLimit;
 
@@ -51,9 +70,11 @@ class SpanLimitBuilder
     }
 
     /**
-     * @param int $eventCountLimit Maximum allowed span event count
+     * @param int $eventCountLimit
+     *
+     * @return $this
      */
-    public function setEventCountLimit(int $eventCountLimit): SpanLimitsBuilder
+    public function setEventCountLimit(int $eventCountLimit)
     {
         $this->eventCountLimit = $eventCountLimit;
 
@@ -61,9 +82,11 @@ class SpanLimitBuilder
     }
 
     /**
-     * @param int $linkCountLimit Maximum allowed span link count
+     * @param int $linkCountLimit
+     *
+     * @return $this
      */
-    public function setLinkCountLimit(int $linkCountLimit): SpanLimitsBuilder
+    public function setLinkCountLimit(int $linkCountLimit)
     {
         $this->linkCountLimit = $linkCountLimit;
 
@@ -71,9 +94,10 @@ class SpanLimitBuilder
     }
 
     /**
-     * @param int $attributePerEventCountLimit Maximum allowed attribute per span event count
+     * @param int $attributePerEventCountLimit
+     * @return $this
      */
-    public function setAttributePerEventCountLimit(int $attributePerEventCountLimit): SpanLimitsBuilder
+    public function setAttributePerEventCountLimit(int $attributePerEventCountLimit)
     {
         $this->attributePerEventCountLimit = $attributePerEventCountLimit;
 
@@ -81,9 +105,11 @@ class SpanLimitBuilder
     }
 
     /**
-     * @param int $attributePerLinkCountLimit Maximum allowed attribute per span link count
+     * @param int $attributePerLinkCountLimit
+     *
+     * @return $this
      */
-    public function setAttributePerLinkCountLimit(int $attributePerLinkCountLimit): SpanLimitsBuilder
+    public function setAttributePerLinkCountLimit(int $attributePerLinkCountLimit)
     {
         $this->attributePerLinkCountLimit = $attributePerLinkCountLimit;
 
@@ -91,11 +117,11 @@ class SpanLimitBuilder
     }
 
     /**
-     * @param bool $retain whether general identity attributes should be retained
+     * @param bool $retain
      *
-     * @see https://github.com/open-telemetry/semantic-conventions/blob/main/docs/general/attributes.md#general-identity-attributes
+     * @return $this
      */
-    public function retainGeneralIdentityAttributes(bool $retain = true): SpanLimitsBuilder
+    public function retainGeneralIdentityAttributes(bool $retain = true)
     {
         $this->retainGeneralIdentityAttributes = $retain;
 
@@ -103,8 +129,7 @@ class SpanLimitBuilder
     }
 
     /**
-     * @see https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/configuration/sdk-environment-variables.md#span-limits
-     * @phan-suppress PhanDeprecatedClassConstant
+     * @return \OpenTelemetry\SDK\Trace\SpanLimits
      */
     public function build(): SpanLimits
     {
@@ -125,14 +150,10 @@ class SpanLimitBuilder
             $attributeValueLengthLimit = null;
         }
 
-        $spanAttributesFactory = Attributes::factory($attributeCountLimit, $attributeValueLengthLimit);
-
-        if (!$this->retainGeneralIdentityAttributes) {
-            $spanAttributesFactory = new FilteredAttributesFactory($spanAttributesFactory, [
-                TraceAttributes::USER_ID,
-                TraceAttributes::USER_ROLES,
-            ]);
-        }
+        $spanAttributesFactory = new FilteredAttributesFactory(Attributes::factory($attributeCountLimit, $attributeValueLengthLimit), [
+            TraceAttributes::USER_ID,
+            TraceAttributes::USER_ROLES,
+        ]);
 
         return new SpanLimits(
             $spanAttributesFactory,

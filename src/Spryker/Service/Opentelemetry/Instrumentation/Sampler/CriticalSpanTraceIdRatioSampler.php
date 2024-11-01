@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * Copyright © 2016-present Spryker Systems GmbH. All rights reserved.
+ * Use of this software requires acceptance of the Evaluation License Agreement. See LICENSE file.
+ */
+
 namespace Spryker\Service\Opentelemetry\Instrumentation\Sampler;
 
 use InvalidArgumentException;
@@ -10,7 +15,7 @@ use OpenTelemetry\SDK\Trace\SamplerInterface;
 use OpenTelemetry\SDK\Trace\SamplingResult;
 use OpenTelemetry\SDK\Trace\Span;
 
-class CriticalSpanTraceIdRatioSampler implements SamplerInterface
+class CriticalSpanTraceIdRatioSampler implements SamplerInterface, ParentSpanAwareSamplerInterface
 {
     /**
      * @var string
@@ -28,7 +33,7 @@ class CriticalSpanTraceIdRatioSampler implements SamplerInterface
     protected ?SpanInterface $parentSpan = null;
 
     /**
-     * @param float $probability Probability float value between 0.0 and 1.0.
+     * @param float $probability
      */
     public function __construct(float $probability)
     {
@@ -39,8 +44,14 @@ class CriticalSpanTraceIdRatioSampler implements SamplerInterface
     }
 
     /**
-     * Returns `SamplingResult` based on probability. Respects the parent `SampleFlag`
-     * {@inheritdoc}
+     * @param \OpenTelemetry\Context\ContextInterface $parentContext
+     * @param string $traceId
+     * @param string $spanName
+     * @param int $spanKind
+     * @param \OpenTelemetry\SDK\Common\Attribute\AttributesInterface $attributes
+     * @param array $links
+     *
+     * @return \OpenTelemetry\SDK\Trace\SamplingResult
      */
     public function shouldSample(
         ContextInterface $parentContext,
@@ -58,9 +69,6 @@ class CriticalSpanTraceIdRatioSampler implements SamplerInterface
             return new SamplingResult(SamplingResult::RECORD_AND_SAMPLE, [], $traceState);
         }
 
-        /**
-         * Since php can only store up to 63 bit positive integers
-         */
         $traceIdLimit = (1 << 60) - 1;
         $lowerOrderBytes = hexdec(substr($traceId, strlen($traceId) - 15, 15));
         $traceIdCondition = $lowerOrderBytes < round($this->probability * $traceIdLimit);
@@ -69,6 +77,11 @@ class CriticalSpanTraceIdRatioSampler implements SamplerInterface
         return new SamplingResult($decision, [], $traceState);
     }
 
+    /**
+     * @param \OpenTelemetry\API\Trace\SpanInterface $span
+     *
+     * @return void
+     */
     public function addParentSpan(SpanInterface $span): void
     {
         $this->parentSpan = $span;
