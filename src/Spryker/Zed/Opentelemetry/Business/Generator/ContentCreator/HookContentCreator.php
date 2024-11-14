@@ -67,21 +67,6 @@ class HookContentCreator implements HookContentCreatorInterface
                 function: \'%s\',
                 pre: static function ($instance, array $params, string $class, string $function, ?string $filename, ?int $lineno) {
                     $context = \\OpenTelemetry\\Context\\Context::getCurrent();
-                    $envVars = %s;
-
-                    $extractTraceIdFromEnv = function(array $envVars): array {
-                        foreach ($envVars as $key => $envVar) {
-                            if (defined($envVar)) {
-                                return [$key => constant($envVar)];
-                            }
-                        }
-                        return [];
-                    };
-
-                    $traceId = $extractTraceIdFromEnv($envVars);
-                    if ($traceId !== []) {
-                        $context = \\OpenTelemetry\\API\\Trace\\Propagation\\TraceContextPropagator::getInstance()->extract($traceId);
-                    }
 
                     $type = $params[1] ?? \\Symfony\\Component\\HttpKernel\\HttpKernelInterface::MAIN_REQUEST;
 
@@ -133,12 +118,11 @@ class HookContentCreator implements HookContentCreatorInterface
                 $class[static::NAMESPACE_KEY],
                 $class[static::CLASS_NAME_KEY],
                 $method,
-                var_export($envVars, true),
                 $this->buildMethodHookName($class, $method),
             );
         }
 
-        return '<?php' . PHP_EOL . implode(PHP_EOL, $hooks) . PHP_EOL;
+        return PHP_EOL . implode(PHP_EOL, $hooks) . PHP_EOL;
     }
 
     /**
