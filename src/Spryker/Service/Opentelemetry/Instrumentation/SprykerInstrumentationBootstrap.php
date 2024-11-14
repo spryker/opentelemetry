@@ -10,10 +10,15 @@ namespace Spryker\Service\Opentelemetry\Instrumentation;
 use OpenTelemetry\API\Common\Time\Clock;
 use OpenTelemetry\API\Signals;
 use OpenTelemetry\API\Trace\Propagation\TraceContextPropagator;
+use OpenTelemetry\API\Trace\Span;
+use OpenTelemetry\API\Trace\SpanInterface;
+use OpenTelemetry\API\Trace\SpanKind;
+use OpenTelemetry\Context\Context;
 use OpenTelemetry\Contrib\Grpc\GrpcTransportFactory;
 use OpenTelemetry\Contrib\Otlp\OtlpUtil;
 use OpenTelemetry\Contrib\Otlp\SpanExporter;
 use OpenTelemetry\SDK\Common\Attribute\Attributes;
+use OpenTelemetry\SDK\Common\Util\ShutdownHandler;
 use OpenTelemetry\SDK\Metrics\MeterProviderFactory;
 use OpenTelemetry\SDK\Metrics\MeterProviderInterface;
 use OpenTelemetry\SDK\Resource\ResourceInfo;
@@ -24,9 +29,12 @@ use OpenTelemetry\SDK\Trace\SpanExporterInterface;
 use OpenTelemetry\SDK\Trace\SpanProcessorInterface;
 use OpenTelemetry\SDK\Trace\TracerProviderInterface;
 use OpenTelemetry\SemConv\ResourceAttributes;
+use OpenTelemetry\SemConv\TraceAttributes;
 use Spryker\Service\Opentelemetry\Instrumentation\Sampler\CriticalSpanTraceIdRatioSampler;
 use Spryker\Service\Opentelemetry\Instrumentation\SpanProcessor\PostFilterBatchSpanProcessor;
 use Spryker\Service\Opentelemetry\Instrumentation\Tracer\TracerProvider;
+use Spryker\Service\Opentelemetry\Storage\CustomParameterStorage;
+use Spryker\Shared\Opentelemetry\Instrumentation\CachedInstrumentation;
 use Spryker\Shared\Opentelemetry\Request\RequestProcessor;
 use Spryker\Zed\Opentelemetry\OpentelemetryConfig;
 
@@ -46,29 +54,44 @@ class SprykerInstrumentationBootstrap
     protected const INSTRUMENTATION_VERSION = '0.1';
 
     /**
+     * @var \OpenTelemetry\API\Trace\SpanInterface|null
+     */
+    protected static ?SpanInterface $rootSpan = null;
+
+    /**
      * @return void
      */
     public static function register(): void
     {
-        $resource = static::createResource();
+        $serviceName = static::resolveServiceName();
+        $resource = static::createResource($serviceName);
+
+        $tracerProvider = static::createTracerProvider($resource);
+        $meterProvider = static::createMeterProvider($resource);
 
         Sdk::builder()
-            ->setTracerProvider(static::createTracerProvider($resource))
-            ->setMeterProvider(static::createMeterProvider($resource))
+            ->setTracerProvider($tracerProvider)
+            ->setMeterProvider($meterProvider)
             ->setPropagator(TraceContextPropagator::getInstance())
-            ->setAutoShutdown(true)
             ->buildAndRegisterGlobal();
+
+        static::registerRootSpan($serviceName);
+
+        ShutdownHandler::register($tracerProvider->shutdown(...));
+        ShutdownHandler::register($meterProvider->shutdown(...));
     }
 
     /**
+     * @param string $serviceName
+     *
      * @return \OpenTelemetry\SDK\Resource\ResourceInfo
      */
-    protected static function createResource(): ResourceInfo
+    protected static function createResource(string $serviceName): ResourceInfo
     {
         return ResourceInfoFactory::defaultResource()->merge(ResourceInfo::create(Attributes::create([
             ResourceAttributes::SERVICE_NAMESPACE => OpentelemetryConfig::getServiceNamespace(),
             ResourceAttributes::SERVICE_VERSION => static::INSTRUMENTATION_VERSION,
-            ResourceAttributes::SERVICE_NAME => static::resolveServiceName(),
+            ResourceAttributes::SERVICE_NAME => $serviceName,
         ])));
     }
 
@@ -152,5 +175,44 @@ class SprykerInstrumentationBootstrap
         }
 
         return OpentelemetryConfig::getDefaultServiceName();
+    }
+
+    /**
+     * @param string $servicedName
+     * @return void
+     */
+    protected static function registerRootSpan(string $servicedName): void
+    {
+        $request = (new RequestProcessor())->getRequest();
+
+        $instrumentation = CachedInstrumentation::getCachedInstrumentation();
+        $parent = Context::getCurrent();
+        $span = $instrumentation->tracer()
+            ->spanBuilder($servicedName . ' root')
+            ->setParent($parent)
+            ->setSpanKind(SpanKind::KIND_SERVER)
+            ->setAttribute(TraceAttributes::URL_QUERY, $request->getQueryString())
+            ->setAttribute(CriticalSpanTraceIdRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
+            ->startSpan();
+
+        Context::storage()->attach($span->storeInContext($parent));
+
+        register_shutdown_function([static::class, 'shutdownHandler']);
+    }
+
+    /**
+     * @return void
+     */
+    public static function shutdownHandler(): void
+    {
+        $scope = Context::storage()->scope();
+        if (!$scope) {
+            return;
+        }
+        $scope->detach();
+        $span = Span::fromContext($scope->context());
+        $customParamsStorage = CustomParameterStorage::getInstance();
+        $span->setAttributes($customParamsStorage->getAttributes());
+        $span->end();
     }
 }

@@ -13,7 +13,7 @@ if (extension_loaded('opentelemetry') === false) {
     return;
 }
 
-if (getenv('OTEL_SDK_DISABLED') === true || getenv('OTEL_SDK_DISABLED') === 'true') {
+if (Sdk::isDisabled()) {
     return;
 }
 

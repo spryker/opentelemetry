@@ -28,6 +28,7 @@ class OpentelemetryConfig extends AbstractBundleConfig
     public function getExcludedDirs(): array
     {
         return [
+            'Monitoring',
             'Opentelemetry',
             'OpenTelemetry',
             'Dependency',
