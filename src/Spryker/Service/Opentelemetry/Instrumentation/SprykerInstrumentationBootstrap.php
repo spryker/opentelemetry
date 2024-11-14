@@ -67,18 +67,18 @@ class SprykerInstrumentationBootstrap
         $resource = static::createResource($serviceName);
 
         $tracerProvider = static::createTracerProvider($resource);
-        $meterProvider = static::createMeterProvider($resource);
+        //$meterProvider = static::createMeterProvider($resource);
 
         Sdk::builder()
             ->setTracerProvider($tracerProvider)
-            ->setMeterProvider($meterProvider)
+            //->setMeterProvider($meterProvider)
             ->setPropagator(TraceContextPropagator::getInstance())
             ->buildAndRegisterGlobal();
 
         static::registerRootSpan($serviceName);
 
         ShutdownHandler::register($tracerProvider->shutdown(...));
-        ShutdownHandler::register($meterProvider->shutdown(...));
+        //ShutdownHandler::register($meterProvider->shutdown(...));
     }
 
     /**
@@ -179,16 +179,24 @@ class SprykerInstrumentationBootstrap
 
     /**
      * @param string $servicedName
+     *
      * @return void
      */
     protected static function registerRootSpan(string $servicedName): void
     {
         $request = (new RequestProcessor())->getRequest();
 
+        $cli = $request->server->get('argv');
+        if ($cli) {
+            $name = implode(' ', $cli);
+        } else {
+            $name = $request->getUri();
+        }
+
         $instrumentation = CachedInstrumentation::getCachedInstrumentation();
         $parent = Context::getCurrent();
         $span = $instrumentation->tracer()
-            ->spanBuilder($servicedName . ' root')
+            ->spanBuilder($servicedName . ' ' . $name)
             ->setParent($parent)
             ->setSpanKind(SpanKind::KIND_SERVER)
             ->setAttribute(TraceAttributes::URL_QUERY, $request->getQueryString())
