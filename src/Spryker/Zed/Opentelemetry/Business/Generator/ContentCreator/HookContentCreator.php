@@ -119,13 +119,13 @@ class HookContentCreator implements HookContentCreatorInterface
                     $scope->detach();
                     $span = \\OpenTelemetry\\API\\Trace\\Span::fromContext($scope->context());
 
-                    if (isset($exception)) {
+                    if ($exception !== null) {
                         $span->recordException($exception);
                         $span->setAttribute(\'error_message\', isset($exception) ? $exception->getMessage() : \'\');
                         $span->setAttribute(\'error_code\', isset($exception) ? $exception->getCode() : \'\');
                     }
 
-                    $span->setStatus(isset($exception) ? \\OpenTelemetry\\API\\Trace\\StatusCode::STATUS_ERROR : \\OpenTelemetry\\API\\Trace\\StatusCode::STATUS_OK);
+                    $span->setStatus($exception !== null ? \\OpenTelemetry\\API\\Trace\\StatusCode::STATUS_ERROR : \\OpenTelemetry\\API\\Trace\\StatusCode::STATUS_OK);
 
                     $span->end();
                 }

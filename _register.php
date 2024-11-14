@@ -5,19 +5,15 @@ declare(strict_types=1);
 use OpenTelemetry\SDK\Sdk;
 use Spryker\Service\Opentelemetry\Instrumentation\SprykerInstrumentationBootstrap;
 
-if (Sdk::isDisabled()) {
+if (!class_exists(Sdk::class)) {
     return;
 }
 
-if (class_exists(Sdk::class) && Sdk::isInstrumentationDisabled(SprykerInstrumentationBootstrap::NAME) === true) {
+if (Sdk::isDisabled()) {
     return;
 }
 
 if (extension_loaded('opentelemetry') === false) {
-    return;
-}
-
-if (Sdk::isDisabled()) {
     return;
 }
 

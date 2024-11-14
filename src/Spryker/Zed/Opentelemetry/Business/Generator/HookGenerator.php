@@ -27,6 +27,11 @@ class HookGenerator implements HookGeneratorInterface
     /**
      * @var string
      */
+    protected const OUTPUT_FILE_PATH_PLACEHOLDER_BY_MODULE = '%s/%sHook.php';
+
+    /**
+     * @var string
+     */
     protected const NAMESPACE_KEY = 'namespace';
 
     /**
@@ -80,12 +85,21 @@ class HookGenerator implements HookGeneratorInterface
         $collectedClasses = $this->collector->collectClasses();
 
         foreach ($collectedClasses as $class) {
+            $content = PHP_EOL;
             $this->ensureDirectoryExists();
 
-            file_put_contents(
-                $this->getOutputFilepath($class),
-                $this->contentCreator->createHookContent($class),
-            );
+            if (!file_exists($this->getOutputFilepathByModule($class))) {
+                $content = '<?php' . PHP_EOL;
+            }
+            $file = fopen($this->getOutputFilepathByModule($class), 'a');
+
+            fwrite($file, $content);
+            fwrite($file, $this->contentCreator->createHookContent($class));
+            fclose($file);
+//            file_put_contents(
+//                $this->getOutputFilepath($class),
+//                $this->contentCreator->createHookContent($class),
+//            );
         }
     }
 
@@ -113,6 +127,22 @@ class HookGenerator implements HookGeneratorInterface
             $this->config->getOutputDir(),
             str_replace('\\', '-', $class[static::NAMESPACE_KEY]),
             $class[static::CLASS_NAME_KEY],
+        );
+    }
+
+    /**
+     * @param array<string> $class
+     *
+     * @return string
+     */
+    protected function getOutputFilepathByModule(array $class): string
+    {
+        $namespace = explode('\\', $class[static::NAMESPACE_KEY]);
+        $moduleNamePattern = $namespace[0] . $namespace[1] . $namespace[2];
+        return sprintf(
+            static::OUTPUT_FILE_PATH_PLACEHOLDER_BY_MODULE,
+            $this->config->getOutputDir(),
+            $moduleNamePattern,
         );
     }
 }
