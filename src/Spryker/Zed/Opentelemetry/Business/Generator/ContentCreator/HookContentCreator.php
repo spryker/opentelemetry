@@ -57,7 +57,6 @@ class HookContentCreator implements HookContentCreatorInterface
     public function createHookContent(array $class): string
     {
         $hooks = [];
-        $envVars = $this->config->getOtelEnvVars();
 
         foreach ($class[static::METHODS_KEY] as $method) {
             $hooks[] = sprintf(
