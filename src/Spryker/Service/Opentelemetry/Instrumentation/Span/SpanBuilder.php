@@ -19,7 +19,6 @@ use OpenTelemetry\SDK\Common\Attribute\AttributesBuilderInterface;
 use OpenTelemetry\SDK\Common\Instrumentation\InstrumentationScopeInterface;
 use OpenTelemetry\SDK\Trace\Link;
 use OpenTelemetry\SDK\Trace\SamplingResult;
-use OpenTelemetry\SDK\Trace\Span;
 use OpenTelemetry\SDK\Trace\TracerSharedState;
 use Spryker\Service\Opentelemetry\Instrumentation\Sampler\ParentSpanAwareSamplerInterface;
 

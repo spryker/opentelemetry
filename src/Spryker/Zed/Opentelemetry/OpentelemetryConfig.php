@@ -90,26 +90,6 @@ class OpentelemetryConfig extends AbstractBundleConfig
 
     /**
      * Specification:
-     * - Returns the list of environment variables that should be used for trace propagation.
-     *
-     * @api
-     *
-     * @return array<string>
-     */
-    public function getOtelEnvVars(): array
-    {
-        return [
-            'backoffice_trace_id' => 'OTEL_BACKOFFICE_TRACE_ID',
-            'cli_trace_id' => 'OTEL_CLI_TRACE_ID',
-            'merchant_portal_trace_id' => 'OTEL_MERCHANT_PORTAL_TRACE_ID',
-            'glue_trace_id' => 'OTEL_GLUE_TRACE_ID',
-            'yves_trace_id' => 'OTEL_YVES_TRACE_ID',
-            'backend_gateway_trace_id' => 'OTEL_BACKEND_GATEWAY_TRACE_ID',
-        ];
-    }
-
-    /**
-     * Specification:
      * - Set to false if you want to instrument all methods, including private and protected ones.
      *
      * @api
