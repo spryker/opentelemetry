@@ -21,6 +21,8 @@ use OpenTelemetry\SDK\Common\Attribute\AttributesInterface;
 use OpenTelemetry\SDK\Common\Instrumentation\InstrumentationScopeInterface;
 use OpenTelemetry\SDK\Resource\ResourceInfo;
 use OpenTelemetry\SDK\Trace\SpanDataInterface;
+use OpenTelemetry\API\Trace\SpanKind as TraceSpanKind;
+use OpenTelemetry\API\Trace\StatusCode as TraceStatusCode;
 
 class SpanConverter
 {
@@ -119,11 +121,11 @@ class SpanConverter
     protected function convertSpanKind(int $kind): int
     {
         return match ($kind) {
-            API\SpanKind::KIND_INTERNAL => SpanKind::SPAN_KIND_INTERNAL,
-            API\SpanKind::KIND_CLIENT => SpanKind::SPAN_KIND_CLIENT,
-            API\SpanKind::KIND_SERVER => SpanKind::SPAN_KIND_SERVER,
-            API\SpanKind::KIND_PRODUCER => SpanKind::SPAN_KIND_PRODUCER,
-            API\SpanKind::KIND_CONSUMER => SpanKind::SPAN_KIND_CONSUMER,
+            TraceSpanKind::KIND_INTERNAL => SpanKind::SPAN_KIND_INTERNAL,
+            TraceSpanKind::KIND_CLIENT => SpanKind::SPAN_KIND_CLIENT,
+            TraceSpanKind::KIND_SERVER => SpanKind::SPAN_KIND_SERVER,
+            TraceSpanKind::KIND_PRODUCER => SpanKind::SPAN_KIND_PRODUCER,
+            TraceSpanKind::KIND_CONSUMER => SpanKind::SPAN_KIND_CONSUMER,
             default => SpanKind::SPAN_KIND_UNSPECIFIED,
         };
     }
@@ -131,9 +133,9 @@ class SpanConverter
     protected function convertStatusCode(string $status): int
     {
         switch ($status) {
-            case API\StatusCode::STATUS_UNSET: return StatusCode::STATUS_CODE_UNSET;
-            case API\StatusCode::STATUS_OK: return StatusCode::STATUS_CODE_OK;
-            case API\StatusCode::STATUS_ERROR: return StatusCode::STATUS_CODE_ERROR;
+            case TraceStatusCode::STATUS_UNSET: return StatusCode::STATUS_CODE_UNSET;
+            case TraceStatusCode::STATUS_OK: return StatusCode::STATUS_CODE_OK;
+            case TraceStatusCode::STATUS_ERROR: return StatusCode::STATUS_CODE_ERROR;
         }
 
         return StatusCode::STATUS_CODE_UNSET;
