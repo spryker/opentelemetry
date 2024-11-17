@@ -66,7 +66,7 @@ class PostFilterBatchSpanProcessor implements SpanProcessorInterface
         int $scheduledDelayMillis = self::DEFAULT_SCHEDULE_DELAY,
         int $exportTimeoutMillis = self::DEFAULT_EXPORT_TIMEOUT,
         int $maxExportBatchSize = self::DEFAULT_MAX_EXPORT_BATCH_SIZE,
-        protected readonly bool $autoFlush = true,
+        protected readonly bool $autoFlush = false,
         ?MeterProviderInterface $meterProvider = null,
     ) {
         if ($maxQueueSize <= 0) {

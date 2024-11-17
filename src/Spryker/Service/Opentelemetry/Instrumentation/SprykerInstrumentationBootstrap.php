@@ -144,7 +144,7 @@ class SprykerInstrumentationBootstrap
     }
 
     /**
-     * @return \OpenTelemetry\API\Trace\SamplerInterface
+     * @return \OpenTelemetry\SDK\Trace\SamplerInterface
      */
     protected static function createSampler(): SamplerInterface
     {

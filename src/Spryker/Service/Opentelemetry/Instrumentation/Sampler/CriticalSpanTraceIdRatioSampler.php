@@ -84,9 +84,14 @@ class CriticalSpanTraceIdRatioSampler implements SamplerInterface, ParentSpanAwa
         $this->parentSpan = $span;
     }
 
+    /**
+     * @param \OpenTelemetry\API\Trace\TraceStateInterface $traceState
+     *
+     * @return void
+     */
     public function addTraceState(TraceStateInterface $traceState): void
     {
-
+        $this->traceState = $traceState;
     }
 
     /**
