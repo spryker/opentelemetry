@@ -158,7 +158,7 @@ class PostFilterBatchSpanProcessor implements SpanProcessorInterface
         if (!$span->getContext()->isSampled()) {
             return;
         }
-        
+
         if (
             $span->getDuration() < OpentelemetryConfig::getSamplerThresholdNano()
             && $span->toSpanData()->getParentSpanId()
