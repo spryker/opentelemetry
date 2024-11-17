@@ -10,6 +10,7 @@ use OpenTelemetry\API\Trace\SpanInterface;
 use OpenTelemetry\API\Trace\StatusCode;
 use OpenTelemetry\Context\ContextInterface;
 use OpenTelemetry\SDK\Common\Attribute\AttributesBuilderInterface;
+use OpenTelemetry\SDK\Common\Attribute\AttributesInterface;
 use OpenTelemetry\SDK\Common\Dev\Compatibility\Util as BcUtil;
 use OpenTelemetry\SDK\Common\Exception\StackTraceFormatter;
 use OpenTelemetry\SDK\Common\Instrumentation\InstrumentationScopeInterface;
@@ -26,34 +27,36 @@ use OpenTelemetry\SDK\Trace\StatusData;
 use OpenTelemetry\SDK\Trace\StatusDataInterface;
 use Throwable;
 
-class Span extends OtelSpan implements ReadWriteSpanInterface
+class Span extends OtelSpan implements ReadWriteSpanInterface, SpanDataInterface
 {
     use LogsMessagesTrait;
 
     /** @var list<EventInterface> */
-    private array $events = [];
-    private int $totalRecordedEvents = 0;
-    private StatusDataInterface $status;
-    private int $endEpochNanos = 0;
-    private bool $hasEnded = false;
+    protected array $events = [];
+    protected int $totalRecordedEvents = 0;
+    protected StatusDataInterface $status;
+    protected int $endEpochNanos = 0;
+    protected bool $hasEnded = false;
+
+    protected ?AttributesInterface $attributes = null;
 
     /**
      * @param non-empty-string $name
      * @param list<LinkInterface> $links
      */
-    private function __construct(
-        private string $name,
-        private readonly SpanContextInterface $context,
-        private readonly InstrumentationScopeInterface $instrumentationScope,
-        private readonly int $kind,
-        private readonly SpanContextInterface $parentSpanContext,
-        private readonly SpanLimits $spanLimits,
-        private readonly SpanProcessorInterface $spanProcessor,
-        private readonly ResourceInfo $resource,
-        private AttributesBuilderInterface $attributesBuilder,
-        private array $links,
-        private int $totalRecordedLinks,
-        private readonly int $startEpochNanos,
+    protected function __construct(
+        protected string $name,
+        protected readonly SpanContextInterface $context,
+        protected readonly InstrumentationScopeInterface $instrumentationScope,
+        protected readonly int $kind,
+        protected readonly SpanContextInterface $parentSpanContext,
+        protected readonly SpanLimits $spanLimits,
+        protected readonly SpanProcessorInterface $spanProcessor,
+        protected readonly ResourceInfo $resource,
+        protected AttributesBuilderInterface $attributesBuilder,
+        protected array $links,
+        protected int $totalRecordedLinks,
+        protected readonly int $startEpochNanos,
     ) {
         $this->status = StatusData::unset();
     }
@@ -329,5 +332,59 @@ class Span extends OtelSpan implements ReadWriteSpanInterface
     public function getResource(): ResourceInfo
     {
         return $this->resource;
+    }
+
+    public function getTraceId(): string
+    {
+        return $this->context->getTraceId();
+    }
+
+    public function getSpanId(): string
+    {
+        return $this->context->getSpanId();
+    }
+
+    public function getParentSpanId(): string
+    {
+        return $this->parentSpanContext->getSpanId();
+    }
+
+    public function getStatus(): StatusDataInterface
+    {
+        return $this->status;
+    }
+
+    public function getAttributes(): AttributesInterface
+    {
+        if (!$this->attributes) {
+            $this->attributes = $this->attributesBuilder->build();
+        }
+
+        return $this->attributes;
+    }
+
+    public function getEvents(): array
+    {
+        return $this->events;
+    }
+
+    public function getLinks(): array
+    {
+        return $this->links;
+    }
+
+    public function getEndEpochNanos(): int
+    {
+        return $this->endEpochNanos;
+    }
+
+    public function getTotalDroppedEvents(): int
+    {
+        return max(0, $this->totalRecordedEvents - count($this->events));
+    }
+
+    public function getTotalDroppedLinks(): int
+    {
+        return max(0, $this->totalRecordedLinks - count($this->links));
     }
 }

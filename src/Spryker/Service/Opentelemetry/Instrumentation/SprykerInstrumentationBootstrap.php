@@ -16,7 +16,6 @@ use OpenTelemetry\API\Trace\SpanKind;
 use OpenTelemetry\Context\Context;
 use OpenTelemetry\Contrib\Grpc\GrpcTransportFactory;
 use OpenTelemetry\Contrib\Otlp\OtlpUtil;
-use OpenTelemetry\Contrib\Otlp\SpanExporter;
 use OpenTelemetry\SDK\Common\Attribute\Attributes;
 use OpenTelemetry\SDK\Common\Util\ShutdownHandler;
 use OpenTelemetry\SDK\Metrics\MeterProviderFactory;
@@ -24,6 +23,7 @@ use OpenTelemetry\SDK\Metrics\MeterProviderInterface;
 use OpenTelemetry\SDK\Resource\ResourceInfo;
 use OpenTelemetry\SDK\Resource\ResourceInfoFactory;
 use OpenTelemetry\SDK\Sdk;
+use OpenTelemetry\SDK\Trace\Sampler\ParentBased;
 use OpenTelemetry\SDK\Trace\SamplerInterface;
 use OpenTelemetry\SDK\Trace\SpanExporterInterface;
 use OpenTelemetry\SDK\Trace\SpanProcessorInterface;
@@ -31,6 +31,7 @@ use OpenTelemetry\SDK\Trace\TracerProviderInterface;
 use OpenTelemetry\SemConv\ResourceAttributes;
 use OpenTelemetry\SemConv\TraceAttributes;
 use Spryker\Service\Opentelemetry\Instrumentation\Sampler\CriticalSpanTraceIdRatioSampler;
+use Spryker\Service\Opentelemetry\Instrumentation\Span\SpanExporter;
 use Spryker\Service\Opentelemetry\Instrumentation\SpanProcessor\PostFilterBatchSpanProcessor;
 use Spryker\Service\Opentelemetry\Instrumentation\Tracer\TracerProvider;
 use Spryker\Service\Opentelemetry\Storage\CustomParameterStorage;
@@ -145,7 +146,7 @@ class SprykerInstrumentationBootstrap
      */
     protected static function createSampler(): SamplerInterface
     {
-        return new CriticalSpanTraceIdRatioSampler(OpentelemetryConfig::getSamplerProbability());
+        return new ParentBased(new CriticalSpanTraceIdRatioSampler(OpentelemetryConfig::getSamplerProbability()));
     }
 
     /**
@@ -200,7 +201,7 @@ class SprykerInstrumentationBootstrap
             ->setParent($parent)
             ->setSpanKind(SpanKind::KIND_SERVER)
             ->setAttribute(TraceAttributes::URL_QUERY, $request->getQueryString())
-            ->setAttribute(CriticalSpanTraceIdRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
+            //->setAttribute(CriticalSpanTraceIdRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
             ->startSpan();
 
         Context::storage()->attach($span->storeInContext($parent));
