@@ -176,7 +176,7 @@ class SpanBuilder implements SpanBuilderInterface
         $spanId = $this->tracerSharedState->getIdGenerator()->generateSpanId();
         $traceId = $parentSpanContext->isValid() ? $parentSpanContext->getTraceId() : $this->tracerSharedState->getIdGenerator()->generateTraceId();
 
-        $samplingResult = $this->getSamplingResult($parentSpan, $parentContext, $traceId, $parentSpanContext);
+        $samplingResult = $this->getSamplingResult($parentSpan, $parentContext, $traceId);
         $samplingDecision = $samplingResult->getDecision();
         $samplingResultTraceState = $samplingResult->getTraceState();
 
@@ -212,19 +212,17 @@ class SpanBuilder implements SpanBuilderInterface
      * @param \OpenTelemetry\API\Trace\SpanInterface $parentSpan
      * @param \OpenTelemetry\Context\ContextInterface $parentContext
      * @param string $traceId
-     * @param \OpenTelemetry\API\Trace\SpanContextInterface $spanContext
      *
      * @return \OpenTelemetry\SDK\Trace\SamplingResult
      */
-    protected function getSamplingResult(SpanInterface $parentSpan, ContextInterface $parentContext, string $traceId, SpanContextInterface $spanContext): SamplingResult
+    protected function getSamplingResult(SpanInterface $parentSpan, ContextInterface $parentContext, string $traceId): SamplingResult
     {
         $sampler = $this
             ->tracerSharedState
             ->getSampler();
 
         if ($sampler instanceof ParentSpanAwareSamplerInterface) {
-            $sampler->addParentSpan($parentSpan);
-            $sampler->addParentSpanContext($spanContext);
+            $sampler->addTraceState($parentSpan->getContext()->getTraceState());
         }
 
         return $sampler

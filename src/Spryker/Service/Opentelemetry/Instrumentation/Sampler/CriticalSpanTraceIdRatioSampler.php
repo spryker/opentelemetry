@@ -10,11 +10,11 @@ namespace Spryker\Service\Opentelemetry\Instrumentation\Sampler;
 use InvalidArgumentException;
 use OpenTelemetry\API\Trace\SpanContextInterface;
 use OpenTelemetry\API\Trace\SpanInterface;
+use OpenTelemetry\API\Trace\TraceStateInterface;
 use OpenTelemetry\Context\ContextInterface;
 use OpenTelemetry\SDK\Common\Attribute\AttributesInterface;
 use OpenTelemetry\SDK\Trace\SamplerInterface;
 use OpenTelemetry\SDK\Trace\SamplingResult;
-use OpenTelemetry\SDK\Trace\Span;
 
 class CriticalSpanTraceIdRatioSampler implements SamplerInterface, ParentSpanAwareSamplerInterface
 {
@@ -29,14 +29,9 @@ class CriticalSpanTraceIdRatioSampler implements SamplerInterface, ParentSpanAwa
     protected float $probability;
 
     /**
-     * @var \OpenTelemetry\API\Trace\SpanInterface|null
+     * @var \OpenTelemetry\API\Trace\TraceStateInterface|null
      */
-    protected ?SpanInterface $parentSpan = null;
-
-    /**
-     * @var \OpenTelemetry\API\Trace\SpanContextInterface|null
-     */
-    protected ?SpanContextInterface $parentSpanContext = null;
+    protected ?TraceStateInterface $traceState = null;
 
     /**
      * @param float $probability
@@ -67,12 +62,8 @@ class CriticalSpanTraceIdRatioSampler implements SamplerInterface, ParentSpanAwa
         AttributesInterface $attributes,
         array $links,
     ): SamplingResult {
-        $parentSpan = $this->parentSpan ?: Span::fromContext($parentContext);
-        $parentSpanContext = $this->parentSpanContext ?: $parentSpan->getContext();
-        $traceState = $parentSpanContext->getTraceState();
-
         if ($attributes->has(static::IS_CRITICAL_ATTRIBUTE)) {
-            return new SamplingResult(SamplingResult::RECORD_AND_SAMPLE, [], $traceState);
+            return new SamplingResult(SamplingResult::RECORD_AND_SAMPLE, [], $this->traceState);
         }
 
         $traceIdLimit = (1 << 60) - 1;
@@ -80,7 +71,7 @@ class CriticalSpanTraceIdRatioSampler implements SamplerInterface, ParentSpanAwa
         $traceIdCondition = $lowerOrderBytes < round($this->probability * $traceIdLimit);
         $decision = $traceIdCondition ? SamplingResult::RECORD_AND_SAMPLE : SamplingResult::DROP;
 
-        return new SamplingResult($decision, [], $traceState);
+        return new SamplingResult($decision, [], $this->traceState);
     }
 
     /**
@@ -91,6 +82,11 @@ class CriticalSpanTraceIdRatioSampler implements SamplerInterface, ParentSpanAwa
     public function addParentSpan(SpanInterface $span): void
     {
         $this->parentSpan = $span;
+    }
+
+    public function addTraceState(TraceStateInterface $traceState): void
+    {
+
     }
 
     /**

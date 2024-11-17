@@ -88,7 +88,7 @@ class AttributesBuilder implements AttributesBuilderInterface
 
             return;
         }
-        if (!in_array($offset, $this->getSafeAttributes()) && !$this->attributeValidator->validate($value)) {
+        if (!in_array($offset, $this->getSafeAttributes(), true) && !$this->attributeValidator->validate($value)) {
             $this->droppedAttributesCount++;
 
             return;

@@ -96,22 +96,22 @@ class Span extends OtelSpan implements ReadWriteSpanInterface, SpanDataInterface
 
         return $span;
     }
-
-    /**
-     * Backward compatibility methods
-     *
-     * @codeCoverageIgnore
-     */
-    public static function formatStackTrace(Throwable $e, ?array &$seen = null): string
-    {
-        BcUtil::triggerMethodDeprecationNotice(
-            __METHOD__,
-            'format',
-            StackTraceFormatter::class
-        );
-
-        return StackTraceFormatter::format($e);
-    }
+//
+//    /**
+//     * Backward compatibility methods
+//     *
+//     * @codeCoverageIgnore
+//     */
+//    public static function formatStackTrace(Throwable $e, ?array &$seen = null): string
+//    {
+//        BcUtil::triggerMethodDeprecationNotice(
+//            __METHOD__,
+//            'format',
+//            StackTraceFormatter::class
+//        );
+//
+//        return StackTraceFormatter::format($e);
+//    }
 
     /** @inheritDoc */
     public function getContext(): SpanContextInterface
@@ -292,7 +292,7 @@ class Span extends OtelSpan implements ReadWriteSpanInterface, SpanDataInterface
             $this->totalRecordedEvents,
             $this->status,
             $this->endEpochNanos,
-            $this->hasEnded
+            $this->hasEnded,
         );
     }
 

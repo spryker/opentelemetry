@@ -3,7 +3,6 @@
 namespace Spryker\Service\Opentelemetry\Instrumentation\Span;
 
 use OpenTelemetry\API\Behavior\LogsMessagesTrait;
-use OpenTelemetry\Contrib\Otlp\SpanConverter;
 use Opentelemetry\Proto\Collector\Trace\V1\ExportTraceServiceResponse;
 use OpenTelemetry\SDK\Common\Export\TransportInterface;
 use OpenTelemetry\SDK\Common\Future\CancellationInterface;
@@ -15,7 +14,10 @@ class SpanExporter implements SpanExporterInterface
 {
     use LogsMessagesTrait;
 
-    public function __construct(protected TransportInterface $transport)
+    public function __construct(
+        protected TransportInterface $transport,
+        protected SpanConverter $spanConverter,
+    )
     {
     }
 
@@ -28,7 +30,7 @@ class SpanExporter implements SpanExporterInterface
     public function export(iterable $batch, ?CancellationInterface $cancellation = null): FutureInterface
     {
         return $this->transport
-            ->send((new SpanConverter())->convert($batch)->serializeToString(), $cancellation)
+            ->send($this->spanConverter->convert($batch)->serializeToString(), $cancellation)
             ->map(function (?string $payload): bool {
                 if ($payload === null) {
                     return true;

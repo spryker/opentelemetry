@@ -31,6 +31,7 @@ use OpenTelemetry\SDK\Trace\TracerProviderInterface;
 use OpenTelemetry\SemConv\ResourceAttributes;
 use OpenTelemetry\SemConv\TraceAttributes;
 use Spryker\Service\Opentelemetry\Instrumentation\Sampler\CriticalSpanTraceIdRatioSampler;
+use Spryker\Service\Opentelemetry\Instrumentation\Span\SpanConverter;
 use Spryker\Service\Opentelemetry\Instrumentation\Span\SpanExporter;
 use Spryker\Service\Opentelemetry\Instrumentation\SpanProcessor\PostFilterBatchSpanProcessor;
 use Spryker\Service\Opentelemetry\Instrumentation\Tracer\TracerProvider;
@@ -127,6 +128,7 @@ class SprykerInstrumentationBootstrap
     {
         return new SpanExporter(
             (new GrpcTransportFactory())->create(OpentelemetryConfig::getExporterEndpoint() . OtlpUtil::method(Signals::TRACE)),
+            new SpanConverter(),
         );
     }
 
