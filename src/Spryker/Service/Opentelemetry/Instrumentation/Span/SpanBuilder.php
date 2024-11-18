@@ -8,7 +8,6 @@
 namespace Spryker\Service\Opentelemetry\Instrumentation\Span;
 
 use OpenTelemetry\API\Trace\SpanBuilderInterface;
-use OpenTelemetry\API\Trace\SpanContext;
 use OpenTelemetry\API\Trace\SpanContextInterface;
 use OpenTelemetry\API\Trace\SpanInterface;
 use OpenTelemetry\API\Trace\SpanKind;
