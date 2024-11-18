@@ -50,6 +50,8 @@ class OpentelemetryConfig extends AbstractBundleConfig
             'Acl',
             'Twig',
             'WebProfiler',
+            'Translator',
+            'Money',
             'templates',
             'config',
             'tests',

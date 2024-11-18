@@ -164,6 +164,7 @@ class PostFilterBatchSpanProcessor implements SpanProcessorInterface
             && $span->getParentSpanId()
             && $span->getStatus()->getCode() === StatusCode::STATUS_OK
         ) {
+            $this->dropped++;
             return;
         }
 
