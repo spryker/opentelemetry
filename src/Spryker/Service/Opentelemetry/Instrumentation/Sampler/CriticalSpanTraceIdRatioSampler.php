@@ -8,7 +8,6 @@
 namespace Spryker\Service\Opentelemetry\Instrumentation\Sampler;
 
 use InvalidArgumentException;
-use OpenTelemetry\API\Trace\SpanContextInterface;
 use OpenTelemetry\API\Trace\SpanInterface;
 use OpenTelemetry\API\Trace\TraceStateInterface;
 use OpenTelemetry\Context\ContextInterface;
@@ -32,6 +31,8 @@ class CriticalSpanTraceIdRatioSampler implements SamplerInterface, ParentSpanAwa
      * @var \OpenTelemetry\API\Trace\TraceStateInterface|null
      */
     protected ?TraceStateInterface $traceState = null;
+
+    protected ?SpanInterface $parentSpan = null;
 
     /**
      * @param float $probability
@@ -62,7 +63,7 @@ class CriticalSpanTraceIdRatioSampler implements SamplerInterface, ParentSpanAwa
         AttributesInterface $attributes,
         array $links,
     ): SamplingResult {
-        if ($attributes->has(static::IS_CRITICAL_ATTRIBUTE)) {
+        if ($attributes->has(static::IS_CRITICAL_ATTRIBUTE) && $this->parentSpan->getContext()->isValid()) {
             return new SamplingResult(SamplingResult::RECORD_AND_SAMPLE, [], $this->traceState);
         }
 
@@ -72,16 +73,6 @@ class CriticalSpanTraceIdRatioSampler implements SamplerInterface, ParentSpanAwa
         $decision = $traceIdCondition ? SamplingResult::RECORD_AND_SAMPLE : SamplingResult::DROP;
 
         return new SamplingResult($decision, [], $this->traceState);
-    }
-
-    /**
-     * @param \OpenTelemetry\API\Trace\SpanInterface $span
-     *
-     * @return void
-     */
-    public function addParentSpan(SpanInterface $span): void
-    {
-        $this->parentSpan = $span;
     }
 
     /**
@@ -95,20 +86,19 @@ class CriticalSpanTraceIdRatioSampler implements SamplerInterface, ParentSpanAwa
     }
 
     /**
+     * @param \OpenTelemetry\API\Trace\SpanInterface $span
+     * @return void
+     */
+    public function addParentSpan(SpanInterface $span): void
+    {
+        $this->parentSpan = $span;
+    }
+
+    /**
      * @return string
      */
     public function getDescription(): string
     {
         return sprintf('%s{%.6F}', 'CriticalSpanTraceIdRatioSampler', $this->probability);
-    }
-
-    /**
-     * @param \OpenTelemetry\API\Trace\SpanContextInterface $spanContext
-     *
-     * @return void
-     */
-    public function addParentSpanContext(SpanContextInterface $spanContext): void
-    {
-        $this->parentSpanContext = $spanContext;
     }
 }

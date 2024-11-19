@@ -222,6 +222,7 @@ class SpanBuilder implements SpanBuilderInterface
 
         if ($sampler instanceof ParentSpanAwareSamplerInterface) {
             $sampler->addTraceState($parentSpan->getContext()->getTraceState());
+            $sampler->addParentSpan($parentSpan);
         }
 
         return $sampler

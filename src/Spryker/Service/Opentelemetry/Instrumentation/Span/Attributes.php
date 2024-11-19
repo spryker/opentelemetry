@@ -13,8 +13,8 @@ class Attributes implements AttributesInterface, IteratorAggregate
      * @internal
      */
     public function __construct(
-        private readonly array $attributes,
-        private readonly int $droppedAttributesCount,
+        protected readonly array $attributes,
+        protected readonly int $droppedAttributesCount,
     ) {
     }
 

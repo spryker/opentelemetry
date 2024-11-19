@@ -39,6 +39,7 @@ use Spryker\Service\Opentelemetry\Storage\CustomParameterStorage;
 use Spryker\Shared\Opentelemetry\Instrumentation\CachedInstrumentation;
 use Spryker\Shared\Opentelemetry\Request\RequestProcessor;
 use Spryker\Zed\Opentelemetry\OpentelemetryConfig;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * @method \Spryker\Service\Opentelemetry\OpentelemetryServiceFactory getFactory()
@@ -49,6 +50,11 @@ class SprykerInstrumentationBootstrap
      * @var string
      */
     public const NAME = 'spryker';
+
+    /**
+     * @var string
+     */
+    protected const SPAN_NAME_PLACEHOLDER = '%s %s';
 
     /**
      * @var string
@@ -193,7 +199,7 @@ class SprykerInstrumentationBootstrap
         if ($cli) {
             $name = implode(' ', $cli);
         } else {
-            $name = $request->getUri();
+            $name = static::formatSpanName($request);
         }
 
         $instrumentation = CachedInstrumentation::getCachedInstrumentation();
@@ -209,6 +215,18 @@ class SprykerInstrumentationBootstrap
         Context::storage()->attach($span->storeInContext($parent));
 
         register_shutdown_function([static::class, 'shutdownHandler']);
+    }
+
+    /**
+     * @param \Symfony\Component\HttpFoundation\Request $request
+     *
+     * @return string
+     */
+    protected static function formatSpanName(Request $request): string
+    {
+        $relativeUriWithoutQueryString = str_replace('?' . $request->getQueryString(), '', $request->getUri());
+
+        return sprintf(static::SPAN_NAME_PLACEHOLDER, $request->getMethod(), $relativeUriWithoutQueryString);
     }
 
     /**

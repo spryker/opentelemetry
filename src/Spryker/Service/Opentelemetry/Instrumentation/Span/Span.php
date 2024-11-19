@@ -11,14 +11,11 @@ use OpenTelemetry\API\Trace\StatusCode;
 use OpenTelemetry\Context\ContextInterface;
 use OpenTelemetry\SDK\Common\Attribute\AttributesBuilderInterface;
 use OpenTelemetry\SDK\Common\Attribute\AttributesInterface;
-use OpenTelemetry\SDK\Common\Dev\Compatibility\Util as BcUtil;
 use OpenTelemetry\SDK\Common\Exception\StackTraceFormatter;
 use OpenTelemetry\SDK\Common\Instrumentation\InstrumentationScopeInterface;
 use OpenTelemetry\SDK\Resource\ResourceInfo;
 use OpenTelemetry\SDK\Trace\Event;
-use OpenTelemetry\SDK\Trace\EventInterface;
 use OpenTelemetry\SDK\Trace\Link;
-use OpenTelemetry\SDK\Trace\LinkInterface;
 use OpenTelemetry\SDK\Trace\ReadWriteSpanInterface;
 use OpenTelemetry\SDK\Trace\SpanDataInterface;
 use OpenTelemetry\SDK\Trace\SpanLimits;
@@ -37,6 +34,7 @@ class Span extends OtelSpan implements ReadWriteSpanInterface, SpanDataInterface
     protected StatusDataInterface $status;
     protected int $endEpochNanos = 0;
     protected bool $hasEnded = false;
+    protected bool $isCritical = false;
 
     protected ?AttributesInterface $attributes = null;
 
@@ -96,22 +94,6 @@ class Span extends OtelSpan implements ReadWriteSpanInterface, SpanDataInterface
 
         return $span;
     }
-//
-//    /**
-//     * Backward compatibility methods
-//     *
-//     * @codeCoverageIgnore
-//     */
-//    public static function formatStackTrace(Throwable $e, ?array &$seen = null): string
-//    {
-//        BcUtil::triggerMethodDeprecationNotice(
-//            __METHOD__,
-//            'format',
-//            StackTraceFormatter::class
-//        );
-//
-//        return StackTraceFormatter::format($e);
-//    }
 
     /** @inheritDoc */
     public function getContext(): SpanContextInterface
@@ -311,7 +293,7 @@ class Span extends OtelSpan implements ReadWriteSpanInterface, SpanDataInterface
     /** @inheritDoc */
     public function getAttribute(string $key)
     {
-        return $this->attributesBuilder[$key];
+        return $this->attributesBuilder[$key] ?? null;
     }
 
     public function getStartEpochNanos(): int
