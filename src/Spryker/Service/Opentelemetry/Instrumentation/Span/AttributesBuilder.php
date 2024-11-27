@@ -16,6 +16,13 @@ use Spryker\Service\Opentelemetry\Instrumentation\Sampler\CriticalSpanTraceIdRat
 
 class AttributesBuilder implements AttributesBuilderInterface
 {
+    /**
+     * @param array $attributes
+     * @param int|null $attributeCountLimit
+     * @param int|null $attributeValueLengthLimit
+     * @param int $droppedAttributesCount
+     * @param \OpenTelemetry\SDK\Common\Attribute\AttributeValidatorInterface $attributeValidator
+     */
     public function __construct(
         protected array $attributes,
         protected ?int $attributeCountLimit,

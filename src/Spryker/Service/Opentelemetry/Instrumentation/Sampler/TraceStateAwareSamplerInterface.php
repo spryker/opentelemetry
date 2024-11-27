@@ -10,7 +10,7 @@ namespace Spryker\Service\Opentelemetry\Instrumentation\Sampler;
 use OpenTelemetry\API\Trace\SpanInterface;
 use OpenTelemetry\API\Trace\TraceStateInterface;
 
-interface ParentSpanAwareSamplerInterface
+interface TraceStateAwareSamplerInterface
 {
     /**
      * @param \OpenTelemetry\API\Trace\TraceStateInterface $span
@@ -18,10 +18,4 @@ interface ParentSpanAwareSamplerInterface
      * @return void
      */
     public function addTraceState(TraceStateInterface $span): void;
-
-    /**
-     * @param \OpenTelemetry\API\Trace\SpanInterface $span
-     * @return void
-     */
-    public function addParentSpan(SpanInterface $span): void;
 }

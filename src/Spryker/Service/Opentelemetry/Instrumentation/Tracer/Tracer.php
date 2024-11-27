@@ -26,7 +26,7 @@ class Tracer implements TracerInterface
     protected const FALLBACK_SPAN_NAME = 'empty';
 
     /**
-     * @var \OpenTelemetry\SDK\Common\InstrumentationScope\Config|\OpenTelemetry\SDK\Trace\TracerConfig
+     * @var \OpenTelemetry\SDK\Common\InstrumentationScope\Config
      */
     protected Config $config;
 

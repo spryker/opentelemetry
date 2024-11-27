@@ -24,125 +24,165 @@ use OpenTelemetry\SDK\Trace\SpanProcessorInterface;
 use SplQueue;
 use Spryker\Service\Opentelemetry\Instrumentation\Sampler\CriticalSpanTraceIdRatioSampler;
 use Spryker\Zed\Opentelemetry\OpentelemetryConfig;
+use Throwable;
 
 class PostFilterBatchSpanProcessor implements SpanProcessorInterface
 {
     use LogsMessagesTrait;
 
+    /**
+     * @var int
+     */
     public const DEFAULT_SCHEDULE_DELAY = 5000;
-    public const DEFAULT_EXPORT_TIMEOUT = 30000;
+
+    /**
+     * @var int
+     */
     public const DEFAULT_MAX_QUEUE_SIZE = 2048;
+
+    /**
+     * @var int
+     */
     public const DEFAULT_MAX_EXPORT_BATCH_SIZE = 512;
 
+    /**
+     * @var array<string, string>
+     */
     protected const ATTRIBUTES_PROCESSOR = ['processor' => 'batching'];
-    protected const ATTRIBUTES_QUEUED    = self::ATTRIBUTES_PROCESSOR + ['state' => 'queued'];
-    protected const ATTRIBUTES_PENDING   = self::ATTRIBUTES_PROCESSOR + ['state' => 'pending'];
+
+    /**
+     * @var array<string, string>
+     */
+    protected const ATTRIBUTES_QUEUED = self::ATTRIBUTES_PROCESSOR + ['state' => 'queued'];
+
+    /**
+     * @var array<string, string>
+     */
+    protected const ATTRIBUTES_PENDING = self::ATTRIBUTES_PROCESSOR + ['state' => 'pending'];
+
+    /**
+     * @var array<string, string>
+     */
     protected const ATTRIBUTES_PROCESSED = self::ATTRIBUTES_PROCESSOR + ['state' => 'processed'];
-    protected const ATTRIBUTES_DROPPED   = self::ATTRIBUTES_PROCESSOR + ['state' => 'dropped'];
-    protected const ATTRIBUTES_FREE      = self::ATTRIBUTES_PROCESSOR + ['state' => 'free'];
+
+    /**
+     * @var array<string, string>
+     */
+    protected const ATTRIBUTES_DROPPED = self::ATTRIBUTES_PROCESSOR + ['state' => 'dropped'];
+
+    /**
+     * @var array<string, string>
+     */
+    protected const ATTRIBUTES_FREE = self::ATTRIBUTES_PROCESSOR + ['state' => 'free'];
+
+    /**
+     * @var int
+     */
     protected int $maxQueueSize;
+
+    /**
+     * @var int
+     */
     protected int $scheduledDelayNanos;
+
+    /**
+     * @var int
+     */
     protected int $maxExportBatchSize;
+
+    /**
+     * @var \OpenTelemetry\Context\ContextInterface
+     */
     protected ContextInterface $exportContext;
 
+    /**
+     * @var int|null
+     */
     protected ?int $nextScheduledRun = null;
+
+    /**
+     * @var bool
+     */
     protected bool $running = false;
+
+    /**
+     * @var int
+     */
     protected int $dropped = 0;
+
+    /**
+     * @var int
+     */
     protected int $processed = 0;
+
+    /**
+     * @var int
+     */
     protected int $batchId = 0;
+
+    /**
+     * @var int
+     */
     protected int $queueSize = 0;
-    /** @var list<\Spryker\Service\Opentelemetry\Instrumentation\Span\Span> */
+
+    /**
+     * @var list<\Spryker\Service\Opentelemetry\Instrumentation\Span\Span>
+     */
     protected array $batch = [];
-    /** @var SplQueue<list<\Spryker\Service\Opentelemetry\Instrumentation\Span\Span>> */
+
+    /**
+     * @var \SplQueue<list<\Spryker\Service\Opentelemetry\Instrumentation\Span\Span>>
+     */
     protected SplQueue $queue;
-    /** @var SplQueue<array{int, string, ?CancellationInterface, bool, ContextInterface}> */
+
+    /**
+     * @var \SplQueue<array{int, string, ?CancellationInterface, bool, ContextInterface}>
+     */
     protected SplQueue $flush;
 
+    /**
+     * @var bool
+     */
     protected bool $closed = false;
 
+    /**
+     * @param \OpenTelemetry\SDK\Trace\SpanExporterInterface $exporter
+     * @param \OpenTelemetry\API\Common\Time\ClockInterface $clock
+     * @param int $maxQueueSize
+     * @param int $scheduledDelayMillis
+     * @param int $maxExportBatchSize
+     * @param bool $autoFlush
+     * @param \OpenTelemetry\API\Metrics\MeterProviderInterface|null $meterProvider
+     */
     public function __construct(
-        protected readonly SpanExporterInterface $exporter,
-        protected readonly ClockInterface $clock,
+        protected SpanExporterInterface $exporter,
+        protected ClockInterface $clock,
         int $maxQueueSize = self::DEFAULT_MAX_QUEUE_SIZE,
         int $scheduledDelayMillis = self::DEFAULT_SCHEDULE_DELAY,
-        int $exportTimeoutMillis = self::DEFAULT_EXPORT_TIMEOUT,
         int $maxExportBatchSize = self::DEFAULT_MAX_EXPORT_BATCH_SIZE,
-        protected readonly bool $autoFlush = false,
+        protected bool $autoFlush = false,
         ?MeterProviderInterface $meterProvider = null,
     ) {
-        if ($maxQueueSize <= 0) {
-            throw new InvalidArgumentException(sprintf('Maximum queue size (%d) must be greater than zero', $maxQueueSize));
-        }
-        if ($scheduledDelayMillis <= 0) {
-            throw new InvalidArgumentException(sprintf('Scheduled delay (%d) must be greater than zero', $scheduledDelayMillis));
-        }
-        if ($exportTimeoutMillis <= 0) {
-            throw new InvalidArgumentException(sprintf('Export timeout (%d) must be greater than zero', $exportTimeoutMillis));
-        }
-        if ($maxExportBatchSize <= 0) {
-            throw new InvalidArgumentException(sprintf('Maximum export batch size (%d) must be greater than zero', $maxExportBatchSize));
-        }
-        if ($maxExportBatchSize > $maxQueueSize) {
-            throw new InvalidArgumentException(sprintf('Maximum export batch size (%d) must be less than or equal to maximum queue size (%d)', $maxExportBatchSize, $maxQueueSize));
-        }
-        $this->maxQueueSize = $maxQueueSize;
-        $this->scheduledDelayNanos = $scheduledDelayMillis * 1_000_000;
-        $this->maxExportBatchSize = $maxExportBatchSize;
+        $this->setMaxQueueSize($maxQueueSize);
+        $this->setScheduledDelayTime($scheduledDelayMillis);
+        $this->setMaxExportBatchSize($maxExportBatchSize, $maxQueueSize);
 
         $this->exportContext = Context::getCurrent();
         $this->queue = new SplQueue();
         $this->flush = new SplQueue();
 
-        if ($meterProvider === null) {
-            return;
-        }
-
-        $meter = $meterProvider->getMeter('io.opentelemetry.sdk');
-        $meter
-            ->createObservableUpDownCounter(
-                'otel.trace.span_processor.spans',
-                '{spans}',
-                'The number of sampled spans received by the span processor',
-            )
-            ->observe(function (ObserverInterface $observer): void {
-                $queued = $this->queue->count() * $this->maxExportBatchSize + count($this->batch);
-                $pending = $this->queueSize - $queued;
-                $processed = $this->processed;
-                $dropped = $this->dropped;
-
-                $observer->observe($queued, self::ATTRIBUTES_QUEUED);
-                $observer->observe($pending, self::ATTRIBUTES_PENDING);
-                $observer->observe($processed, self::ATTRIBUTES_PROCESSED);
-                $observer->observe($dropped, self::ATTRIBUTES_DROPPED);
-            });
-        $meter
-            ->createObservableUpDownCounter(
-                'otel.trace.span_processor.queue.limit',
-                '{spans}',
-                'The queue size limit',
-            )
-            ->observe(function (ObserverInterface $observer): void {
-                $observer->observe($this->maxQueueSize, self::ATTRIBUTES_PROCESSOR);
-            });
-        $meter
-            ->createObservableUpDownCounter(
-                'otel.trace.span_processor.queue.usage',
-                '{spans}',
-                'The current queue usage',
-            )
-            ->observe(function (ObserverInterface $observer): void {
-                $queued = $this->queue->count() * $this->maxExportBatchSize + count($this->batch);
-                $pending = $this->queueSize - $queued;
-                $free = $this->maxQueueSize - $this->queueSize;
-
-                $observer->observe($queued, self::ATTRIBUTES_QUEUED);
-                $observer->observe($pending, self::ATTRIBUTES_PENDING);
-                $observer->observe($free, self::ATTRIBUTES_FREE);
-            });
+        $this->initMetrics($meterProvider);
     }
 
+    /**
+     * @param \OpenTelemetry\SDK\Trace\ReadWriteSpanInterface $span
+     * @param \OpenTelemetry\Context\ContextInterface $parentContext
+     *
+     * @return void
+     */
     public function onStart(ReadWriteSpanInterface $span, ContextInterface $parentContext): void
     {
+        //Nothing is required here, but method is a part of an API
     }
 
     /**
@@ -188,6 +228,12 @@ class PostFilterBatchSpanProcessor implements SpanProcessorInterface
         }
     }
 
+    /**
+     * @param \OpenTelemetry\SDK\Common\Future\CancellationInterface|null $cancellation
+     * @throws \Exception
+     *
+     * @return bool
+     */
     public function forceFlush(?CancellationInterface $cancellation = null): bool
     {
         if ($this->closed) {
@@ -197,6 +243,12 @@ class PostFilterBatchSpanProcessor implements SpanProcessorInterface
         return $this->flush(__FUNCTION__, $cancellation);
     }
 
+    /**
+     * @param \OpenTelemetry\SDK\Common\Future\CancellationInterface|null $cancellation
+     * @throws \Exception
+     *
+     * @return bool
+     */
     public function shutdown(?CancellationInterface $cancellation = null): bool
     {
         if ($this->closed) {
@@ -208,15 +260,121 @@ class PostFilterBatchSpanProcessor implements SpanProcessorInterface
         return $this->flush(__FUNCTION__, $cancellation);
     }
 
+    /**
+     * @param \OpenTelemetry\SDK\Trace\SpanExporterInterface $exporter
+     *
+     * @return \OpenTelemetry\SDK\Trace\SpanProcessor\BatchSpanProcessorBuilder
+     */
     public static function builder(SpanExporterInterface $exporter): BatchSpanProcessorBuilder
     {
         return new BatchSpanProcessorBuilder($exporter);
     }
 
+    /**
+     * @param int $maxQueueSize
+     *
+     * @return void
+     */
+    protected function setMaxQueueSize(int $maxQueueSize): void
+    {
+        if ($maxQueueSize <= 0) {
+            throw new InvalidArgumentException(sprintf('Maximum queue size (%d) must be greater than zero', $maxQueueSize));
+        }
+
+        $this->maxQueueSize = $maxQueueSize;
+    }
+
+    /**
+     * @param int $scheduledDelayMillis
+     *
+     * @return void
+     */
+    protected function setScheduledDelayTime(int $scheduledDelayMillis): void
+    {
+        if ($scheduledDelayMillis <= 0) {
+            throw new InvalidArgumentException(sprintf('Scheduled delay (%d) must be greater than zero', $scheduledDelayMillis));
+        }
+
+        $this->scheduledDelayNanos = $scheduledDelayMillis * 1_000_000;
+    }
+
+    protected function setMaxExportBatchSize(int $maxExportBatchSize, int $maxQueueSize): void
+    {
+        if ($maxExportBatchSize <= 0) {
+            throw new InvalidArgumentException(sprintf('Maximum export batch size (%d) must be greater than zero', $maxExportBatchSize));
+        }
+        if ($maxExportBatchSize > $maxQueueSize) {
+            throw new InvalidArgumentException(sprintf('Maximum export batch size (%d) must be less than or equal to maximum queue size (%d)', $maxExportBatchSize, $maxQueueSize));
+        }
+
+        $this->maxExportBatchSize = $maxExportBatchSize;
+    }
+    /**
+     * @param \OpenTelemetry\API\Metrics\MeterProviderInterface|null $meterProvider
+     *
+     * @return void
+     */
+    protected function initMetrics(?MeterProviderInterface $meterProvider = null): void
+    {
+        if ($meterProvider === null) {
+            return;
+        }
+
+        $meter = $meterProvider->getMeter('io.spryker.metrics');
+        $meter
+            ->createObservableUpDownCounter(
+                'otel.trace.span_processor.spans',
+                '{spans}',
+                'The number of sampled spans received by the span processor',
+            )
+            ->observe(function (ObserverInterface $observer): void {
+                $queued = $this->queue->count() * $this->maxExportBatchSize + count($this->batch);
+                $pending = $this->queueSize - $queued;
+                $processed = $this->processed;
+                $dropped = $this->dropped;
+
+                $observer->observe($queued, static::ATTRIBUTES_QUEUED);
+                $observer->observe($pending, static::ATTRIBUTES_PENDING);
+                $observer->observe($processed, static::ATTRIBUTES_PROCESSED);
+                $observer->observe($dropped, static::ATTRIBUTES_DROPPED);
+            });
+        $meter
+            ->createObservableUpDownCounter(
+                'otel.trace.span_processor.queue.limit',
+                '{spans}',
+                'The queue size limit',
+            )
+            ->observe(function (ObserverInterface $observer): void {
+                $observer->observe($this->maxQueueSize, static::ATTRIBUTES_PROCESSOR);
+            });
+        $meter
+            ->createObservableUpDownCounter(
+                'otel.trace.span_processor.queue.usage',
+                '{spans}',
+                'The current queue usage',
+            )
+            ->observe(function (ObserverInterface $observer): void {
+                $queued = $this->queue->count() * $this->maxExportBatchSize + count($this->batch);
+                $pending = $this->queueSize - $queued;
+                $free = $this->maxQueueSize - $this->queueSize;
+
+                $observer->observe($queued, static::ATTRIBUTES_QUEUED);
+                $observer->observe($pending, static::ATTRIBUTES_PENDING);
+                $observer->observe($free, static::ATTRIBUTES_FREE);
+            });
+    }
+
+    /**
+     * @param string|null $flushMethod
+     * @param \OpenTelemetry\SDK\Common\Future\CancellationInterface|null $cancellation
+     * @throws \Throwable
+     *
+     * @return bool
+     */
     protected function flush(?string $flushMethod = null, ?CancellationInterface $cancellation = null): bool
     {
         if ($flushMethod !== null) {
-            $flushId = $this->batchId + $this->queue->count() + (int) (bool) $this->batch;
+            $flushId = $this->batchId + $this->queue->count() + (int)(bool)$this->batch;
             $this->flush->enqueue([$flushId, $flushMethod, $cancellation, !$this->running, Context::getCurrent()]);
         }
 
@@ -282,6 +440,9 @@ class PostFilterBatchSpanProcessor implements SpanProcessorInterface
         return $success;
     }
 
+    /**
+     * @return bool
+     */
     protected function shouldFlush(): bool
     {
         return !$this->flush->isEmpty()
@@ -289,6 +450,9 @@ class PostFilterBatchSpanProcessor implements SpanProcessorInterface
             || $this->autoFlush && $this->nextScheduledRun !== null && $this->clock->now() > $this->nextScheduledRun;
     }
 
+    /**
+     * @return void
+     */
     protected function enqueueBatch(): void
     {
         assert($this->batch !== []);

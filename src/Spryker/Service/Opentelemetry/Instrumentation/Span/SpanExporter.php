@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * Copyright © 2016-present Spryker Systems GmbH. All rights reserved.
+ * Use of this software requires acceptance of the Evaluation License Agreement. See LICENSE file.
+ */
+
 namespace Spryker\Service\Opentelemetry\Instrumentation\Span;
 
 use OpenTelemetry\API\Behavior\LogsMessagesTrait;
@@ -14,12 +19,14 @@ class SpanExporter implements SpanExporterInterface
 {
     use LogsMessagesTrait;
 
+    /**
+     * @param \OpenTelemetry\SDK\Common\Export\TransportInterface $transport
+     * @param \Spryker\Service\Opentelemetry\Instrumentation\Span\SpanConverter $spanConverter
+     */
     public function __construct(
         protected TransportInterface $transport,
         protected SpanConverter $spanConverter,
-    )
-    {
-    }
+    ){}
 
     /**
      * @param iterable $batch
@@ -61,11 +68,21 @@ class SpanExporter implements SpanExporterInterface
             });
     }
 
+    /**
+     * @param \OpenTelemetry\SDK\Common\Future\CancellationInterface|null $cancellation
+     *
+     * @return bool
+     */
     public function shutdown(?CancellationInterface $cancellation = null): bool
     {
         return $this->transport->shutdown($cancellation);
     }
 
+    /**
+     * @param \OpenTelemetry\SDK\Common\Future\CancellationInterface|null $cancellation
+     *
+     * @return bool
+     */
     public function forceFlush(?CancellationInterface $cancellation = null): bool
     {
         return $this->transport->forceFlush($cancellation);

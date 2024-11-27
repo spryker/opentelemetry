@@ -8,14 +8,13 @@
 namespace Spryker\Service\Opentelemetry\Instrumentation\Sampler;
 
 use InvalidArgumentException;
-use OpenTelemetry\API\Trace\SpanInterface;
 use OpenTelemetry\API\Trace\TraceStateInterface;
 use OpenTelemetry\Context\ContextInterface;
 use OpenTelemetry\SDK\Common\Attribute\AttributesInterface;
 use OpenTelemetry\SDK\Trace\SamplerInterface;
 use OpenTelemetry\SDK\Trace\SamplingResult;
 
-class CriticalSpanTraceIdRatioSampler implements SamplerInterface, ParentSpanAwareSamplerInterface
+class CriticalSpanTraceIdRatioSampler implements SamplerInterface, TraceStateAwareSamplerInterface
 {
     /**
      * @var string
@@ -32,17 +31,12 @@ class CriticalSpanTraceIdRatioSampler implements SamplerInterface, ParentSpanAwa
      */
     protected ?TraceStateInterface $traceState = null;
 
-    protected ?SpanInterface $parentSpan = null;
-
     /**
      * @param float $probability
      */
     public function __construct(float $probability)
     {
-        if ($probability < 0.0 || $probability > 1.0) {
-            throw new InvalidArgumentException('probability should be be between 0.0 and 1.0.');
-        }
-        $this->probability = $probability;
+        $this->setProbability($probability);
     }
 
     /**
@@ -63,7 +57,7 @@ class CriticalSpanTraceIdRatioSampler implements SamplerInterface, ParentSpanAwa
         AttributesInterface $attributes,
         array $links,
     ): SamplingResult {
-        if ($attributes->has(static::IS_CRITICAL_ATTRIBUTE) && $this->parentSpan->getContext()->isValid()) {
+        if ($attributes->has(static::IS_CRITICAL_ATTRIBUTE)) {
             return new SamplingResult(SamplingResult::RECORD_AND_SAMPLE, [], $this->traceState);
         }
 
@@ -86,19 +80,24 @@ class CriticalSpanTraceIdRatioSampler implements SamplerInterface, ParentSpanAwa
     }
 
     /**
-     * @param \OpenTelemetry\API\Trace\SpanInterface $span
-     * @return void
-     */
-    public function addParentSpan(SpanInterface $span): void
-    {
-        $this->parentSpan = $span;
-    }
-
-    /**
      * @return string
      */
     public function getDescription(): string
     {
         return sprintf('%s{%.6F}', 'CriticalSpanTraceIdRatioSampler', $this->probability);
+    }
+
+    /**
+     * @param float $probability
+     *
+     * @return void
+     */
+    protected function setProbability(float $probability): void
+    {
+        if ($probability < 0.0 || $probability > 1.0) {
+            throw new InvalidArgumentException('probability should be be between 0.0 and 1.0.');
+        }
+
+        $this->probability = $probability;
     }
 }

@@ -19,7 +19,7 @@ use OpenTelemetry\SDK\Common\Instrumentation\InstrumentationScopeInterface;
 use OpenTelemetry\SDK\Trace\Link;
 use OpenTelemetry\SDK\Trace\SamplingResult;
 use OpenTelemetry\SDK\Trace\TracerSharedState;
-use Spryker\Service\Opentelemetry\Instrumentation\Sampler\ParentSpanAwareSamplerInterface;
+use Spryker\Service\Opentelemetry\Instrumentation\Sampler\TraceStateAwareSamplerInterface;
 
 class SpanBuilder implements SpanBuilderInterface
 {
@@ -220,9 +220,8 @@ class SpanBuilder implements SpanBuilderInterface
             ->tracerSharedState
             ->getSampler();
 
-        if ($sampler instanceof ParentSpanAwareSamplerInterface) {
-            $sampler->addTraceState($parentSpan->getContext()->getTraceState());
-            $sampler->addParentSpan($parentSpan);
+        if ($sampler instanceof TraceStateAwareSamplerInterface) {
+            $sampler->addTraceState($parentSpan->getContext()->getTraceState());;
         }
 
         return $sampler

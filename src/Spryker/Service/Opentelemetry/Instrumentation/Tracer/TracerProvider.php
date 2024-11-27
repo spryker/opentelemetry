@@ -31,7 +31,7 @@ class TracerProvider implements TracerProviderInterface
     protected TracerSharedState $tracerSharedState;
 
     /**
-     * @var \OpenTelemetry\SDK\Common\Instrumentation\InstrumentationScopeFactoryInterface|\OpenTelemetry\SDK\Common\Instrumentation\InstrumentationScopeFactory
+     * @var \OpenTelemetry\SDK\Common\Instrumentation\InstrumentationScopeFactoryInterface
      */
     protected InstrumentationScopeFactoryInterface $instrumentationScopeFactory;
 
@@ -43,15 +43,12 @@ class TracerProvider implements TracerProviderInterface
     /**
      * @var \Spryker\Service\Opentelemetry\Instrumentation\Tracer\Tracer|null
      */
-    protected static $tracer = null;
+    protected static ?Tracer $tracer = null;
 
     /**
      * @param \OpenTelemetry\SDK\Trace\SpanProcessorInterface $spanProcessor
      * @param \OpenTelemetry\SDK\Trace\SamplerInterface $sampler
      * @param \OpenTelemetry\SDK\Resource\ResourceInfo $resource
-     * @param \OpenTelemetry\SDK\Trace\SpanLimits|null $spanLimits
-     * @param \OpenTelemetry\SDK\Trace\IdGeneratorInterface|null $idGenerator
-     * @param \OpenTelemetry\SDK\Common\Instrumentation\InstrumentationScopeFactoryInterface|null $instrumentationScopeFactory
      * @param \OpenTelemetry\SDK\Common\InstrumentationScope\Configurator|null $configurator
      */
     public function __construct(
