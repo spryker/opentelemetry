@@ -48,7 +48,8 @@ class OpentelemetryMonitoringExtensionPlugin extends AbstractPlugin implements M
 
     /**
      * Specification:
-     * - Will be fixed in stable version. Not in use for now
+     * - Sets name for the root span. If no name provided, default name will be generated.
+     * - This will affect only root span as it will not update the current possible span name.
      *
      * @api
      *
@@ -58,6 +59,7 @@ class OpentelemetryMonitoringExtensionPlugin extends AbstractPlugin implements M
      */
     public function setTransactionName(string $name): void
     {
+        $this->getService()->setRootSpanName($name);
     }
 
     /**

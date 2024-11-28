@@ -36,6 +36,7 @@ use Spryker\Service\Opentelemetry\Instrumentation\Span\SpanExporter;
 use Spryker\Service\Opentelemetry\Instrumentation\SpanProcessor\PostFilterBatchSpanProcessor;
 use Spryker\Service\Opentelemetry\Instrumentation\Tracer\TracerProvider;
 use Spryker\Service\Opentelemetry\Storage\CustomParameterStorage;
+use Spryker\Service\Opentelemetry\Storage\RootSpanNameStorage;
 use Spryker\Shared\Opentelemetry\Instrumentation\CachedInstrumentation;
 use Spryker\Shared\Opentelemetry\Request\RequestProcessor;
 use Spryker\Zed\Opentelemetry\OpentelemetryConfig;
@@ -240,6 +241,10 @@ class SprykerInstrumentationBootstrap
         }
         $scope->detach();
         $span = Span::fromContext($scope->context());
+        $name = RootSpanNameStorage::getInstance()->getName();
+        if ($name) {
+            $span->updateName($name);
+        }
         $customParamsStorage = CustomParameterStorage::getInstance();
         $span->setAttributes($customParamsStorage->getAttributes());
         $span->end();

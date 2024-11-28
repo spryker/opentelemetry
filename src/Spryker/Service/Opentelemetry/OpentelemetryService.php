@@ -28,4 +28,14 @@ class OpentelemetryService extends AbstractService implements OpentelemetryServi
     {
         $this->getFactory()->createCustomParameterStorage()->setAttribute($key, $value);
     }
+
+    /**
+     * @param string $name
+     *
+     * @return void
+     */
+    public function setRootSpanName(string $name): void
+    {
+        $this->getFactory()->createRootSpanNameStorage()->setName($name);
+    }
 }
