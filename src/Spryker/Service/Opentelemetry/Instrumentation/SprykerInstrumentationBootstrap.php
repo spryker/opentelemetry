@@ -10,18 +10,11 @@ namespace Spryker\Service\Opentelemetry\Instrumentation;
 use OpenTelemetry\API\Common\Time\Clock;
 use OpenTelemetry\API\Signals;
 use OpenTelemetry\API\Trace\Propagation\TraceContextPropagator;
-use OpenTelemetry\API\Trace\Span;
-use OpenTelemetry\API\Trace\SpanInterface;
 use OpenTelemetry\API\Trace\SpanKind;
 use OpenTelemetry\Context\Context;
 use OpenTelemetry\Contrib\Grpc\GrpcTransportFactory;
 use OpenTelemetry\Contrib\Otlp\OtlpUtil;
-use OpenTelemetry\SDK\Common\Attribute\Attributes;
 use OpenTelemetry\SDK\Common\Util\ShutdownHandler;
-use OpenTelemetry\SDK\Metrics\MeterProviderFactory;
-use OpenTelemetry\SDK\Metrics\MeterProviderInterface;
-use OpenTelemetry\SDK\Resource\ResourceInfo;
-use OpenTelemetry\SDK\Resource\ResourceInfoFactory;
 use OpenTelemetry\SDK\Sdk;
 use OpenTelemetry\SDK\Trace\Sampler\ParentBased;
 use OpenTelemetry\SDK\Trace\SamplerInterface;
@@ -30,16 +23,22 @@ use OpenTelemetry\SDK\Trace\SpanProcessorInterface;
 use OpenTelemetry\SDK\Trace\TracerProviderInterface;
 use OpenTelemetry\SemConv\ResourceAttributes;
 use OpenTelemetry\SemConv\TraceAttributes;
+use Spryker\Service\Opentelemetry\Instrumentation\Resource\ResourceInfo;
+use Spryker\Service\Opentelemetry\Instrumentation\Resource\ResourceInfoFactory;
 use Spryker\Service\Opentelemetry\Instrumentation\Sampler\CriticalSpanTraceIdRatioSampler;
+use Spryker\Service\Opentelemetry\Instrumentation\Sampler\TraceSampleResult;
+use Spryker\Service\Opentelemetry\Instrumentation\Span\Attributes;
+use Spryker\Service\Opentelemetry\Instrumentation\Span\Span;
 use Spryker\Service\Opentelemetry\Instrumentation\Span\SpanConverter;
 use Spryker\Service\Opentelemetry\Instrumentation\Span\SpanExporter;
 use Spryker\Service\Opentelemetry\Instrumentation\SpanProcessor\PostFilterBatchSpanProcessor;
 use Spryker\Service\Opentelemetry\Instrumentation\Tracer\TracerProvider;
+use Spryker\Service\Opentelemetry\OpentelemetryInstrumentationConfig;
 use Spryker\Service\Opentelemetry\Storage\CustomParameterStorage;
+use Spryker\Service\Opentelemetry\Storage\ResourceNameStorage;
 use Spryker\Service\Opentelemetry\Storage\RootSpanNameStorage;
 use Spryker\Shared\Opentelemetry\Instrumentation\CachedInstrumentation;
 use Spryker\Shared\Opentelemetry\Request\RequestProcessor;
-use Spryker\Zed\Opentelemetry\OpentelemetryConfig;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -63,59 +62,56 @@ class SprykerInstrumentationBootstrap
     protected const INSTRUMENTATION_VERSION = '0.1';
 
     /**
-     * @var \OpenTelemetry\API\Trace\SpanInterface|null
+     * @var \Spryker\Service\Opentelemetry\Instrumentation\Resource\ResourceInfo|null
      */
-    protected static ?SpanInterface $rootSpan = null;
+    protected static ?ResourceInfo $resourceInfo = null;
 
     /**
      * @return void
      */
     public static function register(): void
     {
+        $request = RequestProcessor::getRequest();
+
+        TraceSampleResult::shouldSample($request);
+
+        if (TraceSampleResult::shouldSkipRootSpan()) {
+            return;
+        }
+
         $serviceName = static::resolveServiceName();
         $resource = static::createResource($serviceName);
 
         $tracerProvider = static::createTracerProvider($resource);
-        //$meterProvider = static::createMeterProvider($resource);
 
         Sdk::builder()
             ->setTracerProvider($tracerProvider)
-            //->setMeterProvider($meterProvider)
             ->setPropagator(TraceContextPropagator::getInstance())
             ->buildAndRegisterGlobal();
 
-        static::registerRootSpan($serviceName);
+        static::registerRootSpan($serviceName, $request);
 
         ShutdownHandler::register($tracerProvider->shutdown(...));
-        //ShutdownHandler::register($meterProvider->shutdown(...));
     }
 
     /**
      * @param string $serviceName
      *
-     * @return \OpenTelemetry\SDK\Resource\ResourceInfo
+     * @return \Spryker\Service\Opentelemetry\Instrumentation\Resource\ResourceInfo
      */
     protected static function createResource(string $serviceName): ResourceInfo
     {
-        return ResourceInfoFactory::defaultResource()->merge(ResourceInfo::create(Attributes::create([
-            ResourceAttributes::SERVICE_NAMESPACE => OpentelemetryConfig::getServiceNamespace(),
+        static::$resourceInfo = ResourceInfoFactory::defaultResource()->mergeSprykerResource(ResourceInfo::createSprykerResource(Attributes::create([
+            ResourceAttributes::SERVICE_NAMESPACE => OpentelemetryInstrumentationConfig::getServiceNamespace(),
             ResourceAttributes::SERVICE_VERSION => static::INSTRUMENTATION_VERSION,
             ResourceAttributes::SERVICE_NAME => $serviceName,
         ])));
+
+        return static::$resourceInfo;
     }
 
     /**
-     * @param \OpenTelemetry\SDK\Resource\ResourceInfo $resource
-     *
-     * @return \OpenTelemetry\SDK\Metrics\MeterProviderInterface
-     */
-    protected static function createMeterProvider(ResourceInfo $resource): MeterProviderInterface
-    {
-        return (new MeterProviderFactory())->create($resource);
-    }
-
-    /**
-     * @param \OpenTelemetry\SDK\Resource\ResourceInfo $resource
+     * @param \Spryker\Service\Opentelemetry\Instrumentation\Resource\ResourceInfo $resource
      *
      * @return \OpenTelemetry\SDK\Trace\TracerProviderInterface
      */
@@ -134,7 +130,7 @@ class SprykerInstrumentationBootstrap
     protected static function createSpanExporter(): SpanExporterInterface
     {
         return new SpanExporter(
-            (new GrpcTransportFactory())->create(OpentelemetryConfig::getExporterEndpoint() . OtlpUtil::method(Signals::TRACE)),
+            (new GrpcTransportFactory())->create(OpentelemetryInstrumentationConfig::getExporterEndpoint() . OtlpUtil::method(Signals::TRACE)),
             new SpanConverter(),
         );
     }
@@ -147,6 +143,9 @@ class SprykerInstrumentationBootstrap
         return new PostFilterBatchSpanProcessor(
             static::createSpanExporter(),
             Clock::getDefault(),
+            OpentelemetryInstrumentationConfig::getSpanProcessorMaxQueueSize(),
+            OpentelemetryInstrumentationConfig::getSpanProcessorScheduleDelay(),
+            OpentelemetryInstrumentationConfig::getSpanProcessorMaxBatchSize(),
         );
     }
 
@@ -155,7 +154,7 @@ class SprykerInstrumentationBootstrap
      */
     protected static function createSampler(): SamplerInterface
     {
-        return new ParentBased(new CriticalSpanTraceIdRatioSampler(OpentelemetryConfig::getSamplerProbability()));
+        return new ParentBased(new CriticalSpanTraceIdRatioSampler(OpentelemetryInstrumentationConfig::getSamplerProbability()));
     }
 
     /**
@@ -176,15 +175,15 @@ class SprykerInstrumentationBootstrap
             return sprintf('CLI %s', strtoupper($application));
         }
 
-        $mapping = OpentelemetryConfig::getServiceNameMapping();
+        $mapping = OpentelemetryInstrumentationConfig::getServiceNameMapping();
 
-        foreach ($mapping as $pattern => $serviceName) {
+        foreach ($mapping as $serviceName => $pattern) {
             if (preg_match($pattern, $request->getHost())) {
                 return $serviceName;
             }
         }
 
-        return OpentelemetryConfig::getDefaultServiceName();
+        return OpentelemetryInstrumentationConfig::getDefaultServiceName();
     }
 
     /**
@@ -192,10 +191,8 @@ class SprykerInstrumentationBootstrap
      *
      * @return void
      */
-    protected static function registerRootSpan(string $servicedName): void
+    protected static function registerRootSpan(string $servicedName, Request $request): void
     {
-        $request = (new RequestProcessor())->getRequest();
-
         $cli = $request->server->get('argv');
         if ($cli) {
             $name = implode(' ', $cli);
@@ -210,7 +207,6 @@ class SprykerInstrumentationBootstrap
             ->setParent($parent)
             ->setSpanKind(SpanKind::KIND_SERVER)
             ->setAttribute(TraceAttributes::URL_QUERY, $request->getQueryString())
-            //->setAttribute(CriticalSpanTraceIdRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
             ->startSpan();
 
         Context::storage()->attach($span->storeInContext($parent));
@@ -235,6 +231,10 @@ class SprykerInstrumentationBootstrap
      */
     public static function shutdownHandler(): void
     {
+        $resourceName = ResourceNameStorage::getInstance()->getName();
+        if ($resourceName) {
+            static::$resourceInfo->setServiceName($resourceName);
+        }
         $scope = Context::storage()->scope();
         if (!$scope) {
             return;

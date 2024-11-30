@@ -8,6 +8,7 @@
 namespace Spryker\Service\Opentelemetry;
 
 use Spryker\Service\Kernel\AbstractService;
+use Spryker\Service\Opentelemetry\Storage\ResourceNameStorage;
 
 /**
  * @method \Spryker\Service\Opentelemetry\OpentelemetryServiceFactory getFactory()
@@ -37,5 +38,15 @@ class OpentelemetryService extends AbstractService implements OpentelemetryServi
     public function setRootSpanName(string $name): void
     {
         $this->getFactory()->createRootSpanNameStorage()->setName($name);
+    }
+
+    /**
+     * @param string $name
+     *
+     * @return void
+     */
+    public function setResourceName(string $name): void
+    {
+       $this->getFactory()->createResourceNameStorage()->setName($name);
     }
 }

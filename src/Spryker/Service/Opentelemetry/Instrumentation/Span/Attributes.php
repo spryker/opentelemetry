@@ -12,7 +12,7 @@ use OpenTelemetry\SDK\Common\Attribute\AttributesFactoryInterface;
 use OpenTelemetry\SDK\Common\Attribute\AttributesInterface;
 use Traversable;
 
-class Attributes implements AttributesInterface, IteratorAggregate
+class Attributes implements AttributesInterface, IteratorAggregate, WritableAttributesInterface
 {
     /**
      * @param array $attributes
@@ -97,5 +97,20 @@ class Attributes implements AttributesInterface, IteratorAggregate
     public function getDroppedAttributesCount(): int
     {
         return $this->droppedAttributesCount;
+    }
+
+    /**
+     * @param string $key
+     * @param mixed $value
+     *
+     * @return void
+     */
+    public function set(string $key, $value): void
+    {
+        if ($value === null) {
+            unset($this->attributes[$key]);
+        }
+
+        $this->attributes[$key] = $value;
     }
 }

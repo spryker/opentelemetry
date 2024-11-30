@@ -23,7 +23,7 @@ use OpenTelemetry\SDK\Trace\SpanProcessor\BatchSpanProcessorBuilder;
 use OpenTelemetry\SDK\Trace\SpanProcessorInterface;
 use SplQueue;
 use Spryker\Service\Opentelemetry\Instrumentation\Sampler\CriticalSpanTraceIdRatioSampler;
-use Spryker\Zed\Opentelemetry\OpentelemetryConfig;
+use Spryker\Service\Opentelemetry\OpentelemetryInstrumentationConfig;
 use Throwable;
 
 class PostFilterBatchSpanProcessor implements SpanProcessorInterface
@@ -202,7 +202,7 @@ class PostFilterBatchSpanProcessor implements SpanProcessorInterface
 
         if (
             $span->getAttribute(CriticalSpanTraceIdRatioSampler::IS_CRITICAL_ATTRIBUTE) !== true
-            && $span->getDuration() < OpentelemetryConfig::getSamplerThresholdNano()
+            && $span->getDuration() < OpentelemetryInstrumentationConfig::getSamplerThresholdNano()
             && $span->getParentSpanId()
             && $span->getStatus()->getCode() === StatusCode::STATUS_OK
         ) {

@@ -7,8 +7,10 @@
 
 namespace Spryker\Service\Opentelemetry\Plugin;
 
+use OpenTelemetry\Context\Context;
 use Spryker\Service\Kernel\AbstractPlugin;
 use Spryker\Service\MonitoringExtension\Dependency\Plugin\MonitoringExtensionPluginInterface;
+use Spryker\Service\Opentelemetry\Instrumentation\Span\Span;
 
 /**
  * @method \Spryker\Service\Opentelemetry\OpentelemetryService getService()
@@ -17,7 +19,7 @@ class OpentelemetryMonitoringExtensionPlugin extends AbstractPlugin implements M
 {
     /**
      * Specification:
-     * - Will be fixed in stable version. Not in use for now
+     * - Adds error in to the current active span
      *
      * @api
      *
@@ -28,11 +30,18 @@ class OpentelemetryMonitoringExtensionPlugin extends AbstractPlugin implements M
      */
     public function setError(string $message, $exception): void
     {
+        $scope = Context::storage()->scope();
+        if (!$scope) {
+            return;
+        }
+
+        $span = Span::fromContext($scope->context());
+        $span->recordException($exception);
     }
 
     /**
      * Specification:
-     * - Will be fixed in stable version. Not in use for now
+     * - Sets Service name for traces. If no application name was provided, default one will be used.
      *
      * @api
      *
@@ -44,6 +53,7 @@ class OpentelemetryMonitoringExtensionPlugin extends AbstractPlugin implements M
      */
     public function setApplicationName(?string $application = null, ?string $store = null, ?string $environment = null): void
     {
+        $this->getService()->setResourceName(sprintf('%s-%s (%s)', $application ?? '', $store ?? '', $environment ?? ''));
     }
 
     /**
@@ -64,7 +74,7 @@ class OpentelemetryMonitoringExtensionPlugin extends AbstractPlugin implements M
 
     /**
      * Specification:
-     * - Will be fixed in stable version. Not in use for now
+     * - Opentelemetry instrumentation is completely custom.
      *
      * @api
      *
@@ -72,11 +82,12 @@ class OpentelemetryMonitoringExtensionPlugin extends AbstractPlugin implements M
      */
     public function markStartTransaction(): void
     {
+        return;
     }
 
     /**
      * Specification:
-     * - Will be fixed in stable version. Not in use for now
+     * - Opentelemetry instrumentation is completely custom.
      *
      * @api
      *
@@ -84,6 +95,7 @@ class OpentelemetryMonitoringExtensionPlugin extends AbstractPlugin implements M
      */
     public function markEndOfTransaction(): void
     {
+        return;
     }
 
     /**
@@ -100,7 +112,7 @@ class OpentelemetryMonitoringExtensionPlugin extends AbstractPlugin implements M
 
     /**
      * Specification:
-     * - Will be fixed in stable version. Not in use for now
+     * - Opentelemetry has not attributes to specify background jobs. Service name already defined for CLI commands
      *
      * @api
      *
@@ -108,6 +120,7 @@ class OpentelemetryMonitoringExtensionPlugin extends AbstractPlugin implements M
      */
     public function markAsConsoleCommand(): void
     {
+        return;
     }
 
     /**
@@ -128,7 +141,7 @@ class OpentelemetryMonitoringExtensionPlugin extends AbstractPlugin implements M
 
     /**
      * Specification:
-     * - Will be fixed in stable version. Not in use for now
+     * - Opentelemetry instrumentation is completely custom.
      *
      * @api
      *
@@ -138,5 +151,6 @@ class OpentelemetryMonitoringExtensionPlugin extends AbstractPlugin implements M
      */
     public function addCustomTracer(string $tracer): void
     {
+        return;
     }
 }

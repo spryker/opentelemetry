@@ -13,6 +13,7 @@ use OpenTelemetry\Context\ContextInterface;
 use OpenTelemetry\SDK\Common\Attribute\AttributesInterface;
 use OpenTelemetry\SDK\Trace\SamplerInterface;
 use OpenTelemetry\SDK\Trace\SamplingResult;
+use Spryker\Service\Opentelemetry\OpentelemetryInstrumentationConfig;
 
 class CriticalSpanTraceIdRatioSampler implements SamplerInterface, TraceStateAwareSamplerInterface
 {
@@ -57,13 +58,14 @@ class CriticalSpanTraceIdRatioSampler implements SamplerInterface, TraceStateAwa
         AttributesInterface $attributes,
         array $links,
     ): SamplingResult {
+        $probability = $this->probability;
         if ($attributes->has(static::IS_CRITICAL_ATTRIBUTE)) {
-            return new SamplingResult(SamplingResult::RECORD_AND_SAMPLE, [], $this->traceState);
+            $probability = OpentelemetryInstrumentationConfig::getSamplerProbabilityForCriticalSpans();
         }
 
         $traceIdLimit = (1 << 60) - 1;
         $lowerOrderBytes = hexdec(substr($traceId, strlen($traceId) - 15, 15));
-        $traceIdCondition = $lowerOrderBytes < round($this->probability * $traceIdLimit);
+        $traceIdCondition = $lowerOrderBytes < round($probability * $traceIdLimit);
         $decision = $traceIdCondition ? SamplingResult::RECORD_AND_SAMPLE : SamplingResult::DROP;
 
         return new SamplingResult($decision, [], $this->traceState);

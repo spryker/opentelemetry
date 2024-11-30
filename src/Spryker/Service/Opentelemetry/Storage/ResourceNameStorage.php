@@ -2,12 +2,9 @@
 
 namespace Spryker\Service\Opentelemetry\Storage;
 
-class RootSpanNameStorage implements RootSpanNameStorageInterface
+class ResourceNameStorage implements ResourceNameStorageInterface
 {
-    /**
-     * @var \Spryker\Service\Opentelemetry\Storage\RootSpanNameStorage|null
-     */
-    private static ?RootSpanNameStorage $instance = null;
+    private static ?ResourceNameStorage $instance = null;
 
     /**
      * @var string|null
@@ -15,9 +12,9 @@ class RootSpanNameStorage implements RootSpanNameStorageInterface
     protected ?string $name = null;
 
     /**
-     * @return \Spryker\Service\Opentelemetry\Storage\RootSpanNameStorage
+     * @return \Spryker\Service\Opentelemetry\Storage\ResourceNameStorage
      */
-    public static function getInstance(): RootSpanNameStorage
+    public static function getInstance(): ResourceNameStorage
     {
         if (self::$instance === null) {
             self::$instance = new self();
