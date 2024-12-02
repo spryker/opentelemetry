@@ -72,11 +72,11 @@ class CriticalSpanTraceIdRatioSampler implements SamplerInterface, TraceStateAwa
     }
 
     /**
-     * @param \OpenTelemetry\API\Trace\TraceStateInterface $traceState
+     * @param \OpenTelemetry\API\Trace\TraceStateInterface|null $traceState
      *
      * @return void
      */
-    public function addTraceState(TraceStateInterface $traceState): void
+    public function addTraceState(?TraceStateInterface $traceState): void
     {
         $this->traceState = $traceState;
     }

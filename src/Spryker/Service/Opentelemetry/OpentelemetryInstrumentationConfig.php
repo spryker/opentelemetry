@@ -17,6 +17,11 @@ class OpentelemetryInstrumentationConfig
     /**
      * @var string
      */
+    protected const OTEL_BSP_MIN_CRITICAL_SPAN_DURATION_THRESHOLD = 'OTEL_BSP_MIN_CRITICAL_SPAN_DURATION_THRESHOLD';
+
+    /**
+     * @var string
+     */
     protected const OTEL_EXPORTER_OTLP_ENDPOINT = 'OTEL_EXPORTER_OTLP_ENDPOINT';
 
     /**
@@ -75,6 +80,21 @@ class OpentelemetryInstrumentationConfig
     public static function getSamplerThresholdNano(): int
     {
         $multiplicator = getenv(static::OTEL_BSP_MIN_SPAN_DURATION_THRESHOLD) ?: 1;
+
+        return $multiplicator * 1000000;
+    }
+
+    /**
+     * Specification:
+     * - The threshold in nanoseconds for the critical span to be sampled.
+     *
+     * @api
+     *
+     * return int
+     */
+    public static function getSamplerThresholdNanoForCriticalSpan(): int
+    {
+        $multiplicator = getenv(static::OTEL_BSP_MIN_CRITICAL_SPAN_DURATION_THRESHOLD) ?: 1;
 
         return $multiplicator * 1000000;
     }
@@ -153,7 +173,7 @@ class OpentelemetryInstrumentationConfig
      */
     public static function getSamplerProbability(): float
     {
-        $probability = getenv(static::OTEL_TRACES_SAMPLER_ARG) ?: 1.0;
+        $probability = getenv(static::OTEL_TRACES_SAMPLER_ARG) ?: 0.5;
 
         return (float)$probability;
     }
@@ -165,7 +185,7 @@ class OpentelemetryInstrumentationConfig
      */
     public static function getSamplerProbabilityForCriticalSpans(): float
     {
-        $probability = getenv(static::OTEL_TRACES_CRITICAL_SAMPLER_ARG) ?: 1.0;
+        $probability = getenv(static::OTEL_TRACES_CRITICAL_SAMPLER_ARG) ?: 0.5;
 
         return (float)$probability;
     }

@@ -59,6 +59,10 @@ class HookContentCreator implements HookContentCreatorInterface
         $hooks = [];
 
         foreach ($class[static::METHODS_KEY] as $method) {
+            $methodHookName = $this->buildMethodHookName($class, $method);
+            if (in_array($methodHookName, $this->config->getExcludedSpans(), true)) {
+                continue;
+            }
             $hooks[] = sprintf(
                 '
             \\OpenTelemetry\\Instrumentation\\hook(
@@ -73,7 +77,7 @@ class HookContentCreator implements HookContentCreatorInterface
 
                     $span = \\Spryker\\Shared\\OpenTelemetry\\Instrumentation\\CachedInstrumentation::getCachedInstrumentation()
                         ->tracer()
-                        ->spanBuilder(\' %s\')
+                        ->spanBuilder(\'%s\')
                         ->setParent($context)
                         ->setSpanKind(($type === \\Symfony\\Component\\HttpKernel\\HttpKernelInterface::SUB_REQUEST) ? \\OpenTelemetry\\API\\Trace\\SpanKind::KIND_INTERNAL : \\OpenTelemetry\\API\\Trace\\SpanKind::KIND_SERVER)
                         ->setAttribute(\\OpenTelemetry\\SemConv\\TraceAttributes::CODE_FUNCTION, $function)
@@ -117,7 +121,7 @@ class HookContentCreator implements HookContentCreatorInterface
                 $class[static::NAMESPACE_KEY],
                 $class[static::CLASS_NAME_KEY],
                 $method,
-                $this->buildMethodHookName($class, $method),
+                $methodHookName,
             );
         }
 

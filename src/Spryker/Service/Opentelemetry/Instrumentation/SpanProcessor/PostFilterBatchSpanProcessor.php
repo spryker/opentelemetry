@@ -192,6 +192,7 @@ class PostFilterBatchSpanProcessor implements SpanProcessorInterface
      */
     public function onEnd(ReadableSpanInterface $span): void
     {
+        //$file = fopen(APPLICATION_ROOT_DIR . '/dropped', 'a');
         if ($this->closed) {
             return;
         }
@@ -200,13 +201,20 @@ class PostFilterBatchSpanProcessor implements SpanProcessorInterface
             return;
         }
 
-        if (
-            $span->getAttribute(CriticalSpanTraceIdRatioSampler::IS_CRITICAL_ATTRIBUTE) !== true
-            && $span->getDuration() < OpentelemetryInstrumentationConfig::getSamplerThresholdNano()
+        $duration = $span->getAttribute(CriticalSpanTraceIdRatioSampler::IS_CRITICAL_ATTRIBUTE) === true
+            ? OpentelemetryInstrumentationConfig::getSamplerThresholdNanoForCriticalSpan()
+            : OpentelemetryInstrumentationConfig::getSamplerThresholdNano();
+
+
+        if ($span->getDuration() < $duration
             && $span->getParentSpanId()
             && $span->getStatus()->getCode() === StatusCode::STATUS_OK
         ) {
             $this->dropped++;
+//            if ($span->getAttribute(CriticalSpanTraceIdRatioSampler::IS_CRITICAL_ATTRIBUTE) !== true) {
+//                fwrite($file, '\'' . $span->getName() . '\',' . PHP_EOL);
+//            }
+//            fclose($file);
             return;
         }
 

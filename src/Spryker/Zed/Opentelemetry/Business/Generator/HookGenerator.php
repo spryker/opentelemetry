@@ -96,10 +96,6 @@ class HookGenerator implements HookGeneratorInterface
             fwrite($file, $content);
             fwrite($file, $this->contentCreator->createHookContent($class));
             fclose($file);
-//            file_put_contents(
-//                $this->getOutputFilepath($class),
-//                $this->contentCreator->createHookContent($class),
-//            );
         }
     }
 
@@ -113,21 +109,6 @@ class HookGenerator implements HookGeneratorInterface
         }
 
         $this->fileSystem->mkdir($this->config->getOutputDir(), static::DIRECTORY_PERMISSIONS);
-    }
-
-    /**
-     * @param array<string> $class
-     *
-     * @return string
-     */
-    protected function getOutputFilepath(array $class): string
-    {
-        return sprintf(
-            static::OUTPUT_FILE_PATH_PLACEHOLDER,
-            $this->config->getOutputDir(),
-            str_replace('\\', '-', $class[static::NAMESPACE_KEY]),
-            $class[static::CLASS_NAME_KEY],
-        );
     }
 
     /**

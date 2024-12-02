@@ -74,6 +74,6 @@ class TraceSampleResult
      */
     protected static function decideForRootSpan(): bool
     {
-        return !((mt_rand() / mt_getrandmax()) <= OpentelemetryInstrumentationConfig::getTraceSamplerProbability());
+        return (mt_rand() / mt_getrandmax()) >= OpentelemetryInstrumentationConfig::getTraceSamplerProbability();
     }
 }

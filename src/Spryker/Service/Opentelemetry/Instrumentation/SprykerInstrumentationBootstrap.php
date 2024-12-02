@@ -154,7 +154,8 @@ class SprykerInstrumentationBootstrap
      */
     protected static function createSampler(): SamplerInterface
     {
-        return new ParentBased(new CriticalSpanTraceIdRatioSampler(OpentelemetryInstrumentationConfig::getSamplerProbability()));
+        return new CriticalSpanTraceIdRatioSampler(OpentelemetryInstrumentationConfig::getSamplerProbability());
+        //return new ParentBased(new CriticalSpanTraceIdRatioSampler(OpentelemetryInstrumentationConfig::getSamplerProbability()));
     }
 
     /**
@@ -207,6 +208,7 @@ class SprykerInstrumentationBootstrap
             ->setParent($parent)
             ->setSpanKind(SpanKind::KIND_SERVER)
             ->setAttribute(TraceAttributes::URL_QUERY, $request->getQueryString())
+            ->setAttribute('FULL_TRACE', !TraceSampleResult::shouldSkipTraceBody())
             ->startSpan();
 
         Context::storage()->attach($span->storeInContext($parent));

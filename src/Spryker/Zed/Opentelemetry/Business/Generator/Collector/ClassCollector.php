@@ -316,6 +316,7 @@ class ClassCollector implements ClassCollectorInterface
             'AbstractSpy*.php',
             '*Interface.php',
             '*Plugin.php',
+            '*Mapper.php',
         ];
     }
 }

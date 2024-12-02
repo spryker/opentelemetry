@@ -13,9 +13,9 @@ use OpenTelemetry\API\Trace\TraceStateInterface;
 interface TraceStateAwareSamplerInterface
 {
     /**
-     * @param \OpenTelemetry\API\Trace\TraceStateInterface $span
+     * @param \OpenTelemetry\API\Trace\TraceStateInterface|null $span
      *
      * @return void
      */
-    public function addTraceState(TraceStateInterface $span): void;
+    public function addTraceState(?TraceStateInterface $span): void;
 }
