@@ -73,7 +73,7 @@ class HookContentCreator implements HookContentCreatorInterface
 
                     $span = \\Spryker\\Shared\\OpenTelemetry\\Instrumentation\\CachedInstrumentation::getCachedInstrumentation()
                         ->tracer()
-                        ->spanBuilder($request->getMethod() . \' %s\')
+                        ->spanBuilder(\' %s\')
                         ->setParent($context)
                         ->setSpanKind(($type === \\Symfony\\Component\\HttpKernel\\HttpKernelInterface::SUB_REQUEST) ? \\OpenTelemetry\\API\\Trace\\SpanKind::KIND_INTERNAL : \\OpenTelemetry\\API\\Trace\\SpanKind::KIND_SERVER)
                         ->setAttribute(\\OpenTelemetry\\SemConv\\TraceAttributes::CODE_FUNCTION, $function)
@@ -101,7 +101,7 @@ class HookContentCreator implements HookContentCreatorInterface
                     }
 
                     $scope->detach();
-                    $span = \\OpenTelemetry\\API\\Trace\\Span::fromContext($scope->context());
+                    $span = \\Spryker\\Service\\Opentelemetry\\Instrumentation\\Span\\Span::fromContext($scope->context());
 
                     if ($exception !== null) {
                         $span->recordException($exception);

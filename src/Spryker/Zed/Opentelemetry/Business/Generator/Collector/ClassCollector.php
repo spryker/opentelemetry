@@ -315,6 +315,7 @@ class ClassCollector implements ClassCollectorInterface
             '*Bootstrap.php',
             'AbstractSpy*.php',
             '*Interface.php',
+            '*Plugin.php',
         ];
     }
 }
