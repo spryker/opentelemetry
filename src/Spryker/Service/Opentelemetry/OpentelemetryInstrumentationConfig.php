@@ -185,7 +185,7 @@ class OpentelemetryInstrumentationConfig
      */
     public static function getSamplerProbabilityForCriticalSpans(): float
     {
-        $probability = getenv(static::OTEL_TRACES_CRITICAL_SAMPLER_ARG) ?: 0.5;
+        $probability = getenv(static::OTEL_TRACES_CRITICAL_SAMPLER_ARG) ?: 0.9;
 
         return (float)$probability;
     }
@@ -234,7 +234,7 @@ class OpentelemetryInstrumentationConfig
      */
     public static function getTraceSamplerProbability(): float
     {
-        $probability = getenv(static::OTEL_TRACE_PROBABILITY) ?: 1.0;
+        $probability = getenv(static::OTEL_TRACE_PROBABILITY) ?: 0.7;
 
         return (float)$probability;
     }

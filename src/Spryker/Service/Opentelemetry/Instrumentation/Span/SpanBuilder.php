@@ -187,6 +187,7 @@ class SpanBuilder implements SpanBuilderInterface
         );
 
         if (!in_array($samplingDecision, [SamplingResult::RECORD_AND_SAMPLE, SamplingResult::RECORD_ONLY], true)) {
+            //var_dump($this->spanName);die;
             return Span::wrap($spanContext);
         }
 
@@ -221,7 +222,7 @@ class SpanBuilder implements SpanBuilderInterface
             ->getSampler();
 
         if ($sampler instanceof TraceStateAwareSamplerInterface) {
-            $sampler->addTraceState($parentSpan->getContext()->getTraceState());;
+            $sampler->addParentSpan($parentSpan);;
         }
 
         return $sampler

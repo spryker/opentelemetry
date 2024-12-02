@@ -89,7 +89,11 @@ class HookGenerator implements HookGeneratorInterface
             $this->ensureDirectoryExists();
 
             if (!file_exists($this->getOutputFilepathByModule($class))) {
-                $content = '<?php' . PHP_EOL;
+                $content = '<?php
+if (\Spryker\Service\Opentelemetry\Instrumentation\Sampler\TraceSampleResult::shouldSkipTraceBody()) {
+    return;
+}
+' . PHP_EOL;
             }
             $file = fopen($this->getOutputFilepathByModule($class), 'a');
 

@@ -8,6 +8,7 @@
 namespace Spryker\Service\Opentelemetry\Instrumentation\Sampler;
 
 use InvalidArgumentException;
+use OpenTelemetry\API\Trace\SpanInterface;
 use OpenTelemetry\API\Trace\TraceStateInterface;
 use OpenTelemetry\Context\ContextInterface;
 use OpenTelemetry\SDK\Common\Attribute\AttributesInterface;
@@ -28,16 +29,19 @@ class CriticalSpanTraceIdRatioSampler implements SamplerInterface, TraceStateAwa
     protected float $probability;
 
     /**
-     * @var \OpenTelemetry\API\Trace\TraceStateInterface|null
+     * @var float
      */
-    protected ?TraceStateInterface $traceState = null;
+    protected float $criticalProbability;
+
+    protected ?SpanInterface $parentSpan = null;
 
     /**
      * @param float $probability
      */
-    public function __construct(float $probability)
+    public function __construct(float $probability, float $criticalProbability)
     {
         $this->setProbability($probability);
+        $this->setCriticalProbability($criticalProbability);
     }
 
     /**
@@ -58,27 +62,36 @@ class CriticalSpanTraceIdRatioSampler implements SamplerInterface, TraceStateAwa
         AttributesInterface $attributes,
         array $links,
     ): SamplingResult {
+        if (!$this->parentSpan->getContext()->isValid()) {
+            return new SamplingResult(SamplingResult::RECORD_AND_SAMPLE, [], $this->parentSpan->getContext()->getTraceState());
+        }
         $probability = $this->probability;
         if ($attributes->has(static::IS_CRITICAL_ATTRIBUTE)) {
-            $probability = OpentelemetryInstrumentationConfig::getSamplerProbabilityForCriticalSpans();
+            $probability = $this->criticalProbability;
         }
 
-        $traceIdLimit = (1 << 60) - 1;
-        $lowerOrderBytes = hexdec(substr($traceId, strlen($traceId) - 15, 15));
-        $traceIdCondition = $lowerOrderBytes < round($probability * $traceIdLimit);
+//        $traceIdLimit = (1 << 60) - 1;
+//        $lowerOrderBytes = hexdec(substr($traceId, strlen($traceId) - 15, 15));
+//        $traceIdCondition = $lowerOrderBytes < round($probability * $traceIdLimit);
+//        if (!$traceIdCondition && $spanName !== 'Backoffice GET http://backoffice.de.spryker.local/') {
+//            var_dump($traceId,$traceIdCondition, $lowerOrderBytes, round($probability * $traceIdLimit), $traceIdLimit, $spanName);die;
+//        }
+
+        $traceIdCondition = (mt_rand() / mt_getrandmax()) <= $probability;
+        //var_dump($traceIdCondition, $probability);die;
         $decision = $traceIdCondition ? SamplingResult::RECORD_AND_SAMPLE : SamplingResult::DROP;
 
-        return new SamplingResult($decision, [], $this->traceState);
+        return new SamplingResult($decision, [], $this->parentSpan->getContext()->getTraceState());
     }
 
     /**
-     * @param \OpenTelemetry\API\Trace\TraceStateInterface|null $traceState
+     * @param \OpenTelemetry\API\Trace\SpanInterface $parentSpan
      *
      * @return void
      */
-    public function addTraceState(?TraceStateInterface $traceState): void
+    public function addParentSpan(SpanInterface $parentSpan): void
     {
-        $this->traceState = $traceState;
+        $this->parentSpan = $parentSpan;
     }
 
     /**
@@ -96,10 +109,32 @@ class CriticalSpanTraceIdRatioSampler implements SamplerInterface, TraceStateAwa
      */
     protected function setProbability(float $probability): void
     {
+        $this->validateProbability($probability);
+
+        $this->probability = $probability;
+    }
+
+    /**
+     * @param float $probability
+     *
+     * @return void
+     */
+    protected function setCriticalProbability(float $probability): void
+    {
+        $this->validateProbability($probability);
+
+        $this->criticalProbability = $probability;
+    }
+
+    /**
+     * @param float $probability
+     *
+     * @return void
+     */
+    protected function validateProbability(float $probability): void
+    {
         if ($probability < 0.0 || $probability > 1.0) {
             throw new InvalidArgumentException('probability should be be between 0.0 and 1.0.');
         }
-
-        $this->probability = $probability;
     }
 }
