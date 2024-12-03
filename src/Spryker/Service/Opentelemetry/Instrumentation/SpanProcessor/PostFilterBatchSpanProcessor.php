@@ -192,15 +192,11 @@ class PostFilterBatchSpanProcessor implements SpanProcessorInterface
      */
     public function onEnd(ReadableSpanInterface $span): void
     {
-        $fileS = fopen(APPLICATION_ROOT_DIR . '/sampled-new', 'a');
         if ($this->closed) {
             return;
         }
-        fwrite($fileS, $span->getTraceId() . ' ' . $span->getName() . PHP_EOL);
-        fclose($fileS);
+
         if (!$span->getContext()->isSampled()) {
-            fwrite($fileS, '\'-' . $span->getName() . '\',' . PHP_EOL);
-            fclose($fileS);
             return;
         }
 
