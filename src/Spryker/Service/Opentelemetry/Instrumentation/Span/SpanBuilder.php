@@ -185,9 +185,7 @@ class SpanBuilder implements SpanBuilderInterface
             $samplingDecision === SamplingResult::RECORD_AND_SAMPLE ? TraceFlags::SAMPLED : TraceFlags::DEFAULT,
             $samplingResultTraceState,
         );
-        $fileS = fopen(APPLICATION_ROOT_DIR . '/created', 'a');
-        fwrite($fileS, $traceId . ' ' . $this->spanName . ' ' . $samplingDecision . PHP_EOL);
-        fclose($fileS);
+
         if (!in_array($samplingDecision, [SamplingResult::RECORD_AND_SAMPLE, SamplingResult::RECORD_ONLY], true)) {
             return Span::wrap($spanContext);
         }

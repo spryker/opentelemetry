@@ -17,7 +17,6 @@ use OpenTelemetry\Contrib\Grpc\GrpcTransportFactory;
 use OpenTelemetry\Contrib\Otlp\OtlpUtil;
 use OpenTelemetry\SDK\Common\Util\ShutdownHandler;
 use OpenTelemetry\SDK\Sdk;
-use OpenTelemetry\SDK\Trace\Sampler\ParentBased;
 use OpenTelemetry\SDK\Trace\SamplerInterface;
 use OpenTelemetry\SDK\Trace\SpanExporterInterface;
 use OpenTelemetry\SDK\Trace\SpanProcessorInterface;
@@ -29,7 +28,6 @@ use Spryker\Service\Opentelemetry\Instrumentation\Resource\ResourceInfoFactory;
 use Spryker\Service\Opentelemetry\Instrumentation\Sampler\CriticalSpanTraceIdRatioSampler;
 use Spryker\Service\Opentelemetry\Instrumentation\Sampler\TraceSampleResult;
 use Spryker\Service\Opentelemetry\Instrumentation\Span\Attributes;
-use Spryker\Service\Opentelemetry\Instrumentation\Span\Span;
 use Spryker\Service\Opentelemetry\Instrumentation\Span\SpanConverter;
 use Spryker\Service\Opentelemetry\Instrumentation\Span\SpanExporter;
 use Spryker\Service\Opentelemetry\Instrumentation\SpanProcessor\PostFilterBatchSpanProcessor;
@@ -161,8 +159,11 @@ class SprykerInstrumentationBootstrap
      */
     protected static function createSampler(): SamplerInterface
     {
-        return new CriticalSpanTraceIdRatioSampler(OpentelemetryInstrumentationConfig::getSamplerProbability(), OpentelemetryInstrumentationConfig::getSamplerProbabilityForCriticalSpans());
-        //return new ParentBased(new CriticalSpanTraceIdRatioSampler(OpentelemetryInstrumentationConfig::getSamplerProbability()));
+        return new CriticalSpanTraceIdRatioSampler(
+            OpentelemetryInstrumentationConfig::getSamplerProbability(),
+            OpentelemetryInstrumentationConfig::getSamplerProbabilityForCriticalSpans(),
+            OpentelemetryInstrumentationConfig::getSamplerProbabilityForNonCriticalSpans(),
+        );
     }
 
     /**
@@ -251,9 +252,6 @@ class SprykerInstrumentationBootstrap
         }
         $scope->detach();
         $span = static::$rootSpan;
-        $fileC = fopen(APPLICATION_ROOT_DIR . '/closed', 'a');
-        fwrite($fileC, $span->getName() . PHP_EOL);
-        fclose($fileC);
         $name = RootSpanNameStorage::getInstance()->getName();
         if ($name) {
             $span->updateName($name);

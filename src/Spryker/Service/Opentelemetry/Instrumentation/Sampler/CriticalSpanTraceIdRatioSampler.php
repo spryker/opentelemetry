@@ -24,6 +24,11 @@ class CriticalSpanTraceIdRatioSampler implements SamplerInterface, TraceStateAwa
     public const IS_CRITICAL_ATTRIBUTE = 'is_critical';
 
     /**
+     * @var string
+     */
+    public const NO_CRITICAL_ATTRIBUTE = 'no_critical';
+
+    /**
      * @var float
      */
     protected float $probability;
@@ -33,15 +38,21 @@ class CriticalSpanTraceIdRatioSampler implements SamplerInterface, TraceStateAwa
      */
     protected float $criticalProbability;
 
+    /**
+     * @var float
+     */
+    protected float $nonCriticalProbability;
+
     protected ?SpanInterface $parentSpan = null;
 
     /**
      * @param float $probability
      */
-    public function __construct(float $probability, float $criticalProbability)
+    public function __construct(float $probability, float $criticalProbability, float $nonCriticalProbability)
     {
         $this->setProbability($probability);
         $this->setCriticalProbability($criticalProbability);
+        $this->setNonCriticalProbability($nonCriticalProbability);
     }
 
     /**
@@ -68,6 +79,10 @@ class CriticalSpanTraceIdRatioSampler implements SamplerInterface, TraceStateAwa
         $probability = $this->probability;
         if ($attributes->has(static::IS_CRITICAL_ATTRIBUTE)) {
             $probability = $this->criticalProbability;
+        }
+
+        if ($attributes->has(static::NO_CRITICAL_ATTRIBUTE)) {
+            $probability = $this->nonCriticalProbability;
         }
 
 //        $traceIdLimit = (1 << 60) - 1;
@@ -124,6 +139,18 @@ class CriticalSpanTraceIdRatioSampler implements SamplerInterface, TraceStateAwa
         $this->validateProbability($probability);
 
         $this->criticalProbability = $probability;
+    }
+
+    /**
+     * @param float $probability
+     *
+     * @return void
+     */
+    protected function setNonCriticalProbability(float $probability): void
+    {
+        $this->validateProbability($probability);
+
+        $this->nonCriticalProbability = $probability;
     }
 
     /**
