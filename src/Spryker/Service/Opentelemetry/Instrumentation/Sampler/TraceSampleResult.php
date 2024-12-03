@@ -36,6 +36,12 @@ class TraceSampleResult
     {
         $route = $request->attributes->get('_route');
 
+        if ($request->getMethod() !== Request::METHOD_GET) {
+            static::$result = static::SAMPLING_RESULT_ALLOW_ALL;
+
+            return static::$result;
+        }
+
         if (in_array($route, OpentelemetryInstrumentationConfig::getExcludedRoutes(), true)) {
             static::$result = self::SAMPLING_RESULT_BLOCK;
 

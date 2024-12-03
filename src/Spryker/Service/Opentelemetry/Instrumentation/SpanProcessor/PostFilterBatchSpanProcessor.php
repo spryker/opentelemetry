@@ -192,12 +192,15 @@ class PostFilterBatchSpanProcessor implements SpanProcessorInterface
      */
     public function onEnd(ReadableSpanInterface $span): void
     {
-        //$file = fopen(APPLICATION_ROOT_DIR . '/dropped', 'a');
+        $fileS = fopen(APPLICATION_ROOT_DIR . '/sampled-new', 'a');
         if ($this->closed) {
             return;
         }
-
+        fwrite($fileS, $span->getTraceId() . ' ' . $span->getName() . PHP_EOL);
+        fclose($fileS);
         if (!$span->getContext()->isSampled()) {
+            fwrite($fileS, '\'-' . $span->getName() . '\',' . PHP_EOL);
+            fclose($fileS);
             return;
         }
 
@@ -211,10 +214,7 @@ class PostFilterBatchSpanProcessor implements SpanProcessorInterface
             && $span->getStatus()->getCode() === StatusCode::STATUS_OK
         ) {
             $this->dropped++;
-//            if ($span->getAttribute(CriticalSpanTraceIdRatioSampler::IS_CRITICAL_ATTRIBUTE) !== true) {
-//                fwrite($file, '\'' . $span->getName() . '\',' . PHP_EOL);
-//            }
-//            fclose($file);
+
             return;
         }
 

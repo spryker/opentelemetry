@@ -10,6 +10,7 @@ namespace Spryker\Service\Opentelemetry\Instrumentation;
 use OpenTelemetry\API\Common\Time\Clock;
 use OpenTelemetry\API\Signals;
 use OpenTelemetry\API\Trace\Propagation\TraceContextPropagator;
+use OpenTelemetry\API\Trace\SpanInterface;
 use OpenTelemetry\API\Trace\SpanKind;
 use OpenTelemetry\Context\Context;
 use OpenTelemetry\Contrib\Grpc\GrpcTransportFactory;
@@ -67,6 +68,11 @@ class SprykerInstrumentationBootstrap
     protected static ?ResourceInfo $resourceInfo = null;
 
     /**
+     * @var \OpenTelemetry\API\Trace\SpanInterface|null
+     */
+    protected static ?SpanInterface $rootSpan = null;
+
+    /**
      * @return void
      */
     public static function register(): void
@@ -92,6 +98,7 @@ class SprykerInstrumentationBootstrap
         static::registerRootSpan($serviceName, $request);
 
         ShutdownHandler::register($tracerProvider->shutdown(...));
+        ShutdownHandler::register([static::class, 'shutdownHandler']);
     }
 
     /**
@@ -214,7 +221,7 @@ class SprykerInstrumentationBootstrap
 
         Context::storage()->attach($span->storeInContext($parent));
 
-        register_shutdown_function([static::class, 'shutdownHandler']);
+        static::$rootSpan = $span;
     }
 
     /**
@@ -243,7 +250,10 @@ class SprykerInstrumentationBootstrap
             return;
         }
         $scope->detach();
-        $span = Span::fromContext($scope->context());
+        $span = static::$rootSpan;
+        $fileC = fopen(APPLICATION_ROOT_DIR . '/closed', 'a');
+        fwrite($fileC, $span->getName() . PHP_EOL);
+        fclose($fileC);
         $name = RootSpanNameStorage::getInstance()->getName();
         if ($name) {
             $span->updateName($name);

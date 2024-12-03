@@ -77,8 +77,8 @@ class CriticalSpanTraceIdRatioSampler implements SamplerInterface, TraceStateAwa
 //            var_dump($traceId,$traceIdCondition, $lowerOrderBytes, round($probability * $traceIdLimit), $traceIdLimit, $spanName);die;
 //        }
 
-        $traceIdCondition = (mt_rand() / mt_getrandmax()) <= $probability;
-        //var_dump($traceIdCondition, $probability);die;
+        $result = mt_rand() / mt_getrandmax();
+        $traceIdCondition = $result <= $probability;
         $decision = $traceIdCondition ? SamplingResult::RECORD_AND_SAMPLE : SamplingResult::DROP;
 
         return new SamplingResult($decision, [], $this->parentSpan->getContext()->getTraceState());

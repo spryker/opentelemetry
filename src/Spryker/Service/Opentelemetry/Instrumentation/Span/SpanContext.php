@@ -40,10 +40,16 @@ class SpanContext implements SpanContextInterface
     protected function __construct(
         protected string $traceId,
         protected string $spanId,
-        protected readonly int $traceFlags,
-        protected readonly bool $isRemote,
-        protected readonly ?TraceStateInterface $traceState = null,
+        protected int $traceFlags,
+        protected bool $isRemote,
+        protected ?TraceStateInterface $traceState = null,
     ) {
+        if (!$traceId || !$spanId) {
+            $this->traceId = SpanContextValidator::INVALID_TRACE;
+            $this->spanId = SpanContextValidator::INVALID_SPAN;
+            $this->isValid = false;
+        }
+
         $this->isSampled = ($traceFlags & TraceFlags::SAMPLED) === TraceFlags::SAMPLED;
     }
 
