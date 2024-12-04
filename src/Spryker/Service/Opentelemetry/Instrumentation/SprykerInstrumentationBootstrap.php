@@ -25,7 +25,7 @@ use OpenTelemetry\SemConv\ResourceAttributes;
 use OpenTelemetry\SemConv\TraceAttributes;
 use Spryker\Service\Opentelemetry\Instrumentation\Resource\ResourceInfo;
 use Spryker\Service\Opentelemetry\Instrumentation\Resource\ResourceInfoFactory;
-use Spryker\Service\Opentelemetry\Instrumentation\Sampler\CriticalSpanTraceIdRatioSampler;
+use Spryker\Service\Opentelemetry\Instrumentation\Sampler\CriticalSpanRatioSampler;
 use Spryker\Service\Opentelemetry\Instrumentation\Sampler\TraceSampleResult;
 use Spryker\Service\Opentelemetry\Instrumentation\Span\Attributes;
 use Spryker\Service\Opentelemetry\Instrumentation\Span\SpanConverter;
@@ -159,7 +159,7 @@ class SprykerInstrumentationBootstrap
      */
     protected static function createSampler(): SamplerInterface
     {
-        return new CriticalSpanTraceIdRatioSampler(
+        return new CriticalSpanRatioSampler(
             OpentelemetryInstrumentationConfig::getSamplerProbability(),
             OpentelemetryInstrumentationConfig::getSamplerProbabilityForCriticalSpans(),
             OpentelemetryInstrumentationConfig::getSamplerProbabilityForNonCriticalSpans(),

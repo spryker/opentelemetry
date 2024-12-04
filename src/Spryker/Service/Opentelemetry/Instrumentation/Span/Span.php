@@ -11,7 +11,6 @@ use OpenTelemetry\API\Behavior\LogsMessagesTrait;
 use OpenTelemetry\API\Common\Time\Clock;
 use OpenTelemetry\API\Trace\Span as OtelSpan;
 use OpenTelemetry\API\Trace\SpanContextInterface;
-use OpenTelemetry\API\Trace\SpanInterface;
 use OpenTelemetry\API\Trace\StatusCode;
 use OpenTelemetry\Context\ContextInterface;
 use OpenTelemetry\SDK\Common\Attribute\AttributesBuilderInterface;
@@ -94,7 +93,7 @@ class Span extends OtelSpan implements ReadWriteSpanInterface, SpanDataInterface
      * @param \OpenTelemetry\API\Trace\SpanContextInterface $context
      * @param \OpenTelemetry\SDK\Common\Instrumentation\InstrumentationScopeInterface $instrumentationScope
      * @param int $kind
-     * @param \OpenTelemetry\API\Trace\SpanInterface $parentSpan
+     * @param \OpenTelemetry\API\Trace\SpanContextInterface $parentSpanContext
      * @param \OpenTelemetry\Context\ContextInterface $parentContext
      * @param \OpenTelemetry\SDK\Trace\SpanLimits $spanLimits
      * @param \OpenTelemetry\SDK\Trace\SpanProcessorInterface $spanProcessor
@@ -111,7 +110,7 @@ class Span extends OtelSpan implements ReadWriteSpanInterface, SpanDataInterface
         SpanContextInterface $context,
         InstrumentationScopeInterface $instrumentationScope,
         int $kind,
-        SpanInterface $parentSpan,
+        SpanContextInterface $parentSpanContext,
         ContextInterface $parentContext,
         SpanLimits $spanLimits,
         SpanProcessorInterface $spanProcessor,
@@ -126,7 +125,7 @@ class Span extends OtelSpan implements ReadWriteSpanInterface, SpanDataInterface
             $context,
             $instrumentationScope,
             $kind,
-            $parentSpan->getContext(),
+            $parentSpanContext,
             $spanLimits,
             $spanProcessor,
             $resource,

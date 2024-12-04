@@ -13,7 +13,7 @@ use OpenTelemetry\API\Trace\TraceFlags;
 use OpenTelemetry\API\Trace\TraceStateInterface;
 use function hex2bin;
 
-class SpanContext implements SpanContextInterface
+class SpanContext implements SpanContextInterface, SpanIdUpdateAwareSpanContextInterface
 {
     protected static ?SpanContextInterface $invalidContext = null;
 
@@ -171,5 +171,15 @@ class SpanContext implements SpanContextInterface
         }
 
         return static::$invalidContext;
+    }
+
+    /**
+     * @param string $spanId
+     *
+     * @return void
+     */
+    public function updateSpanId(string $spanId): void
+    {
+        $this->spanId = $spanId;
     }
 }

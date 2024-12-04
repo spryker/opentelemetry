@@ -22,7 +22,8 @@ use OpenTelemetry\SDK\Trace\SpanExporterInterface;
 use OpenTelemetry\SDK\Trace\SpanProcessor\BatchSpanProcessorBuilder;
 use OpenTelemetry\SDK\Trace\SpanProcessorInterface;
 use SplQueue;
-use Spryker\Service\Opentelemetry\Instrumentation\Sampler\CriticalSpanTraceIdRatioSampler;
+use Spryker\Service\Opentelemetry\Instrumentation\Sampler\CriticalSpanRatioSampler;
+use Spryker\Service\Opentelemetry\Instrumentation\Span\SpanIdUpdateAwareSpanContextInterface;
 use Spryker\Service\Opentelemetry\OpentelemetryInstrumentationConfig;
 use Throwable;
 
@@ -146,6 +147,11 @@ class PostFilterBatchSpanProcessor implements SpanProcessorInterface
     protected bool $closed = false;
 
     /**
+     * @var array<string, string>
+     */
+    protected static $parentSpanIdMapping = [];
+
+    /**
      * @param \OpenTelemetry\SDK\Trace\SpanExporterInterface $exporter
      * @param \OpenTelemetry\API\Common\Time\ClockInterface $clock
      * @param int $maxQueueSize
@@ -200,7 +206,7 @@ class PostFilterBatchSpanProcessor implements SpanProcessorInterface
             return;
         }
 
-        $duration = $span->getAttribute(CriticalSpanTraceIdRatioSampler::IS_CRITICAL_ATTRIBUTE) === true
+        $duration = $span->getAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE) === true
             ? OpentelemetryInstrumentationConfig::getSamplerThresholdNanoForCriticalSpan()
             : OpentelemetryInstrumentationConfig::getSamplerThresholdNano();
 
@@ -210,6 +216,7 @@ class PostFilterBatchSpanProcessor implements SpanProcessorInterface
             && $span->getStatus()->getCode() === StatusCode::STATUS_OK
         ) {
             $this->dropped++;
+            static::$parentSpanIdMapping[$span->getSpanId()] = $span->getParentContext()->getSpanId();
 
             return;
         }
@@ -221,6 +228,11 @@ class PostFilterBatchSpanProcessor implements SpanProcessorInterface
         }
 
         $this->queueSize++;
+
+        if (isset(static::$parentSpanIdMapping[$span->getParentContext()->getSpanId()]) && $span->getParentContext() instanceof SpanIdUpdateAwareSpanContextInterface) {
+            $span->getParentContext()->updateSpanId(static::$parentSpanIdMapping[$span->getParentContext()->getSpanId()]);
+        }
+
         $this->batch[] = $span;
         $this->nextScheduledRun ??= $this->clock->now() + $this->scheduledDelayNanos;
 

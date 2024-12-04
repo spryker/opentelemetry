@@ -12,7 +12,7 @@ use OpenTelemetry\SDK\Common\Attribute\AttributesInterface;
 use OpenTelemetry\SDK\Common\Attribute\AttributeValidator;
 use OpenTelemetry\SDK\Common\Attribute\AttributeValidatorInterface;
 use OpenTelemetry\SemConv\TraceAttributes;
-use Spryker\Service\Opentelemetry\Instrumentation\Sampler\CriticalSpanTraceIdRatioSampler;
+use Spryker\Service\Opentelemetry\Instrumentation\Sampler\CriticalSpanRatioSampler;
 
 class AttributesBuilder implements AttributesBuilderInterface
 {
@@ -139,7 +139,7 @@ class AttributesBuilder implements AttributesBuilderInterface
             'search.query',
             'root.url',
             TraceAttributes::URL_DOMAIN,
-            CriticalSpanTraceIdRatioSampler::IS_CRITICAL_ATTRIBUTE,
+            CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE,
         ];
     }
 }

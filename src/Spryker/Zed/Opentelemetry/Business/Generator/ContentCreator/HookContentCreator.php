@@ -84,6 +84,7 @@ class HookContentCreator implements HookContentCreatorInterface
                         ->setAttribute(\\OpenTelemetry\\SemConv\\TraceAttributes::CODE_NAMESPACE, $class)
                         ->setAttribute(\\OpenTelemetry\\SemConv\\TraceAttributes::CODE_FILEPATH, $filename)
                         ->setAttribute(\\OpenTelemetry\\SemConv\\TraceAttributes::CODE_LINENO, $lineno)
+                        ->setAttribute(\\Spryker\\Service\\Opentelemetry\\Instrumentation\\Sampler\\CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, %s)
                         ->startSpan();
 
                     \\OpenTelemetry\\Context\\Context::storage()->attach($span->storeInContext($context));
@@ -122,6 +123,7 @@ class HookContentCreator implements HookContentCreatorInterface
                 $class[static::CLASS_NAME_KEY],
                 $method,
                 $methodHookName,
+                $this->isCriticalHook($class) ? 'true' : 'null',
             );
         }
 
@@ -142,5 +144,15 @@ class HookContentCreator implements HookContentCreatorInterface
             $class[static::CLASS_NAME_KEY],
             $method,
         );
+    }
+
+    /**
+     * @param array<string, mixed> $class
+     *
+     * @return bool
+     */
+    protected function isCriticalHook(array $class): bool
+    {
+        return str_contains($class[static::CLASS_NAME_KEY], 'Facade') || str_contains($class[static::CLASS_NAME_KEY], 'Controller');
     }
 }

@@ -19,7 +19,7 @@ use OpenTelemetry\SDK\Common\Instrumentation\InstrumentationScopeInterface;
 use OpenTelemetry\SDK\Trace\Link;
 use OpenTelemetry\SDK\Trace\SamplingResult;
 use OpenTelemetry\SDK\Trace\TracerSharedState;
-use Spryker\Service\Opentelemetry\Instrumentation\Sampler\TraceStateAwareSamplerInterface;
+use Spryker\Service\Opentelemetry\Instrumentation\Sampler\ParentSpanAwareSamplerInterface;
 
 class SpanBuilder implements SpanBuilderInterface
 {
@@ -52,6 +52,11 @@ class SpanBuilder implements SpanBuilderInterface
      * @var int
      */
     protected int $startEpochNanos = 0;
+
+    /**
+     * @var array<string, string>
+     */
+    protected static $parentMapping = [];
 
     /**
      * @param string $spanName
@@ -187,7 +192,17 @@ class SpanBuilder implements SpanBuilderInterface
         );
 
         if (!in_array($samplingDecision, [SamplingResult::RECORD_AND_SAMPLE, SamplingResult::RECORD_ONLY], true)) {
+            static::$parentMapping[$spanId] = $parentSpanContext->getSpanId();
+
+            if ($spanContext instanceof SpanIdUpdateAwareSpanContextInterface) {
+                $spanContext->updateSpanId($parentSpanContext->getSpanId());
+            }
+
             return Span::wrap($spanContext);
+        }
+
+        if (isset(static::$parentMapping[$parentSpanContext->getSpanId()]) && $parentSpanContext instanceof SpanIdUpdateAwareSpanContextInterface) {
+            $parentSpanContext->updateSpanId(static::$parentMapping[$parentSpanContext->getSpanId()]);
         }
 
         return Span::startSpan(
@@ -195,7 +210,7 @@ class SpanBuilder implements SpanBuilderInterface
             $spanContext,
             $this->instrumentationScope,
             $this->spanKind,
-            $parentSpan,
+            $parentSpanContext,
             $parentContext,
             $this->tracerSharedState->getSpanLimits(),
             $this->tracerSharedState->getSpanProcessor(),
@@ -220,7 +235,7 @@ class SpanBuilder implements SpanBuilderInterface
             ->tracerSharedState
             ->getSampler();
 
-        if ($sampler instanceof TraceStateAwareSamplerInterface) {
+        if ($sampler instanceof ParentSpanAwareSamplerInterface) {
             $sampler->addParentSpan($parentSpan);;
         }
 

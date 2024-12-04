@@ -117,7 +117,7 @@ class ClassCollector implements ClassCollectorInterface
         $tokens = token_get_all($content);
         $namespace = $this->parseNamespace($tokens);
         $class = $this->parseClassName($tokens);
-        $methods = $this->parseMethods($tokens);
+        $methods = $this->parseMethods($tokens, $class);
 
         if ($class && $methods !== []) {
             return [
@@ -187,10 +187,11 @@ class ClassCollector implements ClassCollectorInterface
 
     /**
      * @param array<mixed> $tokens
+     * @param string $class
      *
      * @return array<string>
      */
-    protected function parseMethods(array $tokens): array
+    protected function parseMethods(array $tokens, string $class): array
     {
         $methods = [];
         $functionLevel = 0;
@@ -199,7 +200,7 @@ class ClassCollector implements ClassCollectorInterface
 
         for ($i = 0; $i < $tokensCount; $i++) {
             if ($tokens[$i][0] === T_FUNCTION) {
-                if (!$this->isMethodAllowed($tokens, $i)) {
+                if (!$this->isMethodAllowed($tokens, $i, $class)) {
                     break;
                 }
                 $isAnonymousFunction = false;
@@ -241,20 +242,28 @@ class ClassCollector implements ClassCollectorInterface
         return $methods;
     }
 
-    protected function isMethodAllowed(array $tokens, int $functionIndex): bool
+    /**
+     * @param array $tokens
+     * @param int $functionIndex
+     * @param string $class
+     *
+     * @return bool
+     */
+    protected function isMethodAllowed(array $tokens, int $functionIndex, string $class): bool
     {
-        return $this->checkForPublicMethods($tokens, $functionIndex) && $this->checkForSimpleMethods($tokens, $functionIndex);
+        return $this->checkForPublicMethods($tokens, $functionIndex, $class) && $this->checkForSimpleMethods($tokens, $functionIndex);
     }
 
     /**
      * @param array $tokens
      * @param int $functionIndex
+     * @param string $class
      *
      * @return bool
      */
-    protected function checkForPublicMethods(array $tokens, int $functionIndex): bool
+    protected function checkForPublicMethods(array $tokens, int $functionIndex, string $class): bool
     {
-        if (!$this->config->areOnlyPublicMethodsInstrumented()) {
+        if (!$this->config->areOnlyPublicMethodsInstrumented() || str_contains($class, 'Controller')) {
             return true;
         }
 

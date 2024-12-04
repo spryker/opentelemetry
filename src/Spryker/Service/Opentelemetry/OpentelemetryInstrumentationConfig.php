@@ -180,7 +180,7 @@ class OpentelemetryInstrumentationConfig
     {
         $probability = getenv(static::OTEL_TRACES_SAMPLER_ARG) ?: 0.4;
 
-        return (float)$probability;
+        return (float)0.4;
     }
 
     /**

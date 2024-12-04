@@ -9,14 +9,12 @@ namespace Spryker\Service\Opentelemetry\Instrumentation\Sampler;
 
 use InvalidArgumentException;
 use OpenTelemetry\API\Trace\SpanInterface;
-use OpenTelemetry\API\Trace\TraceStateInterface;
 use OpenTelemetry\Context\ContextInterface;
 use OpenTelemetry\SDK\Common\Attribute\AttributesInterface;
 use OpenTelemetry\SDK\Trace\SamplerInterface;
 use OpenTelemetry\SDK\Trace\SamplingResult;
-use Spryker\Service\Opentelemetry\OpentelemetryInstrumentationConfig;
 
-class CriticalSpanTraceIdRatioSampler implements SamplerInterface, TraceStateAwareSamplerInterface
+class CriticalSpanRatioSampler implements SamplerInterface, ParentSpanAwareSamplerInterface
 {
     /**
      * @var string
@@ -85,13 +83,6 @@ class CriticalSpanTraceIdRatioSampler implements SamplerInterface, TraceStateAwa
             $probability = $this->nonCriticalProbability;
         }
 
-//        $traceIdLimit = (1 << 60) - 1;
-//        $lowerOrderBytes = hexdec(substr($traceId, strlen($traceId) - 15, 15));
-//        $traceIdCondition = $lowerOrderBytes < round($probability * $traceIdLimit);
-//        if (!$traceIdCondition && $spanName !== 'Backoffice GET http://backoffice.de.spryker.local/') {
-//            var_dump($traceId,$traceIdCondition, $lowerOrderBytes, round($probability * $traceIdLimit), $traceIdLimit, $spanName);die;
-//        }
-
         $result = mt_rand() / mt_getrandmax();
         $traceIdCondition = $result <= $probability;
         $decision = $traceIdCondition ? SamplingResult::RECORD_AND_SAMPLE : SamplingResult::DROP;
@@ -114,7 +105,7 @@ class CriticalSpanTraceIdRatioSampler implements SamplerInterface, TraceStateAwa
      */
     public function getDescription(): string
     {
-        return sprintf('%s{%.6F}', 'CriticalSpanTraceIdRatioSampler', $this->probability);
+        return sprintf('%s{%.6F}', 'CriticalSpanRatioSampler', $this->probability);
     }
 
     /**
