@@ -33,7 +33,7 @@ class OpentelemetryConfig extends AbstractBundleConfig
             'AclEntity',
             'Container',
             'Transfer',
-            //'Kernel',
+            'Kernel',
             //'Application',
             'Installer',
             'Console',
