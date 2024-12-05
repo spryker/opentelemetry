@@ -53,7 +53,7 @@ class SprykerInstrumentationBootstrap
     /**
      * @var string
      */
-    public const ATTRIBUTE_IS_DETAILED_TRACE = 'is_full_trace';
+    public const ATTRIBUTE_IS_DETAILED_TRACE = 'detailed';
 
     /**
      * @var string
@@ -227,7 +227,7 @@ class SprykerInstrumentationBootstrap
             ->setParent($parent)
             ->setSpanKind(SpanKind::KIND_SERVER)
             ->setAttribute(TraceAttributes::URL_QUERY, $request->getQueryString())
-            ->setAttribute(static::ATTRIBUTE_IS_DETAILED_TRACE, TraceSampleResult::shouldSkipTraceBody() ? null : false)
+            ->setAttribute(static::ATTRIBUTE_IS_DETAILED_TRACE, TraceSampleResult::shouldSkipTraceBody() ? false : null)
             ->setAttribute(static::ATTRIBUTE_HTTP_METHOD, $request->getMethod())
             ->startSpan();
 
