@@ -184,6 +184,9 @@ class SpanBuilder implements SpanBuilderInterface
         $samplingDecision = $samplingResult->getDecision();
         $samplingResultTraceState = $samplingResult->getTraceState();
 
+        $file = fopen(APPLICATION_ROOT_DIR . '/span' . $traceId, 'a');
+        fwrite($file, $this->spanName . PHP_EOL);
+        fclose($file);
         $spanContext = SpanContext::create(
             $traceId,
             $spanId,
