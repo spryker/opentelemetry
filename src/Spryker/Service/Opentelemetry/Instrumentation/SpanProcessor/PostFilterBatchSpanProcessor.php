@@ -314,6 +314,12 @@ class PostFilterBatchSpanProcessor implements SpanProcessorInterface
         $this->scheduledDelayNanos = $scheduledDelayMillis * 1_000_000;
     }
 
+    /**
+     * @param int $maxExportBatchSize
+     * @param int $maxQueueSize
+     *
+     * @return void
+     */
     protected function setMaxExportBatchSize(int $maxExportBatchSize, int $maxQueueSize): void
     {
         if ($maxExportBatchSize <= 0) {

@@ -19,7 +19,7 @@ class OpentelemetryMonitoringExtensionPlugin extends AbstractPlugin implements M
 {
     /**
      * Specification:
-     * - Adds error in to the current active span
+     * - Adds error to the current active span
      *
      * @api
      *
@@ -58,7 +58,7 @@ class OpentelemetryMonitoringExtensionPlugin extends AbstractPlugin implements M
 
     /**
      * Specification:
-     * - Sets name for the root span. If no name provided, default name will be generated.
+     * - Sets name for the root span. If no name was provided, default name will be generated.
      * - This will affect only root span as it will not update the current possible span name.
      *
      * @api

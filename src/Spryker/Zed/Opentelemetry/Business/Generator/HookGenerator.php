@@ -127,7 +127,7 @@ if (\Spryker\Service\Opentelemetry\Instrumentation\Sampler\TraceSampleResult::sh
         return sprintf(
             static::OUTPUT_FILE_PATH_PLACEHOLDER_BY_MODULE,
             $this->config->getOutputDir(),
-            $moduleNamePattern,
+            'BigHook',
         );
     }
 }

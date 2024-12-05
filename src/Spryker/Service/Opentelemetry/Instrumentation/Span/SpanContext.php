@@ -15,6 +15,9 @@ use function hex2bin;
 
 class SpanContext implements SpanContextInterface, SpanIdUpdateAwareSpanContextInterface
 {
+    /**
+     * @var \OpenTelemetry\API\Trace\SpanContextInterface|null
+     */
     protected static ?SpanContextInterface $invalidContext = null;
 
     /**

@@ -53,6 +53,16 @@ class SprykerInstrumentationBootstrap
     /**
      * @var string
      */
+    public const ATTRIBUTE_IS_DETAILED_TRACE = 'is_full_trace';
+
+    /**
+     * @var string
+     */
+    public const ATTRIBUTE_HTTP_METHOD = 'method';
+
+    /**
+     * @var string
+     */
     protected const SPAN_NAME_PLACEHOLDER = '%s %s';
 
     /**
@@ -97,6 +107,7 @@ class SprykerInstrumentationBootstrap
 
         ShutdownHandler::register($tracerProvider->shutdown(...));
         ShutdownHandler::register([static::class, 'shutdownHandler']);
+        include_once APPLICATION_ROOT_DIR . '/src/Generated/OpenTelemetry/Hooks/BigHookHook.php';
     }
 
     /**
@@ -216,8 +227,8 @@ class SprykerInstrumentationBootstrap
             ->setParent($parent)
             ->setSpanKind(SpanKind::KIND_SERVER)
             ->setAttribute(TraceAttributes::URL_QUERY, $request->getQueryString())
-            ->setAttribute('is_full_trace', !TraceSampleResult::shouldSkipTraceBody())
-            ->setAttribute('method', $request->getMethod())
+            ->setAttribute(static::ATTRIBUTE_IS_DETAILED_TRACE, TraceSampleResult::shouldSkipTraceBody() ? null : false)
+            ->setAttribute(static::ATTRIBUTE_HTTP_METHOD, $request->getMethod())
             ->startSpan();
 
         Context::storage()->attach($span->storeInContext($parent));

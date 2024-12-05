@@ -99,7 +99,7 @@ class Span extends OtelSpan implements ReadWriteSpanInterface, SpanDataInterface
      * @param \OpenTelemetry\SDK\Trace\SpanProcessorInterface $spanProcessor
      * @param \OpenTelemetry\SDK\Resource\ResourceInfo $resource
      * @param \OpenTelemetry\SDK\Common\Attribute\AttributesBuilderInterface $attributesBuilder
-     * @param array $links
+     * @param list<\OpenTelemetry\SDK\Trace\LinkInterface> $links
      * @param int $totalRecordedLinks
      * @param int $startEpochNanos
      *
@@ -485,7 +485,7 @@ class Span extends OtelSpan implements ReadWriteSpanInterface, SpanDataInterface
     }
 
     /**
-     * @return \OpenTelemetry\SDK\Trace\EventInterface[]
+     * @return array<\OpenTelemetry\SDK\Trace\EventInterface>
      */
     public function getEvents(): array
     {
@@ -493,7 +493,7 @@ class Span extends OtelSpan implements ReadWriteSpanInterface, SpanDataInterface
     }
 
     /**
-     * @return \OpenTelemetry\SDK\Trace\LinkInterface[]
+     * @return array<\OpenTelemetry\SDK\Trace\LinkInterface>
      */
     public function getLinks(): array
     {

@@ -85,6 +85,11 @@ class SpanConverter
         return $pExportTraceServiceRequest;
     }
 
+    /**
+     * @param \OpenTelemetry\SDK\Resource\ResourceInfo $resource
+     *
+     * @return \Opentelemetry\Proto\Trace\V1\ResourceSpans
+     */
     protected function convertResourceSpans(ResourceInfo $resource): ResourceSpans
     {
         $pResourceSpans = new ResourceSpans();
@@ -96,6 +101,11 @@ class SpanConverter
         return $pResourceSpans;
     }
 
+    /**
+     * @param \OpenTelemetry\SDK\Common\Instrumentation\InstrumentationScopeInterface $instrumentationScope
+     *
+     * @return \Opentelemetry\Proto\Trace\V1\ScopeSpans
+     */
     protected function convertScopeSpans(InstrumentationScopeInterface $instrumentationScope): ScopeSpans
     {
         $pScopeSpans = new ScopeSpans();
@@ -111,6 +121,9 @@ class SpanConverter
 
     /**
      * @param Resource_|Span|Event|Link|InstrumentationScope $pElement
+     * @param \OpenTelemetry\SDK\Common\Attribute\AttributesInterface $attributes
+     *
+     * @return void
      */
     protected function setAttributes($pElement, AttributesInterface $attributes): void
     {
@@ -123,6 +136,11 @@ class SpanConverter
         $pElement->setDroppedAttributesCount($attributes->getDroppedAttributesCount());
     }
 
+    /**
+     * @param int $kind
+     *
+     * @return int
+     */
     protected function convertSpanKind(int $kind): int
     {
         return match ($kind) {
@@ -135,6 +153,11 @@ class SpanConverter
         };
     }
 
+    /**
+     * @param string $status
+     *
+     * @return int
+     */
     protected function convertStatusCode(string $status): int
     {
         switch ($status) {
@@ -146,6 +169,11 @@ class SpanConverter
         return StatusCode::STATUS_CODE_UNSET;
     }
 
+    /**
+     * @param \OpenTelemetry\SDK\Trace\SpanDataInterface $span
+     *
+     * @return \Opentelemetry\Proto\Trace\V1\Span
+     */
     protected function convertSpan(SpanDataInterface $span): Span
     {
         $pSpan = new Span();
@@ -190,6 +218,11 @@ class SpanConverter
         return $pSpan;
     }
 
+    /**
+     * @param \OpenTelemetry\API\Trace\SpanContextInterface $spanContext
+     *
+     * @return int
+     */
     protected static function traceFlags(SpanContextInterface $spanContext): int
     {
         $flags = $spanContext->getTraceFlags();
