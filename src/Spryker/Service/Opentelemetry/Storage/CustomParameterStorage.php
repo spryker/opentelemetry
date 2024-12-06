@@ -4,6 +4,9 @@ namespace Spryker\Service\Opentelemetry\Storage;
 
 class CustomParameterStorage implements CustomParameterStorageInterface
 {
+    /**
+     * @var \Spryker\Service\Opentelemetry\Storage\CustomParameterStorage|null
+     */
     private static ?CustomParameterStorage $instance = null;
 
     /**

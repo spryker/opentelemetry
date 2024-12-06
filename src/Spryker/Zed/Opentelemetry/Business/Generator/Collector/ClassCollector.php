@@ -117,7 +117,7 @@ class ClassCollector implements ClassCollectorInterface
         $tokens = token_get_all($content);
         $namespace = $this->parseNamespace($tokens);
         $class = $this->parseClassName($tokens);
-        $methods = $this->parseMethods($tokens);
+        $methods = $this->parseMethods($tokens, $class);
 
         if ($class && $methods !== []) {
             return [
@@ -187,10 +187,11 @@ class ClassCollector implements ClassCollectorInterface
 
     /**
      * @param array<mixed> $tokens
+     * @param string $class
      *
      * @return array<string>
      */
-    protected function parseMethods(array $tokens): array
+    protected function parseMethods(array $tokens, string $class): array
     {
         $methods = [];
         $functionLevel = 0;
@@ -199,6 +200,9 @@ class ClassCollector implements ClassCollectorInterface
 
         for ($i = 0; $i < $tokensCount; $i++) {
             if ($tokens[$i][0] === T_FUNCTION) {
+                if (!$this->isMethodAllowed($tokens, $i, $class)) {
+                    break;
+                }
                 $isAnonymousFunction = false;
                 for ($j = $i + 1; $j < $tokensCount; $j++) {
                     if ($tokens[$j] === '(') {
@@ -239,6 +243,72 @@ class ClassCollector implements ClassCollectorInterface
     }
 
     /**
+     * @param array $tokens
+     * @param int $functionIndex
+     * @param string $class
+     *
+     * @return bool
+     */
+    protected function isMethodAllowed(array $tokens, int $functionIndex, string $class): bool
+    {
+        return $this->checkForPublicMethods($tokens, $functionIndex, $class) && $this->checkForSimpleMethods($tokens, $functionIndex);
+    }
+
+    /**
+     * @param array $tokens
+     * @param int $functionIndex
+     * @param string $class
+     *
+     * @return bool
+     */
+    protected function checkForPublicMethods(array $tokens, int $functionIndex, string $class): bool
+    {
+        if (!$this->config->areOnlyPublicMethodsInstrumented() || str_contains($class, 'Controller')) {
+            return true;
+        }
+
+        if (isset($tokens[$functionIndex - 2][0]) && in_array($tokens[$functionIndex - 2][0], [T_PROTECTED, T_PRIVATE], true)) {
+            return false;
+        }
+
+        if (isset($tokens[$functionIndex - 2][0])
+            && $tokens[$functionIndex - 2][0] === T_STATIC
+            && isset($tokens[$functionIndex - 3][0])
+            && in_array($tokens[$functionIndex - 3][0], [T_PROTECTED, T_PRIVATE], true)
+        ) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * @param array $tokens
+     * @param int $functionIndex
+     *
+     * @return bool
+     */
+    protected function checkForSimpleMethods(array $tokens, int $functionIndex): bool
+    {
+        for ($i = $functionIndex + 1; $i < count($tokens); $i++) {
+            if ($tokens[$i] === '{') {
+                $count = 0;
+                for ($j = $i + 1; $j < count($tokens); $j++) {
+                    $count++;
+                    if ($count < 3 && $tokens[$j][0] === T_RETURN && in_array($tokens[$j + 2][0], [T_STRING, T_ARRAY, T_NEW, ], true)) {
+                        return false;
+                    }
+                    if ($tokens[$j] === '}') {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * @return array<string>
      */
     protected function getExcludedClasses(): array
@@ -254,6 +324,8 @@ class ClassCollector implements ClassCollectorInterface
             '*Bootstrap.php',
             'AbstractSpy*.php',
             '*Interface.php',
+            '*Plugin.php',
+            '*Mapper.php',
         ];
     }
 }

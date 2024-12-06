@@ -22,4 +22,16 @@ interface OpentelemetryServiceInterface
      * @return void
      */
     public function setCustomParameter(string $key, $value): void;
+
+    /**
+     * Specification:
+     * - Sets root span name that will be shown in the list of all transactions
+     *
+     * @api
+     *
+     * @param string $name
+     *
+     * @return void
+     */
+    public function setRootSpanName(string $name): void;
 }

@@ -15,6 +15,11 @@ use Spryker\Zed\Opentelemetry\OpentelemetryConfig;
 class HookGenerator implements HookGeneratorInterface
 {
     /**
+     * @var string
+     */
+    public const GLOBAL_HOOK_FILE_NAME = 'GlobalHook';
+
+    /**
      * @var int
      */
     protected const DIRECTORY_PERMISSIONS = 0755;
@@ -22,7 +27,7 @@ class HookGenerator implements HookGeneratorInterface
     /**
      * @var string
      */
-    protected const OUTPUT_FILE_PATH_PLACEHOLDER = '%s/%s-%sHook.php';
+    protected const OUTPUT_FILE_PATH_PLACEHOLDER_GLOBAL = '%s/%s.php';
 
     /**
      * @var string
@@ -80,12 +85,21 @@ class HookGenerator implements HookGeneratorInterface
         $collectedClasses = $this->collector->collectClasses();
 
         foreach ($collectedClasses as $class) {
+            $content = PHP_EOL;
             $this->ensureDirectoryExists();
 
-            file_put_contents(
-                $this->getOutputFilepath($class),
-                $this->contentCreator->createHookContent($class),
-            );
+            if (!file_exists($this->getOutputFilepathByModule($class))) {
+                $content = '<?php
+if (\Spryker\Service\Opentelemetry\Instrumentation\Sampler\TraceSampleResult::shouldSkipTraceBody()) {
+    return;
+}
+' . PHP_EOL;
+            }
+            $file = fopen($this->getOutputFilepathByModule($class), 'a');
+
+            fwrite($file, $content);
+            fwrite($file, $this->contentCreator->createHookContent($class));
+            fclose($file);
         }
     }
 
@@ -106,13 +120,14 @@ class HookGenerator implements HookGeneratorInterface
      *
      * @return string
      */
-    protected function getOutputFilepath(array $class): string
+    protected function getOutputFilepathByModule(array $class): string
     {
+        $namespace = explode('\\', $class[static::NAMESPACE_KEY]);
+        $moduleNamePattern = $namespace[0] . $namespace[1] . $namespace[2];
         return sprintf(
-            static::OUTPUT_FILE_PATH_PLACEHOLDER,
+            static::OUTPUT_FILE_PATH_PLACEHOLDER_GLOBAL,
             $this->config->getOutputDir(),
-            str_replace('\\', '-', $class[static::NAMESPACE_KEY]),
-            $class[static::CLASS_NAME_KEY],
+            static::GLOBAL_HOOK_FILE_NAME,
         );
     }
 }

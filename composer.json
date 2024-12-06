@@ -4,10 +4,15 @@
     "description": "Opentelemetry module",
     "license": "proprietary",
     "require": {
+        "ext-grpc": "*",
+        "ext-opentelemetry": "*",
         "open-telemetry/api": "^1.0",
+        "open-telemetry/exporter-otlp": "^1.0",
+        "open-telemetry/gen-otlp-protobuf": "^1.1",
+        "open-telemetry/transport-grpc": "^1.0",
         "open-telemetry/sdk": "^1.0",
         "open-telemetry/sem-conv": "^1.0",
-        "php": ">=8.1",
+        "php": ">=8.2",
         "spryker/kernel": "^3.30.0",
         "spryker/monitoring-extension": "^1.0.0",
         "spryker/symfony": "^3.0.0"

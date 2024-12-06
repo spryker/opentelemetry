@@ -57,9 +57,12 @@ class HookContentCreator implements HookContentCreatorInterface
     public function createHookContent(array $class): string
     {
         $hooks = [];
-        $envVars = $this->config->getOtelEnvVars();
 
         foreach ($class[static::METHODS_KEY] as $method) {
+            $methodHookName = $this->buildMethodHookName($class, $method);
+            if (in_array($methodHookName, $this->config->getExcludedSpans(), true)) {
+                continue;
+            }
             $hooks[] = sprintf(
                 '
             \\OpenTelemetry\\Instrumentation\\hook(
@@ -67,21 +70,6 @@ class HookContentCreator implements HookContentCreatorInterface
                 function: \'%s\',
                 pre: static function ($instance, array $params, string $class, string $function, ?string $filename, ?int $lineno) {
                     $context = \\OpenTelemetry\\Context\\Context::getCurrent();
-                    $envVars = %s;
-
-                    $extractTraceIdFromEnv = function(array $envVars): array {
-                        foreach ($envVars as $key => $envVar) {
-                            if (defined($envVar)) {
-                                return [$key => constant($envVar)];
-                            }
-                        }
-                        return [];
-                    };
-
-                    $traceId = $extractTraceIdFromEnv($envVars);
-                    if ($traceId !== []) {
-                        $context = \\OpenTelemetry\\API\\Trace\\Propagation\\TraceContextPropagator::getInstance()->extract($traceId);
-                    }
 
                     $type = $params[1] ?? \\Symfony\\Component\\HttpKernel\\HttpKernelInterface::MAIN_REQUEST;
 
@@ -89,16 +77,17 @@ class HookContentCreator implements HookContentCreatorInterface
 
                     $span = \\Spryker\\Shared\\OpenTelemetry\\Instrumentation\\CachedInstrumentation::getCachedInstrumentation()
                         ->tracer()
-                        ->spanBuilder($request->getMethod() . \' %s\')
+                        ->spanBuilder(\'%s\')
                         ->setParent($context)
                         ->setSpanKind(($type === \\Symfony\\Component\\HttpKernel\\HttpKernelInterface::SUB_REQUEST) ? \\OpenTelemetry\\API\\Trace\\SpanKind::KIND_INTERNAL : \\OpenTelemetry\\API\\Trace\\SpanKind::KIND_SERVER)
                         ->setAttribute(\\OpenTelemetry\\SemConv\\TraceAttributes::CODE_FUNCTION, $function)
                         ->setAttribute(\\OpenTelemetry\\SemConv\\TraceAttributes::CODE_NAMESPACE, $class)
                         ->setAttribute(\\OpenTelemetry\\SemConv\\TraceAttributes::CODE_FILEPATH, $filename)
                         ->setAttribute(\\OpenTelemetry\\SemConv\\TraceAttributes::CODE_LINENO, $lineno)
+                        ->setAttribute(\\Spryker\\Service\\Opentelemetry\\Instrumentation\\Sampler\\CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, %s)
                         ->startSpan();
 
-                    \\OpenTelemetry\\Context\\Context::storage()->attach($span->storeInContext(\\OpenTelemetry\\Context\\Context::getCurrent()));
+                    \\OpenTelemetry\\Context\\Context::storage()->attach($span->storeInContext($context));
                 },
 
                 post: static function ($instance, array $params, $returnValue, ?\Throwable $exception) {
@@ -117,17 +106,15 @@ class HookContentCreator implements HookContentCreatorInterface
                     }
 
                     $scope->detach();
-                    $span = \\OpenTelemetry\\API\\Trace\\Span::fromContext($scope->context());
+                    $span = \\Spryker\\Service\\Opentelemetry\\Instrumentation\\Span\\Span::fromContext($scope->context());
 
-                    if (isset($exception)) {
+                    if ($exception !== null) {
                         $span->recordException($exception);
+                        $span->setAttribute(\'error_message\', isset($exception) ? $exception->getMessage() : \'\');
+                        $span->setAttribute(\'error_code\', isset($exception) ? $exception->getCode() : \'\');
                     }
 
-                    $span->setAttribute(\'error_message\', isset($exception) ? $exception->getMessage() : \'\');
-                    $span->setAttribute(\'error_code\', isset($exception) ? $exception->getCode() : \'\');
-                    $span->setStatus(isset($exception) ? \\OpenTelemetry\\API\\Trace\\StatusCode::STATUS_ERROR : \\OpenTelemetry\\API\\Trace\\StatusCode::STATUS_OK);
-
-                    $span = \\Spryker\\Zed\\Opentelemetry\\Business\\Generator\\SpanFilter\\SamplerSpanFilter::filter($span);
+                    $span->setStatus($exception !== null ? \\OpenTelemetry\\API\\Trace\\StatusCode::STATUS_ERROR : \\OpenTelemetry\\API\\Trace\\StatusCode::STATUS_OK);
 
                     $span->end();
                 }
@@ -135,12 +122,12 @@ class HookContentCreator implements HookContentCreatorInterface
                 $class[static::NAMESPACE_KEY],
                 $class[static::CLASS_NAME_KEY],
                 $method,
-                var_export($envVars, true),
-                $this->buildMethodHookName($class, $method),
+                $methodHookName,
+                $this->isCriticalHook($class) ? 'true' : 'null',
             );
         }
 
-        return '<?php' . PHP_EOL . implode(PHP_EOL, $hooks) . PHP_EOL;
+        return PHP_EOL . implode(PHP_EOL, $hooks) . PHP_EOL;
     }
 
     /**
@@ -157,5 +144,20 @@ class HookContentCreator implements HookContentCreatorInterface
             $class[static::CLASS_NAME_KEY],
             $method,
         );
+    }
+
+    /**
+     * @param array<string, mixed> $class
+     *
+     * @return bool
+     */
+    protected function isCriticalHook(array $class): bool
+    {
+        foreach ($this->config->getCriticalClassNamePatterns() as $classNamePattern) {
+            if (str_contains($class[static::CLASS_NAME_KEY], $classNamePattern)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
