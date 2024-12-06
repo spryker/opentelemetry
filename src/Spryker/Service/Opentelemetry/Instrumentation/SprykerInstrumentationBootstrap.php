@@ -38,6 +38,7 @@ use Spryker\Service\Opentelemetry\Storage\ResourceNameStorage;
 use Spryker\Service\Opentelemetry\Storage\RootSpanNameStorage;
 use Spryker\Shared\Opentelemetry\Instrumentation\CachedInstrumentation;
 use Spryker\Shared\Opentelemetry\Request\RequestProcessor;
+use Spryker\Zed\Opentelemetry\Business\Generator\HookGenerator;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -68,7 +69,17 @@ class SprykerInstrumentationBootstrap
     /**
      * @var string
      */
-    protected const INSTRUMENTATION_VERSION = '0.1';
+    protected const INSTRUMENTATION_VERSION = '1.0';
+
+    /**
+     * @var string
+     */
+    protected const ZED_BIN_FILE_NAME = 'console';
+
+    /**
+     * @var string
+     */
+    protected const ZED_CLI_APPLICATION_NAME = 'CLI ZED';
 
     /**
      * @var \Spryker\Service\Opentelemetry\Instrumentation\Resource\ResourceInfo|null
@@ -107,7 +118,22 @@ class SprykerInstrumentationBootstrap
 
         ShutdownHandler::register($tracerProvider->shutdown(...));
         ShutdownHandler::register([static::class, 'shutdownHandler']);
-        include_once APPLICATION_ROOT_DIR . '/src/Generated/OpenTelemetry/Hooks/BigHookHook.php';
+
+        static::registerAdditionalHooks();
+    }
+
+    /**
+     * @return void
+     */
+    protected static function registerAdditionalHooks(): void
+    {
+        if (TraceSampleResult::shouldSkipTraceBody()) {
+            putenv('OTEL_PHP_DISABLED_INSTRUMENTATIONS=all');
+
+            return;
+        }
+
+        include_once sprintf('%s/src/Generated/OpenTelemetry/Hooks/%s.php', APPLICATION_ROOT_DIR, HookGenerator::GLOBAL_HOOK_FILE_NAME);
     }
 
     /**
@@ -188,8 +214,8 @@ class SprykerInstrumentationBootstrap
         if ($cli) {
             [$vendor, $bin, $application] = explode('/', $cli[0]);
 
-            if ($application === 'console') {
-                return 'CLI ZED';
+            if ($application === static::ZED_BIN_FILE_NAME) {
+                return static::ZED_CLI_APPLICATION_NAME;
             }
 
             return sprintf('CLI %s', strtoupper($application));
@@ -227,7 +253,7 @@ class SprykerInstrumentationBootstrap
             ->setParent($parent)
             ->setSpanKind(SpanKind::KIND_SERVER)
             ->setAttribute(TraceAttributes::URL_QUERY, $request->getQueryString())
-            ->setAttribute(static::ATTRIBUTE_IS_DETAILED_TRACE, TraceSampleResult::shouldSkipTraceBody() ? false : null)
+            ->setAttribute(static::ATTRIBUTE_IS_DETAILED_TRACE, !TraceSampleResult::shouldSkipTraceBody())
             ->setAttribute(static::ATTRIBUTE_HTTP_METHOD, $request->getMethod())
             ->startSpan();
 

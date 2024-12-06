@@ -15,6 +15,11 @@ use Spryker\Zed\Opentelemetry\OpentelemetryConfig;
 class HookGenerator implements HookGeneratorInterface
 {
     /**
+     * @var string
+     */
+    public const GLOBAL_HOOK_FILE_NAME = 'GlobalHook';
+
+    /**
      * @var int
      */
     protected const DIRECTORY_PERMISSIONS = 0755;
@@ -22,12 +27,7 @@ class HookGenerator implements HookGeneratorInterface
     /**
      * @var string
      */
-    protected const OUTPUT_FILE_PATH_PLACEHOLDER = '%s/%s-%sHook.php';
-
-    /**
-     * @var string
-     */
-    protected const OUTPUT_FILE_PATH_PLACEHOLDER_BY_MODULE = '%s/%sHook.php';
+    protected const OUTPUT_FILE_PATH_PLACEHOLDER_GLOBAL = '%s/%s.php';
 
     /**
      * @var string
@@ -125,9 +125,9 @@ if (\Spryker\Service\Opentelemetry\Instrumentation\Sampler\TraceSampleResult::sh
         $namespace = explode('\\', $class[static::NAMESPACE_KEY]);
         $moduleNamePattern = $namespace[0] . $namespace[1] . $namespace[2];
         return sprintf(
-            static::OUTPUT_FILE_PATH_PLACEHOLDER_BY_MODULE,
+            static::OUTPUT_FILE_PATH_PLACEHOLDER_GLOBAL,
             $this->config->getOutputDir(),
-            'BigHook',
+            static::GLOBAL_HOOK_FILE_NAME,
         );
     }
 }
