@@ -153,6 +153,11 @@ class HookContentCreator implements HookContentCreatorInterface
      */
     protected function isCriticalHook(array $class): bool
     {
-        return str_contains($class[static::CLASS_NAME_KEY], 'Facade') || str_contains($class[static::CLASS_NAME_KEY], 'Controller');
+        foreach ($this->config->getCriticalClassNamePatterns() as $classNamePattern) {
+            if (str_contains($class[static::CLASS_NAME_KEY], $classNamePattern)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

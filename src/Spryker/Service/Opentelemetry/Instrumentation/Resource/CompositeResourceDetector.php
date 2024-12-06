@@ -11,7 +11,6 @@ use OpenTelemetry\SDK\Resource\ResourceDetectorInterface;
 
 class CompositeResourceDetector implements ResourceDetectorInterface
 {
-
     /**
      * @param array<\OpenTelemetry\SDK\Resource\ResourceDetectorInterface> $resourceDetectors
      */

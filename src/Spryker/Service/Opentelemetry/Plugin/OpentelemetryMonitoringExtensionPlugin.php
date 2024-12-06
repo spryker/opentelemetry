@@ -19,7 +19,7 @@ class OpentelemetryMonitoringExtensionPlugin extends AbstractPlugin implements M
 {
     /**
      * Specification:
-     * - Adds error to the current active span
+     * - Adds error to the current active span.
      *
      * @api
      *
@@ -74,7 +74,7 @@ class OpentelemetryMonitoringExtensionPlugin extends AbstractPlugin implements M
 
     /**
      * Specification:
-     * - Opentelemetry instrumentation is completely custom.
+     * - Opentelemetry instrumentation doesn't require additional calls to start ot end transaction methods.
      *
      * @api
      *
@@ -87,7 +87,7 @@ class OpentelemetryMonitoringExtensionPlugin extends AbstractPlugin implements M
 
     /**
      * Specification:
-     * - Opentelemetry instrumentation is completely custom.
+     * - Opentelemetry instrumentation doesn't require additional calls to start ot end transaction methods.
      *
      * @api
      *
@@ -100,7 +100,7 @@ class OpentelemetryMonitoringExtensionPlugin extends AbstractPlugin implements M
 
     /**
      * Specification:
-     * - Will be fixed in stable version. Not in use for now
+     * - Transaction should be ignored before it was started in Opentelemetery in order to not generate additional load to the system.
      *
      * @api
      *
@@ -112,7 +112,7 @@ class OpentelemetryMonitoringExtensionPlugin extends AbstractPlugin implements M
 
     /**
      * Specification:
-     * - Opentelemetry has not attributes to specify background jobs. Service name already defined for CLI commands
+     * - Opentelemetry has no attributes to specify background jobs. Service name already defined for CLI commands.
      *
      * @api
      *

@@ -4,6 +4,9 @@ namespace Spryker\Service\Opentelemetry\Storage;
 
 class ResourceNameStorage implements ResourceNameStorageInterface
 {
+    /**
+     * @var \Spryker\Service\Opentelemetry\Storage\ResourceNameStorage|null
+     */
     private static ?ResourceNameStorage $instance = null;
 
     /**

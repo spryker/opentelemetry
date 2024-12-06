@@ -699,10 +699,6 @@ class OpentelemetryConfig extends AbstractBundleConfig
             'ProductGroupWidget-ProductGroupReader::getProductGroups',
             'ProductGroupWidget-ProductGroupWidget::getName',
             'ProductGroupWidget-ProductGroupWidget::getTemplate',
-//            'ProductImage-ProductImageFacade::createProductConcreteImageSetCollection',
-//            'ProductImage-ProductImageFacade::expandProductAbstractWithImageSets',
-//            'ProductImage-ProductImageFacade::expandProductConcreteTransfersWithImageSets',
-//            'ProductImage-ProductImageFacade::getProductImagesSetCollectionByProductAbstractId',
             'ProductImage-Reader::expandProductAbstractWithImageSets',
             'ProductImage-Reader::expandProductConcreteTransfersWithImageSets',
             'ProductImage-Reader::getProductImagesSetCollectionByProductAbstractId',
@@ -1096,5 +1092,22 @@ class OpentelemetryConfig extends AbstractBundleConfig
     public function areOnlyPublicMethodsInstrumented(): bool
     {
         return true;
+    }
+
+    /**
+     * Specification:
+     * - List of class names or part of class names that should be considered as critical.
+     * - Critical classes will generate hooks that are marked as critical and will be process with more prio to show.
+     *
+     * @api
+     *
+     * @return array<string>
+     */
+    public function getCriticalClassNamePatterns(): array
+    {
+        return [
+            'Facade',
+            'Controller',
+        ];
     }
 }
