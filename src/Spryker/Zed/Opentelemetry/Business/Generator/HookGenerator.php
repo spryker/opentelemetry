@@ -15,11 +15,6 @@ use Spryker\Zed\Opentelemetry\OpentelemetryConfig;
 class HookGenerator implements HookGeneratorInterface
 {
     /**
-     * @var string
-     */
-    public const GLOBAL_HOOK_FILE_NAME = 'GlobalHook';
-
-    /**
      * @var int
      */
     protected const DIRECTORY_PERMISSIONS = 0755;
@@ -27,7 +22,12 @@ class HookGenerator implements HookGeneratorInterface
     /**
      * @var string
      */
-    protected const OUTPUT_FILE_PATH_PLACEHOLDER_GLOBAL = '%s/%s.php';
+    protected const OUTPUT_FILE_PATH_PLACEHOLDER = '%s%s-%sHook.php';
+
+    /**
+     * @var string
+     */
+    protected const CLASSMAP_FILE_NAME_PATTERN = '%sclassmap.php';
 
     /**
      * @var string
@@ -84,23 +84,31 @@ class HookGenerator implements HookGeneratorInterface
     {
         $collectedClasses = $this->collector->collectClasses();
 
+        $this->ensureDirectoryExists();
+        $classMapFileName = sprintf(static::CLASSMAP_FILE_NAME_PATTERN, $this->config->getOutputDir());
+        $classMap = fopen($classMapFileName, 'a');
+        fwrite($classMap, '<?php' . PHP_EOL . '$classmap = [' . PHP_EOL);
         foreach ($collectedClasses as $class) {
             $content = PHP_EOL;
-            $this->ensureDirectoryExists();
 
-            if (!file_exists($this->getOutputFilepathByModule($class))) {
+            $hookFile = $this->getOutputFilepath($class);
+            if (!file_exists($hookFile)) {
                 $content = '<?php
 if (\Spryker\Service\Opentelemetry\Instrumentation\Sampler\TraceSampleResult::shouldSkipTraceBody()) {
     return;
 }
 ' . PHP_EOL;
             }
-            $file = fopen($this->getOutputFilepathByModule($class), 'a');
+
+            $file = fopen($hookFile, 'a');
 
             fwrite($file, $content);
             fwrite($file, $this->contentCreator->createHookContent($class));
             fclose($file);
+            fwrite($classMap, '\'' . $class[static::NAMESPACE_KEY] . '\\' . $class[static::CLASS_NAME_KEY] . '\' => \'' . $hookFile . '\',' . PHP_EOL);
         }
+        fwrite($classMap, '];' . PHP_EOL);
+        fclose($classMap);
     }
 
     /**
@@ -120,14 +128,13 @@ if (\Spryker\Service\Opentelemetry\Instrumentation\Sampler\TraceSampleResult::sh
      *
      * @return string
      */
-    protected function getOutputFilepathByModule(array $class): string
+    protected function getOutputFilepath(array $class): string
     {
-        $namespace = explode('\\', $class[static::NAMESPACE_KEY]);
-        $moduleNamePattern = $namespace[0] . $namespace[1] . $namespace[2];
         return sprintf(
-            static::OUTPUT_FILE_PATH_PLACEHOLDER_GLOBAL,
+            static::OUTPUT_FILE_PATH_PLACEHOLDER,
             $this->config->getOutputDir(),
-            static::GLOBAL_HOOK_FILE_NAME,
+            str_replace('\\', '-', $class[static::NAMESPACE_KEY]),
+            $class[static::CLASS_NAME_KEY],
         );
     }
 }

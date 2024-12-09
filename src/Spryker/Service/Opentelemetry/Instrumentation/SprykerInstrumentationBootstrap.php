@@ -133,7 +133,22 @@ class SprykerInstrumentationBootstrap
             return;
         }
 
-        include_once sprintf('%s/src/Generated/OpenTelemetry/Hooks/%s.php', APPLICATION_ROOT_DIR, HookGenerator::GLOBAL_HOOK_FILE_NAME);
+        $classmapFileName = APPLICATION_ROOT_DIR . '/src/Generated/OpenTelemetry/Hooks/classmap.php';
+        if (!file_exists($classmapFileName)) {
+            return;
+        }
+
+        require_once $classmapFileName;
+
+        $autoload = function (string $class) use ($classmap)
+        {
+            if (!isset($classmap[$class])) {
+                return;
+            }
+            include_once $classmap[$class];
+        };
+
+        spl_autoload_register($autoload, true, true);
     }
 
     /**
