@@ -7,7 +7,6 @@
 
 namespace Spryker\Zed\Opentelemetry\Business\Generator;
 
-use PHPUnit\Event\Runtime\PHP;
 use Spryker\Zed\Opentelemetry\Business\Generator\Collector\ClassCollectorInterface;
 use Spryker\Zed\Opentelemetry\Business\Generator\ContentCreator\HookContentCreatorInterface;
 use Spryker\Zed\Opentelemetry\Dependency\External\OpentelemetryToFilesystemInterface;
