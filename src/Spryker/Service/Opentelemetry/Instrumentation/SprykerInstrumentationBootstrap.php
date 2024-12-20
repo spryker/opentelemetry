@@ -12,6 +12,7 @@ use OpenTelemetry\API\Signals;
 use OpenTelemetry\API\Trace\Propagation\TraceContextPropagator;
 use OpenTelemetry\API\Trace\SpanInterface;
 use OpenTelemetry\API\Trace\SpanKind;
+use OpenTelemetry\API\Trace\StatusCode;
 use OpenTelemetry\Context\Context;
 use OpenTelemetry\Contrib\Grpc\GrpcTransportFactory;
 use OpenTelemetry\Contrib\Otlp\OtlpUtil;
@@ -33,7 +34,9 @@ use Spryker\Service\Opentelemetry\Instrumentation\Span\SpanExporter;
 use Spryker\Service\Opentelemetry\Instrumentation\SpanProcessor\PostFilterBatchSpanProcessor;
 use Spryker\Service\Opentelemetry\Instrumentation\Tracer\TracerProvider;
 use Spryker\Service\Opentelemetry\OpentelemetryInstrumentationConfig;
+use Spryker\Service\Opentelemetry\Plugin\OpentelemetryMonitoringExtensionPlugin;
 use Spryker\Service\Opentelemetry\Storage\CustomParameterStorage;
+use Spryker\Service\Opentelemetry\Storage\ExceptionStorage;
 use Spryker\Service\Opentelemetry\Storage\ResourceNameStorage;
 use Spryker\Service\Opentelemetry\Storage\RootSpanNameStorage;
 use Spryker\Shared\Opentelemetry\Instrumentation\CachedInstrumentation;
@@ -295,20 +298,32 @@ class SprykerInstrumentationBootstrap
     public static function shutdownHandler(): void
     {
         $resourceName = ResourceNameStorage::getInstance()->getName();
+        $customParamsStorage = CustomParameterStorage::getInstance();
         if ($resourceName) {
+            if ($customParamsStorage->getAttribute(OpentelemetryMonitoringExtensionPlugin::ATTRIBUTE_IS_CONSOLE_COMMAND)) {
+                $resourceName = sprintf('CLI %s', $resourceName);
+            }
             static::$resourceInfo->setServiceName($resourceName);
         }
         $scope = Context::storage()->scope();
         if (!$scope) {
             return;
         }
+
         $scope->detach();
         $span = static::$rootSpan;
         $name = RootSpanNameStorage::getInstance()->getName();
         if ($name) {
             $span->updateName($name);
         }
-        $customParamsStorage = CustomParameterStorage::getInstance();
+
+        $exceptions = ExceptionStorage::getInstance()->getExceptions();
+        foreach ($exceptions as $exception) {
+            $span->recordException($exception);
+        }
+
+        $span->setStatus($exceptions ? StatusCode::STATUS_ERROR : StatusCode::STATUS_OK);
+
         $span->setAttributes($customParamsStorage->getAttributes());
         $span->end();
     }

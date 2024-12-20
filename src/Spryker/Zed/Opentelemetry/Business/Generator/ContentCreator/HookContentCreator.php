@@ -73,8 +73,6 @@ class HookContentCreator implements HookContentCreatorInterface
 
                     $type = $params[1] ?? \\Symfony\\Component\\HttpKernel\\HttpKernelInterface::MAIN_REQUEST;
 
-                    $request = \\Spryker\\Shared\\OpenTelemetry\\Request\\RequestProcessor::getRequest();
-
                     $span = \\Spryker\\Shared\\OpenTelemetry\\Instrumentation\\CachedInstrumentation::getCachedInstrumentation()
                         ->tracer()
                         ->spanBuilder(\'%s\')
@@ -110,8 +108,8 @@ class HookContentCreator implements HookContentCreatorInterface
 
                     if ($exception !== null) {
                         $span->recordException($exception);
-                        $span->setAttribute(\'error_message\', isset($exception) ? $exception->getMessage() : \'\');
-                        $span->setAttribute(\'error_code\', isset($exception) ? $exception->getCode() : \'\');
+                        $span->setAttribute(\'error_message\', $exception->getMessage());
+                        $span->setAttribute(\'error_code\', $exception->getCode());
                     }
 
                     $span->setStatus($exception !== null ? \\OpenTelemetry\\API\\Trace\\StatusCode::STATUS_ERROR : \\OpenTelemetry\\API\\Trace\\StatusCode::STATUS_OK);
