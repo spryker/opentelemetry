@@ -301,7 +301,7 @@ class SprykerInstrumentationBootstrap
         $customParamsStorage = CustomParameterStorage::getInstance();
         if ($resourceName) {
             if ($customParamsStorage->getAttribute(OpentelemetryMonitoringExtensionPlugin::ATTRIBUTE_IS_CONSOLE_COMMAND)) {
-                $resourceName = 'CLI ' . $resourceName  ;
+                $resourceName = sprintf('CLI %s', $resourceName);
             }
             static::$resourceInfo->setServiceName($resourceName);
         }

@@ -7,6 +7,8 @@
 
 namespace Spryker\Service\Opentelemetry;
 
+use Throwable;
+
 interface OpentelemetryServiceInterface
 {
     /**
@@ -58,5 +60,5 @@ interface OpentelemetryServiceInterface
      *
      * @return void
      */
-    public function setError(string $message, \Throwable $exception): void;
+    public function setError(string $message, Throwable $exception): void;
 }

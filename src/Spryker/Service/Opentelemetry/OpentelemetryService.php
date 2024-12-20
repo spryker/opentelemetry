@@ -9,6 +9,7 @@ namespace Spryker\Service\Opentelemetry;
 
 use Spryker\Service\Kernel\AbstractService;
 use Spryker\Service\Opentelemetry\Storage\ResourceNameStorage;
+use Throwable;
 
 /**
  * @method \Spryker\Service\Opentelemetry\OpentelemetryServiceFactory getFactory()
@@ -68,7 +69,7 @@ class OpentelemetryService extends AbstractService implements OpentelemetryServi
      *
      * @return void
      */
-    public function setError(string $message, \Throwable $exception): void
+    public function setError(string $message, Throwable $exception): void
     {
         $this->getFactory()->createExceptionStorage()->addException($exception);
     }
