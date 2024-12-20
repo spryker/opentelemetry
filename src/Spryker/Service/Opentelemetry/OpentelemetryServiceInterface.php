@@ -34,4 +34,29 @@ interface OpentelemetryServiceInterface
      * @return void
      */
     public function setRootSpanName(string $name): void;
+
+    /**
+     * Specification:
+     * - Sets service name to the root span.
+     *
+     * @api
+     *
+     * @param string $name
+     *
+     * @return void
+     */
+    public function setResourceName(string $name): void;
+
+    /**
+     * Specification:
+     * - Adds error event to the root span.
+     *
+     * @api
+     *
+     * @param string $message
+     * @param \Throwable $exception
+     *
+     * @return void
+     */
+    public function setError(string $message, \Throwable $exception): void;
 }

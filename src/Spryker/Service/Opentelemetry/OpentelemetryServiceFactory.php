@@ -10,6 +10,8 @@ namespace Spryker\Service\Opentelemetry;
 use Spryker\Service\Kernel\AbstractServiceFactory;
 use Spryker\Service\Opentelemetry\Storage\CustomParameterStorage;
 use Spryker\Service\Opentelemetry\Storage\CustomParameterStorageInterface;
+use Spryker\Service\Opentelemetry\Storage\ExceptionStorage;
+use Spryker\Service\Opentelemetry\Storage\ExceptionStorageInterface;
 use Spryker\Service\Opentelemetry\Storage\ResourceNameStorage;
 use Spryker\Service\Opentelemetry\Storage\RootSpanNameStorage;
 use Spryker\Service\Opentelemetry\Storage\RootSpanNameStorageInterface;
@@ -38,5 +40,13 @@ class OpentelemetryServiceFactory extends AbstractServiceFactory
     public function createResourceNameStorage(): ResourceNameStorage
     {
         return ResourceNameStorage::getInstance();
+    }
+
+    /**
+     * @return \Spryker\Service\Opentelemetry\Storage\ExceptionStorageInterface
+     */
+    public function createExceptionStorage(): ExceptionStorageInterface
+    {
+        return ExceptionStorage::getInstance();
     }
 }

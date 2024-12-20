@@ -31,6 +31,10 @@ class OpentelemetryService extends AbstractService implements OpentelemetryServi
     }
 
     /**
+     * {@inheritDoc}
+     *
+     * @api
+     *
      * @param string $name
      *
      * @return void
@@ -41,6 +45,10 @@ class OpentelemetryService extends AbstractService implements OpentelemetryServi
     }
 
     /**
+     * {@inheritDoc}
+     *
+     * @api
+     *
      * @param string $name
      *
      * @return void
@@ -48,5 +56,20 @@ class OpentelemetryService extends AbstractService implements OpentelemetryServi
     public function setResourceName(string $name): void
     {
        $this->getFactory()->createResourceNameStorage()->setName($name);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @api
+     *
+     * @param string $message
+     * @param \Throwable $exception
+     *
+     * @return void
+     */
+    public function setError(string $message, \Throwable $exception): void
+    {
+        $this->getFactory()->createExceptionStorage()->addException($exception);
     }
 }

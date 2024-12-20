@@ -7,16 +7,19 @@
 
 namespace Spryker\Service\Opentelemetry\Plugin;
 
-use OpenTelemetry\Context\Context;
 use Spryker\Service\Kernel\AbstractPlugin;
 use Spryker\Service\MonitoringExtension\Dependency\Plugin\MonitoringExtensionPluginInterface;
-use Spryker\Service\Opentelemetry\Instrumentation\Span\Span;
 
 /**
- * @method \Spryker\Service\Opentelemetry\OpentelemetryService getService()
+ * @method \Spryker\Service\Opentelemetry\OpentelemetryServiceInterface getService()
  */
 class OpentelemetryMonitoringExtensionPlugin extends AbstractPlugin implements MonitoringExtensionPluginInterface
 {
+    /**
+     * @var string
+     */
+    public const ATTRIBUTE_IS_CONSOLE_COMMAND = 'is_console_command';
+
     /**
      * Specification:
      * - Adds error to the current active span.
@@ -30,13 +33,7 @@ class OpentelemetryMonitoringExtensionPlugin extends AbstractPlugin implements M
      */
     public function setError(string $message, $exception): void
     {
-        $scope = Context::storage()->scope();
-        if (!$scope) {
-            return;
-        }
-
-        $span = Span::fromContext($scope->context());
-        $span->recordException($exception);
+        $this->getService()->setError($message, $exception);
     }
 
     /**
@@ -53,7 +50,8 @@ class OpentelemetryMonitoringExtensionPlugin extends AbstractPlugin implements M
      */
     public function setApplicationName(?string $application = null, ?string $store = null, ?string $environment = null): void
     {
-        $this->getService()->setResourceName(sprintf('%s-%s (%s)', $application ?? '', $store ?? '', $environment ?? ''));
+        $storeRegion = $store ?? (defined('APPLICATION_REGION') ? APPLICATION_REGION : '');
+        $this->getService()->setResourceName(sprintf('%s-%s (%s)', $application ?? '', $storeRegion, $environment ?? ''));
     }
 
     /**
@@ -112,7 +110,8 @@ class OpentelemetryMonitoringExtensionPlugin extends AbstractPlugin implements M
 
     /**
      * Specification:
-     * - Opentelemetry has no attributes to specify background jobs. Service name already defined for CLI commands.
+     * - Adds custom param that will be added to root span.
+     * - Adds CLI prefix to the service name.
      *
      * @api
      *
@@ -120,7 +119,7 @@ class OpentelemetryMonitoringExtensionPlugin extends AbstractPlugin implements M
      */
     public function markAsConsoleCommand(): void
     {
-        return;
+        $this->getService()->setCustomParameter(static::ATTRIBUTE_IS_CONSOLE_COMMAND, true);
     }
 
     /**
