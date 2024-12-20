@@ -110,8 +110,8 @@ class OpentelemetryMonitoringExtensionPlugin extends AbstractPlugin implements M
 
     /**
      * Specification:
-     * - Adds custom param that will be added to root span.
-     * - Adds CLI prefix to the service name.
+     * - Adds custom param into the root span that can be used to show only console commands.
+     * - Trace service name will be prepended with `CLI` prefix if this param is true.
      *
      * @api
      *
