@@ -68,7 +68,12 @@ class ElasticaInstrumentation
      */
     public static function register(): void
     {
-        if (!class_exists(Client::class) || Sdk::isInstrumentationDisabled(static::NAME) === true) {
+        //BC check
+        if (class_exists('\Spryker\Service\OtelElasticaInstrumentation\OpenTelemetry\ElasticaInstrumentation')) {
+            return;
+        }
+
+        if (Sdk::isInstrumentationDisabled(static::NAME) === true) {
             return;
         }
 

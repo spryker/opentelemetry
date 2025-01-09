@@ -73,4 +73,19 @@ class OpentelemetryService extends AbstractService implements OpentelemetryServi
     {
         $this->getFactory()->createExceptionStorage()->addException($exception);
     }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @api
+     *
+     * @param string $name
+     * @param array $attributes
+     *
+     * @return void
+     */
+    public function addEvent(string $name, array $attributes): void
+    {
+        $this->getFactory()->createCustomEventsStorage()->addEvent($name, $attributes);
+    }
 }

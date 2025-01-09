@@ -8,6 +8,8 @@
 namespace Spryker\Service\Opentelemetry;
 
 use Spryker\Service\Kernel\AbstractServiceFactory;
+use Spryker\Service\Opentelemetry\Storage\CustomEventsStorage;
+use Spryker\Service\Opentelemetry\Storage\CustomEventsStorageInterface;
 use Spryker\Service\Opentelemetry\Storage\CustomParameterStorage;
 use Spryker\Service\Opentelemetry\Storage\CustomParameterStorageInterface;
 use Spryker\Service\Opentelemetry\Storage\ExceptionStorage;
@@ -48,5 +50,13 @@ class OpentelemetryServiceFactory extends AbstractServiceFactory
     public function createExceptionStorage(): ExceptionStorageInterface
     {
         return ExceptionStorage::getInstance();
+    }
+
+    /**
+     * @return \Spryker\Service\Opentelemetry\Storage\CustomEventsStorageInterface
+     */
+    public function createCustomEventsStorage(): CustomEventsStorageInterface
+    {
+        return CustomEventsStorage::getInstance();
     }
 }

@@ -88,7 +88,12 @@ class RabbitMqInstrumentation
      */
     protected static function registerHook(string $functionName, string $spanName): void
     {
-        if (!class_exists(RabbitMqAdapter::class) || Sdk::isInstrumentationDisabled(static::NAME) === true) {
+        //BC check
+        if (class_exists('\Spryker\Service\OtelRabbitMqInstrumentation\OpenTelemetry\RabbitMqInstrumentation')) {
+            return;
+        }
+
+        if (Sdk::isInstrumentationDisabled(static::NAME) === true) {
             return;
         }
 

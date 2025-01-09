@@ -46,7 +46,12 @@ class PropelInstrumentation
      */
     public static function register(): void
     {
-        if (!class_exists(StatementInterface::class) || Sdk::isInstrumentationDisabled(static::NAME) === true) {
+        //BC check
+        if (class_exists('\Spryker\Service\OtelPropelInstrumentation\OpenTelemetry\PropelInstrumentation')) {
+            return;
+        }
+
+        if (Sdk::isInstrumentationDisabled(static::NAME) === true) {
             return;
         }
 

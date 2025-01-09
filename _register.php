@@ -21,8 +21,8 @@ if (extension_loaded('opentelemetry') === false) {
     return;
 }
 
-SprykerInstrumentationBootstrap::register();
 ElasticaInstrumentation::register();
 PropelInstrumentation::register();
 RabbitMqInstrumentation::register();
 RedisInstrumentation::register();
+SprykerInstrumentationBootstrap::register();

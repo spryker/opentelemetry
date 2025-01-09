@@ -35,6 +35,7 @@ use Spryker\Service\Opentelemetry\Instrumentation\SpanProcessor\PostFilterBatchS
 use Spryker\Service\Opentelemetry\Instrumentation\Tracer\TracerProvider;
 use Spryker\Service\Opentelemetry\OpentelemetryInstrumentationConfig;
 use Spryker\Service\Opentelemetry\Plugin\OpentelemetryMonitoringExtensionPlugin;
+use Spryker\Service\Opentelemetry\Storage\CustomEventsStorage;
 use Spryker\Service\Opentelemetry\Storage\CustomParameterStorage;
 use Spryker\Service\Opentelemetry\Storage\ExceptionStorage;
 use Spryker\Service\Opentelemetry\Storage\ResourceNameStorage;
@@ -117,7 +118,7 @@ class SprykerInstrumentationBootstrap
             ->setPropagator(TraceContextPropagator::getInstance())
             ->buildAndRegisterGlobal();
 
-        static::registerRootSpan($serviceName, $request);
+        static::registerRootSpan($request);
 
         ShutdownHandler::register($tracerProvider->shutdown(...));
         ShutdownHandler::register([static::class, 'shutdownHandler']);
@@ -251,11 +252,11 @@ class SprykerInstrumentationBootstrap
     }
 
     /**
-     * @param string $servicedName
+     * @param Request $request
      *
      * @return void
      */
-    protected static function registerRootSpan(string $servicedName, Request $request): void
+    protected static function registerRootSpan(Request $request): void
     {
         $cli = $request->server->get('argv');
         if ($cli) {
@@ -267,7 +268,7 @@ class SprykerInstrumentationBootstrap
         $instrumentation = CachedInstrumentation::getCachedInstrumentation();
         $parent = Context::getCurrent();
         $span = $instrumentation->tracer()
-            ->spanBuilder($servicedName . ' ' . $name)
+            ->spanBuilder($name)
             ->setParent($parent)
             ->setSpanKind(SpanKind::KIND_SERVER)
             ->setAttribute(TraceAttributes::URL_QUERY, $request->getQueryString())
@@ -320,6 +321,11 @@ class SprykerInstrumentationBootstrap
         $exceptions = ExceptionStorage::getInstance()->getExceptions();
         foreach ($exceptions as $exception) {
             $span->recordException($exception);
+        }
+
+        $events = CustomEventsStorage::getInstance()->getEvents();
+        foreach ($events as $eventName => $eventAttributes) {
+            $span->addEvent($eventName, $eventAttributes);
         }
 
         $span->setStatus($exceptions ? StatusCode::STATUS_ERROR : StatusCode::STATUS_OK);
