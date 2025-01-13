@@ -61,4 +61,17 @@ interface OpentelemetryServiceInterface
      * @return void
      */
     public function setError(string $message, Throwable $exception): void;
+
+    /**
+     * Specification:
+     * - Adds a custom event to the root span.
+     *
+     * @api
+     *
+     * @param string $name
+     * @param array $attributes
+     *
+     * @return void
+     */
+    public function addEvent(string $name, array $attributes): void;
 }

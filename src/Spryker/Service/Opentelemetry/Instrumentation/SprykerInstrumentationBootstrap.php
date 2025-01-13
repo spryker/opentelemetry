@@ -35,6 +35,7 @@ use Spryker\Service\Opentelemetry\Instrumentation\SpanProcessor\PostFilterBatchS
 use Spryker\Service\Opentelemetry\Instrumentation\Tracer\TracerProvider;
 use Spryker\Service\Opentelemetry\OpentelemetryInstrumentationConfig;
 use Spryker\Service\Opentelemetry\Plugin\OpentelemetryMonitoringExtensionPlugin;
+use Spryker\Service\Opentelemetry\Storage\CustomEventsStorage;
 use Spryker\Service\Opentelemetry\Storage\CustomParameterStorage;
 use Spryker\Service\Opentelemetry\Storage\ExceptionStorage;
 use Spryker\Service\Opentelemetry\Storage\ResourceNameStorage;
@@ -42,7 +43,10 @@ use Spryker\Service\Opentelemetry\Storage\RootSpanNameStorage;
 use Spryker\Shared\Opentelemetry\Instrumentation\CachedInstrumentation;
 use Spryker\Shared\Opentelemetry\Request\RequestProcessor;
 use Spryker\Zed\Opentelemetry\Business\Generator\HookGenerator;
+use Symfony\Component\Console\Application;
 use Symfony\Component\HttpFoundation\Request;
+use Throwable;
+use function OpenTelemetry\Instrumentation\hook;
 
 /**
  * @method \Spryker\Service\Opentelemetry\OpentelemetryServiceFactory getFactory()
@@ -95,6 +99,11 @@ class SprykerInstrumentationBootstrap
     protected static ?SpanInterface $rootSpan = null;
 
     /**
+     * @var bool|null
+     */
+    protected static ?bool $cliSuccess = null;
+
+    /**
      * @return void
      */
     public static function register(): void
@@ -117,7 +126,7 @@ class SprykerInstrumentationBootstrap
             ->setPropagator(TraceContextPropagator::getInstance())
             ->buildAndRegisterGlobal();
 
-        static::registerRootSpan($serviceName, $request);
+        static::registerRootSpan($request);
 
         ShutdownHandler::register($tracerProvider->shutdown(...));
         ShutdownHandler::register([static::class, 'shutdownHandler']);
@@ -130,6 +139,7 @@ class SprykerInstrumentationBootstrap
      */
     protected static function registerAdditionalHooks(): void
     {
+        static::registerConsoleReturnCodeHook();
         if (TraceSampleResult::shouldSkipTraceBody()) {
             putenv('OTEL_PHP_DISABLED_INSTRUMENTATIONS=all');
 
@@ -152,6 +162,21 @@ class SprykerInstrumentationBootstrap
         };
 
         spl_autoload_register($autoload, true, true);
+    }
+
+    /**
+     * @return void
+     */
+    protected static function registerConsoleReturnCodeHook(): void
+    {
+        hook(
+            Application::class,
+            'doRun',
+            function () {},
+            function ($instance, array $params, $returnValue, ?Throwable $exception) {
+                static::$cliSuccess = $returnValue === 0 ||  $returnValue === null;
+            }
+        );
     }
 
     /**
@@ -251,11 +276,11 @@ class SprykerInstrumentationBootstrap
     }
 
     /**
-     * @param string $servicedName
+     * @param Request $request
      *
      * @return void
      */
-    protected static function registerRootSpan(string $servicedName, Request $request): void
+    protected static function registerRootSpan(Request $request): void
     {
         $cli = $request->server->get('argv');
         if ($cli) {
@@ -267,7 +292,7 @@ class SprykerInstrumentationBootstrap
         $instrumentation = CachedInstrumentation::getCachedInstrumentation();
         $parent = Context::getCurrent();
         $span = $instrumentation->tracer()
-            ->spanBuilder($servicedName . ' ' . $name)
+            ->spanBuilder($name)
             ->setParent($parent)
             ->setSpanKind(SpanKind::KIND_SERVER)
             ->setAttribute(TraceAttributes::URL_QUERY, $request->getQueryString())
@@ -322,7 +347,12 @@ class SprykerInstrumentationBootstrap
             $span->recordException($exception);
         }
 
-        $span->setStatus($exceptions ? StatusCode::STATUS_ERROR : StatusCode::STATUS_OK);
+        $events = CustomEventsStorage::getInstance()->getEvents();
+        foreach ($events as $eventName => $eventAttributes) {
+            $span->addEvent($eventName, $eventAttributes);
+        }
+
+        $span->setStatus($exceptions || static::$cliSuccess === false ? StatusCode::STATUS_ERROR : StatusCode::STATUS_OK);
 
         $span->setAttributes($customParamsStorage->getAttributes());
         $span->end();

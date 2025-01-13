@@ -35,6 +35,7 @@ class TraceSampleResult
     public static function shouldSample(Request $request): int
     {
         $route = $request->attributes->get('_route');
+        $isCli = (bool)$request->server->get('argv');
 
         if ($request->getMethod() !== Request::METHOD_GET) {
             static::$result = static::SAMPLING_RESULT_ALLOW_ALL;
@@ -48,7 +49,7 @@ class TraceSampleResult
             return static::$result;
         }
 
-        if (static::decideForRootSpan()) {
+        if (static::decideForRootSpan($isCli)) {
             static::$result = static::SAMPLING_RESULT_ALLOW_ROOT_SPAN;
 
             return static::$result;
@@ -76,10 +77,13 @@ class TraceSampleResult
     }
 
     /**
+     * @param bool $isCli
+     *
      * @return bool
      */
-    protected static function decideForRootSpan(): bool
+    protected static function decideForRootSpan(bool $isCli): bool
     {
-        return (mt_rand() / mt_getrandmax()) >= OpentelemetryInstrumentationConfig::getTraceSamplerProbability();
+        $probability = $isCli ? OpentelemetryInstrumentationConfig::getTraceCLISamplerProbability() : OpentelemetryInstrumentationConfig::getTraceSamplerProbability();
+        return (mt_rand() / mt_getrandmax()) >= $probability;
     }
 }

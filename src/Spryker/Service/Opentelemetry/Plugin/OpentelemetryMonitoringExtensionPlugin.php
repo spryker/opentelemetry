@@ -8,12 +8,13 @@
 namespace Spryker\Service\Opentelemetry\Plugin;
 
 use Spryker\Service\Kernel\AbstractPlugin;
+use Spryker\Service\MonitoringExtension\Dependency\Plugin\CustomEventsMonitoringExtensionPluginInterface;
 use Spryker\Service\MonitoringExtension\Dependency\Plugin\MonitoringExtensionPluginInterface;
 
 /**
  * @method \Spryker\Service\Opentelemetry\OpentelemetryServiceInterface getService()
  */
-class OpentelemetryMonitoringExtensionPlugin extends AbstractPlugin implements MonitoringExtensionPluginInterface
+class OpentelemetryMonitoringExtensionPlugin extends AbstractPlugin implements MonitoringExtensionPluginInterface, CustomEventsMonitoringExtensionPluginInterface
 {
     /**
      * @var string
@@ -151,5 +152,19 @@ class OpentelemetryMonitoringExtensionPlugin extends AbstractPlugin implements M
     public function addCustomTracer(string $tracer): void
     {
         return;
+    }
+
+    /**
+     * Specification:
+     * - Adds a custom event that will be added to the root span.
+     *
+     * @param string $name
+     * @param array $attributes
+     *
+     * @return void
+     */
+    public function addEvent(string $name, array $attributes): void
+    {
+        $this->getService()->addEvent($name, $attributes);
     }
 }
