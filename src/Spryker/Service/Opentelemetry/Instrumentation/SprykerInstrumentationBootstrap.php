@@ -43,7 +43,10 @@ use Spryker\Service\Opentelemetry\Storage\RootSpanNameStorage;
 use Spryker\Shared\Opentelemetry\Instrumentation\CachedInstrumentation;
 use Spryker\Shared\Opentelemetry\Request\RequestProcessor;
 use Spryker\Zed\Opentelemetry\Business\Generator\HookGenerator;
+use Symfony\Component\Console\Application;
 use Symfony\Component\HttpFoundation\Request;
+use Throwable;
+use function OpenTelemetry\Instrumentation\hook;
 
 /**
  * @method \Spryker\Service\Opentelemetry\OpentelemetryServiceFactory getFactory()
@@ -96,6 +99,11 @@ class SprykerInstrumentationBootstrap
     protected static ?SpanInterface $rootSpan = null;
 
     /**
+     * @var bool|null
+     */
+    protected static ?bool $cliSuccess = null;
+
+    /**
      * @return void
      */
     public static function register(): void
@@ -131,6 +139,7 @@ class SprykerInstrumentationBootstrap
      */
     protected static function registerAdditionalHooks(): void
     {
+        static::registerConsoleReturnCodeHook();
         if (TraceSampleResult::shouldSkipTraceBody()) {
             putenv('OTEL_PHP_DISABLED_INSTRUMENTATIONS=all');
 
@@ -153,6 +162,21 @@ class SprykerInstrumentationBootstrap
         };
 
         spl_autoload_register($autoload, true, true);
+    }
+
+    /**
+     * @return void
+     */
+    protected static function registerConsoleReturnCodeHook(): void
+    {
+        hook(
+            Application::class,
+            'doRun',
+            function () {},
+            function ($instance, array $params, $returnValue, ?Throwable $exception) {
+                static::$cliSuccess = $returnValue === 0 ||  $returnValue === null;
+            }
+        );
     }
 
     /**
@@ -328,7 +352,7 @@ class SprykerInstrumentationBootstrap
             $span->addEvent($eventName, $eventAttributes);
         }
 
-        $span->setStatus($exceptions ? StatusCode::STATUS_ERROR : StatusCode::STATUS_OK);
+        $span->setStatus($exceptions || static::$cliSuccess === false ? StatusCode::STATUS_ERROR : StatusCode::STATUS_OK);
 
         $span->setAttributes($customParamsStorage->getAttributes());
         $span->end();
