@@ -135,7 +135,15 @@ class RabbitMqInstrumentation
                 if (TraceSampleResult::shouldSkipTraceBody()) {
                     return;
                 }
-                $span = Span::fromContext(Context::getCurrent());
+                $scope = Context::storage()->scope();
+
+                if ($scope === null) {
+                    return;
+                }
+
+                $scope->detach();
+
+                $span = Span::fromContext($scope->context());
 
                 if ($exception !== null) {
                     $span->recordException($exception);
