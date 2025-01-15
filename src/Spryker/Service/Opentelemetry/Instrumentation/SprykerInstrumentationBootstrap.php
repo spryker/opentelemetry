@@ -355,6 +355,7 @@ class SprykerInstrumentationBootstrap
         $span->setStatus($exceptions || static::$cliSuccess === false ? StatusCode::STATUS_ERROR : StatusCode::STATUS_OK);
 
         $span->setAttributes($customParamsStorage->getAttributes());
+        $span->setAttribute(TraceAttributes::HTTP_RESPONSE_STATUS_CODE, http_response_code());
         $span->end();
     }
 }

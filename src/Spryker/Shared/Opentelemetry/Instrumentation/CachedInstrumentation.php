@@ -19,7 +19,7 @@ class CachedInstrumentation implements CachedInstrumentationInterface
     /**
      * @var string
      */
-    protected const INSTRUMENTATION_VERSION = '0.1.0';
+    protected const INSTRUMENTATION_VERSION = '1.4.0';
 
     /**
      * @var \OpenTelemetry\API\Instrumentation\CachedInstrumentation|null

@@ -112,6 +112,8 @@ class GuzzleInstrumentation
 
                         if ($response->getStatusCode() >= 400 && $response->getStatusCode() < 600) {
                             $span->setStatus(StatusCode::STATUS_ERROR);
+                        } else {
+                            $span->setStatus(StatusCode::STATUS_OK);
                         }
                         $span->end();
 
