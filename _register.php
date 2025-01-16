@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use OpenTelemetry\SDK\Sdk;
 use Spryker\Service\Opentelemetry\Instrumentation\ElasticaInstrumentation;
+use Spryker\Service\Opentelemetry\Instrumentation\GuzzleInstrumentation;
 use Spryker\Service\Opentelemetry\Instrumentation\PropelInstrumentation;
 use Spryker\Service\Opentelemetry\Instrumentation\RabbitMqInstrumentation;
 use Spryker\Service\Opentelemetry\Instrumentation\RedisInstrumentation;
@@ -25,4 +26,5 @@ ElasticaInstrumentation::register();
 PropelInstrumentation::register();
 RabbitMqInstrumentation::register();
 RedisInstrumentation::register();
+GuzzleInstrumentation::register();
 SprykerInstrumentationBootstrap::register();

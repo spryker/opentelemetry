@@ -66,6 +66,26 @@ class RabbitMqInstrumentation
     protected const FUNCTION_SEND_MESSAGE = 'sendMessage';
 
     /**
+     * @var string
+     */
+    protected const FUNCTION_RECEIVE_MESSAGE = 'receiveMessage';
+
+    /**
+     * @var string
+     */
+    protected const FUNCTION_RECEIVE_MESSAGES = 'receiveMessages';
+
+    /**
+     * @var string
+     */
+    protected const SPAN_NAME_RECEIVE_MESSAGE = 'rabbitmq-receiveMessage';
+
+    /**
+     * @var string
+     */
+    protected const SPAN_NAME_RECEIVE_MESSAGES = 'rabbitmq-receiveMessages';
+
+    /**
      * @return void
      */
     public static function register(): void
@@ -73,6 +93,8 @@ class RabbitMqInstrumentation
         $functions = [
             static::FUNCTION_SEND_MESSAGE => static::SPAN_NAME_SEND_MESSAGE,
             static::FUNCTION_SEND_MESSAGES => static::SPAN_NAME_SEND_MESSAGES,
+            static::FUNCTION_RECEIVE_MESSAGE => static::SPAN_NAME_RECEIVE_MESSAGE,
+            static::FUNCTION_RECEIVE_MESSAGES => static::SPAN_NAME_RECEIVE_MESSAGES,
         ];
 
         foreach ($functions as $function => $spanName) {
@@ -135,7 +157,15 @@ class RabbitMqInstrumentation
                 if (TraceSampleResult::shouldSkipTraceBody()) {
                     return;
                 }
-                $span = Span::fromContext(Context::getCurrent());
+                $scope = Context::storage()->scope();
+
+                if ($scope === null) {
+                    return;
+                }
+
+                $scope->detach();
+
+                $span = Span::fromContext($scope->context());
 
                 if ($exception !== null) {
                     $span->recordException($exception);
