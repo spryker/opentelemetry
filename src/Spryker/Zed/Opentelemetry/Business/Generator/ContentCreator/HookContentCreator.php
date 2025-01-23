@@ -108,8 +108,8 @@ class HookContentCreator implements HookContentCreatorInterface
 
                     if ($exception !== null) {
                         $span->recordException($exception);
-                        $span->setAttribute(\'error_message\', $exception->getMessage());
-                        $span->setAttribute(\'error_code\', $exception->getCode());
+                        $span->setAttribute(\\OpenTelemetry\\SemConv\\TraceAttributes::EXCEPTION_MESSAGE, $exception->getMessage());
+                        $span->setAttribute(\\OpenTelemetry\\SemConv\\TraceAttributes::ERROR_TYPE, $exception->getCode());
                     }
 
                     $span->setStatus($exception !== null ? \\OpenTelemetry\\API\\Trace\\StatusCode::STATUS_ERROR : \\OpenTelemetry\\API\\Trace\\StatusCode::STATUS_OK);
