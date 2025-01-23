@@ -26,6 +26,31 @@ class ElasticaInstrumentation
     /**
      * @var string
      */
+    public const ATTRIBUTE_QUERY_TIME = 'spr.search.queryTime';
+
+    /**
+     * @var string
+     */
+    public const ATTRIBUTE_SEARCH_INDEX = 'spr.search.index';
+
+    /**
+     * @var string
+     */
+    public const ATTRIBUTE_SEARCH_INDEXES = 'spr.search.indexes';
+
+    /**
+     * @var string
+     */
+    public const ATTRIBUTE_SEARCH_ID = 'spr.search.id';
+
+    /**
+     * @var string
+     */
+    public const ATTRIBUTE_SEARCH_IDS = 'spr.search.ids';
+
+    /**
+     * @var string
+     */
     protected const NAME = 'spryker_otel_elastica';
 
     /**
@@ -94,41 +119,6 @@ class ElasticaInstrumentation
     protected const HEADER_HOST = 'host';
 
     /**
-     * @var string
-     */
-    protected const ATTRIBUTE_QUERY_TIME = 'queryTime';
-
-    /**
-     * @var string
-     */
-    protected const ATTRIBUTE_SEARCH_INDEX = 'search.index';
-
-    /**
-     * @var string
-     */
-    protected const ATTRIBUTE_SEARCH_INDEXES = 'search.indexes';
-
-    /**
-     * @var string
-     */
-    protected const ATTRIBUTE_SEARCH_ID = 'search.id';
-
-    /**
-     * @var string
-     */
-    protected const ATTRIBUTE_SEARCH_IDS = 'search.ids';
-
-    /**
-     * @var string
-     */
-    protected const ATTRIBUTE_SEARCH_QUERY = 'search.query';
-
-    /**
-     * @var string
-     */
-    protected const ATTRIBUTE_ROOT_URL = 'root.url';
-
-    /**
      * @return void
      */
     public static function register(): void
@@ -160,8 +150,8 @@ class ElasticaInstrumentation
                     ->setParent($context)
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(static::ATTRIBUTE_SEARCH_INDEX, $params[0])
-                    ->setAttribute(static::ATTRIBUTE_SEARCH_QUERY, serialize($params[2]))
-                    ->setAttribute(static::ATTRIBUTE_ROOT_URL, $request->getRequest()->getUri())
+                    ->setAttribute(TraceAttributes::DB_QUERY_TEXT, serialize($params[2]))
+                    ->setAttribute(TraceAttributes::URL_FULL, $request->getRequest()->getUri())
                     ->setAttribute(TraceAttributes::URL_DOMAIN, $request->getRequest()->headers->get(static::HEADER_HOST))
                     ->startSpan();
 
@@ -213,7 +203,7 @@ class ElasticaInstrumentation
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(static::ATTRIBUTE_SEARCH_INDEXES, implode(',', $indexes))
                     ->setAttribute(static::ATTRIBUTE_SEARCH_IDS, implode(',', array_keys($indexes)))
-                    ->setAttribute(static::ATTRIBUTE_ROOT_URL, $request->getRequest()->getUri())
+                    ->setAttribute(TraceAttributes::URL_FULL, $request->getRequest()->getUri())
                     ->setAttribute(TraceAttributes::URL_DOMAIN, $request->getRequest()->headers->get(static::HEADER_HOST))
                     ->startSpan();
 
@@ -265,7 +255,7 @@ class ElasticaInstrumentation
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(static::ATTRIBUTE_SEARCH_INDEXES, implode(',', $indexes))
                     ->setAttribute(static::ATTRIBUTE_SEARCH_IDS, implode(',', array_keys($indexes)))
-                    ->setAttribute(static::ATTRIBUTE_ROOT_URL, $request->getRequest()->getUri())
+                    ->setAttribute(TraceAttributes::URL_FULL, $request->getRequest()->getUri())
                     ->setAttribute(TraceAttributes::URL_DOMAIN, $request->getRequest()->headers->get(static::HEADER_HOST))
                     ->startSpan();
 
@@ -315,7 +305,7 @@ class ElasticaInstrumentation
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(static::ATTRIBUTE_SEARCH_ID, $params[0])
                     ->setAttribute(static::ATTRIBUTE_SEARCH_INDEX, $params[2])
-                    ->setAttribute(static::ATTRIBUTE_ROOT_URL, $request->getRequest()->getUri())
+                    ->setAttribute(TraceAttributes::URL_FULL, $request->getRequest()->getUri())
                     ->setAttribute(TraceAttributes::URL_DOMAIN, $request->getRequest()->headers->get(static::HEADER_HOST))
                     ->startSpan();
 
@@ -367,7 +357,7 @@ class ElasticaInstrumentation
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(static::ATTRIBUTE_SEARCH_INDEXES, implode(',', $indexes))
                     ->setAttribute(static::ATTRIBUTE_SEARCH_IDS, implode(',', array_keys($indexes)))
-                    ->setAttribute(static::ATTRIBUTE_ROOT_URL, $request->getRequest()->getUri())
+                    ->setAttribute(TraceAttributes::URL_FULL, $request->getRequest()->getUri())
                     ->setAttribute(TraceAttributes::URL_DOMAIN, $request->getRequest()->headers->get(static::HEADER_HOST))
                     ->startSpan();
 
@@ -419,7 +409,7 @@ class ElasticaInstrumentation
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(static::ATTRIBUTE_SEARCH_INDEXES, implode(',', $indexes))
                     ->setAttribute(static::ATTRIBUTE_SEARCH_IDS, implode(',', array_keys($indexes)))
-                    ->setAttribute(static::ATTRIBUTE_ROOT_URL, $request->getRequest()->getUri())
+                    ->setAttribute(TraceAttributes::URL_FULL, $request->getRequest()->getUri())
                     ->setAttribute(TraceAttributes::URL_DOMAIN, $request->getRequest()->headers->get(static::HEADER_HOST))
                     ->startSpan();
 

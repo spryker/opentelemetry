@@ -135,7 +135,6 @@ class Span extends OtelSpan implements ReadWriteSpanInterface, SpanDataInterface
             $startEpochNanos !== 0 ? $startEpochNanos : Clock::getDefault()->now()
         );
 
-        // Call onStart here to ensure the span is fully initialized.
         $spanProcessor->onStart($span, $parentContext);
 
         return $span;
@@ -300,12 +299,10 @@ class Span extends OtelSpan implements ReadWriteSpanInterface, SpanDataInterface
             return $this;
         }
 
-        // An attempt to set value Unset SHOULD be ignored.
         if ($code === StatusCode::STATUS_UNSET) {
             return $this;
         }
 
-        // When span status is set to Ok it SHOULD be considered final and any further attempts to change it SHOULD be ignored.
         if ($this->status->getCode() === StatusCode::STATUS_OK) {
             return $this;
         }

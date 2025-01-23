@@ -11,6 +11,7 @@ use OpenTelemetry\API\Trace\SpanKind;
 use OpenTelemetry\API\Trace\StatusCode;
 use OpenTelemetry\Context\Context;
 use OpenTelemetry\SDK\Sdk;
+use OpenTelemetry\SemConv\TraceAttributes;
 use Propel\Runtime\Connection\StatementInterface;
 use Spryker\Service\Opentelemetry\Instrumentation\Sampler\CriticalSpanRatioSampler;
 use Spryker\Service\Opentelemetry\Instrumentation\Sampler\TraceSampleResult;
@@ -35,11 +36,6 @@ class PropelInstrumentation
      * @var string
      */
     protected const METHOD_NAME = 'execute';
-
-    /**
-     * @var string
-     */
-    protected const ATTRIBUTE_QUERY = 'query';
 
     /**
      * @return void
@@ -72,7 +68,7 @@ class PropelInstrumentation
                     ->spanBuilder(sprintf(static::SPAN_NAME_PATTERN, substr($query, 0, 20)))
                     ->setParent($context)
                     ->setSpanKind(SpanKind::KIND_CLIENT)
-                    ->setAttribute(static::ATTRIBUTE_QUERY, $query)
+                    ->setAttribute(TraceAttributes::DB_QUERY_TEXT, $query)
                     ->setAttribute($criticalAttr, true)
                     ->startSpan();
 

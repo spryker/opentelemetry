@@ -33,17 +33,12 @@ class RabbitMqInstrumentation
     /**
      * @var string
      */
-    protected const ATTRIBUTE_QUEUE_NAME = 'queue.name';
-
-    /**
-     * @var string
-     */
     protected const HEADER_HOST = 'host';
 
     /**
      * @var string
      */
-    protected const ATTRIBUTE_EVENT_LISTENER_CLASS_NAME = 'event.listenerClassName';
+    protected const ATTRIBUTE_EVENT_LISTENER_CLASS_NAME = 'spr.event.listenerClassName';
 
     /**
      * @var string
@@ -136,7 +131,7 @@ class RabbitMqInstrumentation
                     ->setParent($context)
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(TraceAttributes::HTTP_REQUEST_METHOD, $request->getMethod())
-                    ->setAttribute(static::ATTRIBUTE_QUEUE_NAME, $params[0]);
+                    ->setAttribute(TraceAttributes::MESSAGING_DESTINATION_NAME, $params[0]);
 
                 if (static::isValidMessage($params)) {
                     $eventQueueSendMessageBodyArray = json_decode($params[1][0]->getBody(), true);

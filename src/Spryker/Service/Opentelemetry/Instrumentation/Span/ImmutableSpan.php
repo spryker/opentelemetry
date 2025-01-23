@@ -7,6 +7,7 @@
 
 namespace Spryker\Service\Opentelemetry\Instrumentation\Span;
 
+use OpenTelemetry\API\Trace\SpanContextInterface;
 use OpenTelemetry\SDK\Common\Attribute\AttributesInterface;
 use OpenTelemetry\SDK\Common\Instrumentation\InstrumentationScopeInterface;
 use OpenTelemetry\SDK\Resource\ResourceInfo;
@@ -40,7 +41,7 @@ class ImmutableSpan implements SpanDataInterface
     /**
      * @return \OpenTelemetry\API\Trace\SpanContextInterface
      */
-    public function getContext(): \OpenTelemetry\API\Trace\SpanContextInterface
+    public function getContext(): SpanContextInterface
     {
         return $this->span->getContext();
     }
@@ -48,7 +49,7 @@ class ImmutableSpan implements SpanDataInterface
     /**
      * @return \OpenTelemetry\API\Trace\SpanContextInterface
      */
-    public function getParentContext(): \OpenTelemetry\API\Trace\SpanContextInterface
+    public function getParentContext(): SpanContextInterface
     {
         return $this->span->getParentContext();
     }
