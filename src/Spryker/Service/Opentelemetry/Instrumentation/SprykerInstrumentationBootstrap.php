@@ -66,11 +66,6 @@ class SprykerInstrumentationBootstrap
     /**
      * @var string
      */
-    public const ATTRIBUTE_HTTP_METHOD = 'method';
-
-    /**
-     * @var string
-     */
     protected const SPAN_NAME_PLACEHOLDER = '%s %s';
 
     /**
@@ -295,9 +290,9 @@ class SprykerInstrumentationBootstrap
             ->spanBuilder($name)
             ->setParent($parent)
             ->setSpanKind(SpanKind::KIND_SERVER)
-            ->setAttribute(TraceAttributes::URL_QUERY, $request->getQueryString())
+            ->setAttribute(TraceAttributes::URL_FULL, $request->getUri())
             ->setAttribute(static::ATTRIBUTE_IS_DETAILED_TRACE, !TraceSampleResult::shouldSkipTraceBody())
-            ->setAttribute(static::ATTRIBUTE_HTTP_METHOD, $request->getMethod())
+            ->setAttribute(TraceAttributes::HTTP_REQUEST_METHOD, $request->getMethod())
             ->startSpan();
 
         Context::storage()->attach($span->storeInContext($parent));

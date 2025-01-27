@@ -12,6 +12,8 @@ use OpenTelemetry\SDK\Common\Attribute\AttributesInterface;
 use OpenTelemetry\SDK\Common\Attribute\AttributeValidator;
 use OpenTelemetry\SDK\Common\Attribute\AttributeValidatorInterface;
 use OpenTelemetry\SemConv\TraceAttributes;
+use Spryker\Service\Opentelemetry\Instrumentation\ElasticaInstrumentation;
+use Spryker\Service\Opentelemetry\Instrumentation\RedisInstrumentation;
 use Spryker\Service\Opentelemetry\Instrumentation\Sampler\CriticalSpanRatioSampler;
 use Spryker\Service\Opentelemetry\Instrumentation\SprykerInstrumentationBootstrap;
 
@@ -132,17 +134,26 @@ class AttributesBuilder implements AttributesBuilderInterface
             TraceAttributes::CODE_LINENO,
             TraceAttributes::CODE_FUNCTION,
             TraceAttributes::URL_QUERY,
-            'query',
+            TraceAttributes::HTTP_RESPONSE_STATUS_CODE,
             TraceAttributes::HTTP_REQUEST_METHOD,
-            'queue.name',
-            'queryTime',
-            'search.index',
-            'search.query',
-            'root.url',
+            TraceAttributes::URL_FULL,
+            TraceAttributes::DB_QUERY_TEXT,
+            TraceAttributes::MESSAGING_DESTINATION_NAME,
+            TraceAttributes::USER_AGENT_ORIGINAL,
+            TraceAttributes::NETWORK_PROTOCOL_VERSION,
+            TraceAttributes::SERVER_PORT,
+            TraceAttributes::SERVER_ADDRESS,
+            TraceAttributes::ERROR_TYPE,
+            TraceAttributes::EXCEPTION_MESSAGE,
             TraceAttributes::URL_DOMAIN,
+            RedisInstrumentation::ATTRIBUTE_EVAL_SCRIPT,
+            ElasticaInstrumentation::ATTRIBUTE_QUERY_TIME,
+            ElasticaInstrumentation::ATTRIBUTE_SEARCH_INDEX,
+            ElasticaInstrumentation::ATTRIBUTE_SEARCH_ID,
+            ElasticaInstrumentation::ATTRIBUTE_SEARCH_IDS,
+            ElasticaInstrumentation::ATTRIBUTE_SEARCH_INDEXES,
             CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE,
             CriticalSpanRatioSampler::NO_CRITICAL_ATTRIBUTE,
-            SprykerInstrumentationBootstrap::ATTRIBUTE_HTTP_METHOD,
             SprykerInstrumentationBootstrap::ATTRIBUTE_IS_DETAILED_TRACE,
         ];
     }

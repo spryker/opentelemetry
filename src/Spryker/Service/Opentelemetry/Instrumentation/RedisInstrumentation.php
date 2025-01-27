@@ -26,12 +26,12 @@ class RedisInstrumentation
     /**
      * @var string
      */
-    protected const NAME = 'spryker_otel_redis';
+    public const ATTRIBUTE_EVAL_SCRIPT = 'spr.script';
 
     /**
      * @var string
      */
-    protected const PARAM_EVAL_SCRIPT = 'script';
+    protected const NAME = 'spryker_otel_redis';
 
     /**
      * @var string
@@ -151,7 +151,7 @@ class RedisInstrumentation
                     ->setSpanKind(SpanKind::KIND_CLIENT)
                     ->setParent($context)
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
-                    ->setAttribute(static::PARAM_EVAL_SCRIPT, $params[0] ?? 'undefined')
+                    ->setAttribute(static::ATTRIBUTE_EVAL_SCRIPT, $params[0] ?? 'undefined')
                     ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));
