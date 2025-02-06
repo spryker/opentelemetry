@@ -285,7 +285,6 @@ class RedisInstrumentation
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(TraceAttributes::DB_QUERY_TEXT, $params[0] ?? 'undefined')
                     ->setAttribute(static::PARAM_EXPIRATION, $params[0] ?? 'undefined')
-                    ->setAttribute(TraceAttributes::DB_NAMESPACE, $redis->getDBNum())
                     ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));
