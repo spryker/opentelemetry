@@ -8,6 +8,7 @@
 namespace Spryker\Shared\Opentelemetry\Instrumentation;
 
 use OpenTelemetry\API\Instrumentation\CachedInstrumentation as OpenTelemetryCachedInstrumentation;
+use Spryker\Service\Opentelemetry\Instrumentation\SprykerInstrumentationBootstrap;
 
 class CachedInstrumentation implements CachedInstrumentationInterface
 {
@@ -15,11 +16,6 @@ class CachedInstrumentation implements CachedInstrumentationInterface
      * @var string
      */
     protected const INSTRUMENTATION_NAME = 'io.opentelemetry.contrib.php.spryker';
-
-    /**
-     * @var string
-     */
-    protected const INSTRUMENTATION_VERSION = '1.4.0';
 
     /**
      * @var \OpenTelemetry\API\Instrumentation\CachedInstrumentation|null
@@ -45,7 +41,7 @@ class CachedInstrumentation implements CachedInstrumentationInterface
     {
         static::$instrumentation = (new OpenTelemetryCachedInstrumentation(
             static::INSTRUMENTATION_NAME,
-            static::INSTRUMENTATION_VERSION,
+            SprykerInstrumentationBootstrap::INSTRUMENTATION_VERSION,
         ));
     }
 }
