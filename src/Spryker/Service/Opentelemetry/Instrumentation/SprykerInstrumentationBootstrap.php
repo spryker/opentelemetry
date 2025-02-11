@@ -14,6 +14,7 @@ use OpenTelemetry\API\Trace\SpanInterface;
 use OpenTelemetry\API\Trace\SpanKind;
 use OpenTelemetry\API\Trace\StatusCode;
 use OpenTelemetry\Context\Context;
+use OpenTelemetry\Context\Propagation\PropagationGetterInterface;
 use OpenTelemetry\Contrib\Grpc\GrpcTransportFactory;
 use OpenTelemetry\Contrib\Otlp\OtlpUtil;
 use OpenTelemetry\SDK\Common\Util\ShutdownHandler;
@@ -24,6 +25,7 @@ use OpenTelemetry\SDK\Trace\SpanProcessorInterface;
 use OpenTelemetry\SDK\Trace\TracerProviderInterface;
 use OpenTelemetry\SemConv\ResourceAttributes;
 use OpenTelemetry\SemConv\TraceAttributes;
+use Spryker\Service\Opentelemetry\Instrumentation\Propagation\SymfonyRequestPropagationGetter;
 use Spryker\Service\Opentelemetry\Instrumentation\Resource\ResourceInfo;
 use Spryker\Service\Opentelemetry\Instrumentation\Resource\ResourceInfoFactory;
 use Spryker\Service\Opentelemetry\Instrumentation\Sampler\CriticalSpanRatioSampler;
@@ -42,7 +44,6 @@ use Spryker\Service\Opentelemetry\Storage\ResourceNameStorage;
 use Spryker\Service\Opentelemetry\Storage\RootSpanNameStorage;
 use Spryker\Shared\Opentelemetry\Instrumentation\CachedInstrumentation;
 use Spryker\Shared\Opentelemetry\Request\RequestProcessor;
-use Spryker\Zed\Opentelemetry\Business\Generator\HookGenerator;
 use Symfony\Component\Console\Application;
 use Symfony\Component\HttpFoundation\Request;
 use Throwable;
@@ -66,12 +67,12 @@ class SprykerInstrumentationBootstrap
     /**
      * @var string
      */
-    protected const SPAN_NAME_PLACEHOLDER = '%s %s';
+    public const INSTRUMENTATION_VERSION = '1.7.0';
 
     /**
      * @var string
      */
-    protected const INSTRUMENTATION_VERSION = '1.0';
+    protected const SPAN_NAME_PLACEHOLDER = '%s %s';
 
     /**
      * @var string
@@ -82,6 +83,11 @@ class SprykerInstrumentationBootstrap
      * @var string
      */
     protected const ZED_CLI_APPLICATION_NAME = 'CLI ZED';
+
+    /**
+     * @var string
+     */
+    protected const ROOT_ATTRIBUTE = 'root';
 
     /**
      * @var \Spryker\Service\Opentelemetry\Instrumentation\Resource\ResourceInfo|null
@@ -145,6 +151,8 @@ class SprykerInstrumentationBootstrap
         if (!file_exists($classmapFileName)) {
             return;
         }
+
+        $classmap = [];
 
         require_once $classmapFileName;
 
@@ -285,19 +293,29 @@ class SprykerInstrumentationBootstrap
         }
 
         $instrumentation = CachedInstrumentation::getCachedInstrumentation();
-        $parent = Context::getCurrent();
+        $parent = TraceContextPropagator::getInstance()->extract($request, static::createRequestPropagatorGetter());
         $span = $instrumentation->tracer()
             ->spanBuilder($name)
             ->setParent($parent)
             ->setSpanKind(SpanKind::KIND_SERVER)
-            ->setAttribute(TraceAttributes::URL_FULL, $request->getUri())
+            ->setAttribute(CriticalSpanRatioSampler::IS_SYSTEM_ATTRIBUTE, true)
+            ->setAttribute(static::ROOT_ATTRIBUTE, true)
             ->setAttribute(static::ATTRIBUTE_IS_DETAILED_TRACE, !TraceSampleResult::shouldSkipTraceBody())
+            ->setAttribute(TraceAttributes::URL_FULL, $request->getUri())
             ->setAttribute(TraceAttributes::HTTP_REQUEST_METHOD, $request->getMethod())
             ->startSpan();
 
         Context::storage()->attach($span->storeInContext($parent));
 
         static::$rootSpan = $span;
+    }
+
+    /**
+     * @return \OpenTelemetry\Context\Propagation\PropagationGetterInterface
+     */
+    protected static function createRequestPropagatorGetter(): PropagationGetterInterface
+    {
+        return new SymfonyRequestPropagationGetter();
     }
 
     /**
