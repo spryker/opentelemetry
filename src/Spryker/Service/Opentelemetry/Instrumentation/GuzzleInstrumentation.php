@@ -117,6 +117,7 @@ class GuzzleInstrumentation
                         } else {
                             $span->setStatus(StatusCode::STATUS_OK);
                         }
+                        $span->setAttribute(TraceAttributes::HTTP_RESPONSE_STATUS_CODE, $response->getStatusCode());
                         $span->end();
 
                         return $response;
@@ -124,6 +125,7 @@ class GuzzleInstrumentation
                     onRejected: function (Throwable $exception) use ($span) {
                         $span->recordException($exception);
                         $span->setStatus(StatusCode::STATUS_ERROR);
+                        $span->setAttribute(TraceAttributes::ERROR_TYPE, get_class($exception));
                         $span->end();
 
                         throw $exception;

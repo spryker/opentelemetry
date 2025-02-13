@@ -15,6 +15,7 @@ class PsrRequestPropagationSetter implements PropagationSetterInterface
      * @param \Psr\Http\Message\RequestInterface $carrier
      * @param string $key
      * @param string $value
+     *
      * @return void
      */
     public function set(&$carrier, string $key, string $value): void

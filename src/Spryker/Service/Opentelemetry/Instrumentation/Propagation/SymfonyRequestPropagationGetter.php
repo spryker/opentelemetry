@@ -48,7 +48,7 @@ class SymfonyRequestPropagationGetter implements PropagationGetterInterface
     protected function checkCarrier($carrier): void
     {
         if (!$carrier instanceof Request) {
-            throw new Exception('Carrier should be instance of Symfony Request');
+            throw new Exception('Carrier should be an instance of Symfony Request');
         }
     }
 }

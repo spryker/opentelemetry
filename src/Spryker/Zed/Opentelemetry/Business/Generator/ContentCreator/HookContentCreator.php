@@ -77,11 +77,10 @@ class HookContentCreator implements HookContentCreatorInterface
                         ->tracer()
                         ->spanBuilder(\'%s\')
                         ->setParent($context)
-                        ->setSpanKind(($type === \\Symfony\\Component\\HttpKernel\\HttpKernelInterface::SUB_REQUEST) ? \\OpenTelemetry\\API\\Trace\\SpanKind::KIND_INTERNAL : \\OpenTelemetry\\API\\Trace\\SpanKind::KIND_SERVER)
-                        ->setAttribute(\\OpenTelemetry\\SemConv\\TraceAttributes::CODE_FUNCTION, $function)
+                        ->setAttribute(\\OpenTelemetry\\SemConv\\TraceAttributes::CODE_FUNCTION_NAME, $function)
                         ->setAttribute(\\OpenTelemetry\\SemConv\\TraceAttributes::CODE_NAMESPACE, $class)
                         ->setAttribute(\\OpenTelemetry\\SemConv\\TraceAttributes::CODE_FILEPATH, $filename)
-                        ->setAttribute(\\OpenTelemetry\\SemConv\\TraceAttributes::CODE_LINENO, $lineno)
+                        ->setAttribute(\\OpenTelemetry\\SemConv\\TraceAttributes::CODE_LINE_NUMBER, $lineno)
                         ->setAttribute(\\Spryker\\Service\\Opentelemetry\\Instrumentation\\Sampler\\CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, %s)
                         ->startSpan();
 
