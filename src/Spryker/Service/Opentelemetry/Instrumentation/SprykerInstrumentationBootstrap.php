@@ -395,9 +395,7 @@ class SprykerInstrumentationBootstrap
         }
 
         $name = RootSpanNameStorage::getInstance()->getName();
-        if ($name) {
-            $span->updateName($name);
-        }
+        $span->updateName($name ?: static::formatSpanName($request));
 
         $exceptions = ExceptionStorage::getInstance()->getExceptions();
         foreach ($exceptions as $exception) {
