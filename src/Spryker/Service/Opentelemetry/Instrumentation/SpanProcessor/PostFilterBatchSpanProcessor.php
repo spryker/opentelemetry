@@ -210,8 +210,8 @@ class PostFilterBatchSpanProcessor implements SpanProcessorInterface
             ? OpentelemetryInstrumentationConfig::getSamplerThresholdNanoForCriticalSpan()
             : OpentelemetryInstrumentationConfig::getSamplerThresholdNano();
 
-
-        if ($span->getDuration() < $duration
+        if ($span->getAttribute(CriticalSpanRatioSampler::IS_SYSTEM_ATTRIBUTE) !== true
+            && $span->getDuration() < $duration
             && $span->getParentSpanId()
             && $span->getStatus()->getCode() === StatusCode::STATUS_OK
         ) {
