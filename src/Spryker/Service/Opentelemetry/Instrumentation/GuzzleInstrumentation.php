@@ -19,6 +19,7 @@ use Psr\Http\Message\ResponseInterface;
 use Spryker\Service\Opentelemetry\Instrumentation\Propagation\PsrRequestPropagationSetter;
 use Spryker\Service\Opentelemetry\Instrumentation\Sampler\CriticalSpanRatioSampler;
 use Spryker\Service\Opentelemetry\Instrumentation\Span\Span;
+use Spryker\Service\Opentelemetry\OpentelemetryInstrumentationConfig;
 use Spryker\Shared\Opentelemetry\Instrumentation\CachedInstrumentation;
 use Throwable;
 use function OpenTelemetry\Instrumentation\hook;
@@ -83,7 +84,9 @@ class GuzzleInstrumentation
 
                 $propagator = TraceContextPropagator::getInstance();
                 $context = $span->storeInContext($context);
-                $propagator->inject($request, new PsrRequestPropagationSetter(), $context);
+                if (OpentelemetryInstrumentationConfig::getIsDistributedTracingEnabled()) {
+                    $propagator->inject($request, new PsrRequestPropagationSetter(), $context);
+                }
 
                 Context::storage()->attach($context);
 

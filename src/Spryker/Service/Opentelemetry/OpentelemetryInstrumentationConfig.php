@@ -80,6 +80,11 @@ class OpentelemetryInstrumentationConfig
     protected const OTEL_CLI_TRACE_PROBABILITY = 'OTEL_CLI_TRACE_PROBABILITY';
 
     /**
+     * @string
+     */
+    protected const OTEL_DISTRIBUTED_TRACING_ENABLED = 'OTEL_DISTRIBUTED_TRACING_ENABLED';
+
+    /**
      * Specification:
      * - The threshold in nanoseconds for the span to be sampled.
      *
@@ -269,5 +274,19 @@ class OpentelemetryInstrumentationConfig
         $probability = getenv(static::OTEL_CLI_TRACE_PROBABILITY) ?: 0.5;
 
         return (float)$probability;
+    }
+
+    /**
+     * @return bool
+     */
+    public static function getIsDistributedTracingEnabled(): bool
+    {
+        $dtEnabled = getenv(static::OTEL_DISTRIBUTED_TRACING_ENABLED);
+
+        if ($dtEnabled === 0) {
+            return false;
+        }
+
+        return true;
     }
 }

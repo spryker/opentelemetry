@@ -294,7 +294,10 @@ class SprykerInstrumentationBootstrap
         }
 
         $instrumentation = CachedInstrumentation::getCachedInstrumentation();
-        $parent = TraceContextPropagator::getInstance()->extract($request, static::createRequestPropagatorGetter());
+        $parent = Context::getCurrent();
+        if (OpentelemetryInstrumentationConfig::getIsDistributedTracingEnabled()) {
+            $parent = TraceContextPropagator::getInstance()->extract($request, static::createRequestPropagatorGetter());
+        }
         $spanBuilder = $instrumentation->tracer()
             ->spanBuilder($name)
             ->setParent($parent)
