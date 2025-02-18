@@ -81,29 +81,47 @@ class RabbitMqInstrumentation
     protected const SPAN_NAME_RECEIVE_MESSAGES = 'rabbitmq-receiveMessages';
 
     /**
+     * @var string
+     */
+    protected const MESSAGING_SYSTEM_VALUE = 'rabbitmq';
+
+    /**
      * @return void
      */
     public static function register(): void
     {
         $functions = [
-            static::FUNCTION_SEND_MESSAGE => static::SPAN_NAME_SEND_MESSAGE,
-            static::FUNCTION_SEND_MESSAGES => static::SPAN_NAME_SEND_MESSAGES,
-            static::FUNCTION_RECEIVE_MESSAGE => static::SPAN_NAME_RECEIVE_MESSAGE,
-            static::FUNCTION_RECEIVE_MESSAGES => static::SPAN_NAME_RECEIVE_MESSAGES,
+            static::FUNCTION_SEND_MESSAGE => [
+                static::SPAN_NAME_SEND_MESSAGE,
+                SpanKind::KIND_PRODUCER,
+            ],
+            static::FUNCTION_SEND_MESSAGES => [
+                static::SPAN_NAME_SEND_MESSAGES,
+                SpanKind::KIND_PRODUCER,
+            ],
+            static::FUNCTION_RECEIVE_MESSAGE => [
+                static::SPAN_NAME_RECEIVE_MESSAGE,
+                SpanKind::KIND_CONSUMER,
+            ],
+            static::FUNCTION_RECEIVE_MESSAGES => [
+                static::SPAN_NAME_RECEIVE_MESSAGES,
+                SpanKind::KIND_CONSUMER,
+            ],
         ];
 
         foreach ($functions as $function => $spanName) {
-            static::registerHook($function, $spanName);
+            static::registerHook($function, $spanName[0], $spanName[1]);
         }
     }
 
     /**
      * @param string $functionName
      * @param string $spanName
+     * @param int $spanKind
      *
      * @return void
      */
-    protected static function registerHook(string $functionName, string $spanName): void
+    protected static function registerHook(string $functionName, string $spanName, int $spanKind): void
     {
         //BC check
         if (class_exists('\Spryker\Service\OtelRabbitMqInstrumentation\OpenTelemetry\RabbitMqInstrumentation')) {
@@ -120,15 +138,16 @@ class RabbitMqInstrumentation
         hook(
             class: RabbitMqAdapter::class,
             function: $functionName,
-            pre: function (RabbitMqAdapter $rabbitMqAdapter, array $params) use ($instrumentation, $spanName, $request): void {
+            pre: function (RabbitMqAdapter $rabbitMqAdapter, array $params) use ($instrumentation, $spanName, $request, $spanKind): void {
                 if (TraceSampleResult::shouldSkipTraceBody()) {
                     return;
                 }
                 $context = Context::getCurrent();
                 $span = $instrumentation->tracer()
                     ->spanBuilder($spanName)
-                    ->setSpanKind(SpanKind::KIND_CLIENT)
+                    ->setSpanKind($spanKind)
                     ->setParent($context)
+                    ->setAttribute(TraceAttributes::MESSAGING_SYSTEM, static::MESSAGING_SYSTEM_VALUE)
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(TraceAttributes::HTTP_REQUEST_METHOD, $request->getMethod())
                     ->setAttribute(TraceAttributes::MESSAGING_DESTINATION_NAME, $params[0]);

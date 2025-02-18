@@ -119,6 +119,11 @@ class ElasticaInstrumentation
     protected const HEADER_HOST = 'host';
 
     /**
+     * @var string
+     */
+    protected const DB_SYSTEM_NAME = 'elasticsearch';
+
+    /**
      * @return void
      */
     public static function register(): void
@@ -139,20 +144,25 @@ class ElasticaInstrumentation
                 if (TraceSampleResult::shouldSkipTraceBody()) {
                     return;
                 }
-                $path = $params[0];
                 $method = $params[1];
 
                 $instrumentation = CachedInstrumentation::getCachedInstrumentation();
                 $context = Context::getCurrent();
 
+                $connection = $client->getConnection();
+                $url = sprintf('%s://%s:%s/%s', strtolower($connection->getTransport()), $connection->getHost(), $connection->getPort(), $params[0]);
+                if ($params[3] !== []) {
+                    $url .= '?' . \http_build_query(static::sanityzeQueryStringBool($params[3]));
+                }
                 $span = $instrumentation->tracer()
                     ->spanBuilder(static::SPAN_NAME_REQUEST)
                     ->setSpanKind(SpanKind::KIND_CLIENT)
                     ->setParent($context)
+                    ->setAttribute(TraceAttributes::DB_SYSTEM_NAME, static::DB_SYSTEM_NAME)
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(static::ATTRIBUTE_SEARCH_INDEX, $params[0])
                     ->setAttribute(TraceAttributes::DB_QUERY_TEXT, serialize($params[2]))
-                    ->setAttribute(TraceAttributes::URL_FULL, $path)
+                    ->setAttribute(TraceAttributes::URL_FULL, $url)
                     ->setAttribute(TraceAttributes::HTTP_REQUEST_METHOD, $method)
                     ->startSpan();
 
@@ -200,6 +210,7 @@ class ElasticaInstrumentation
                     ->spanBuilder(static::SPAN_NAME_UPDATE_DOCUMENTS)
                     ->setSpanKind(SpanKind::KIND_CLIENT)
                     ->setParent($context)
+                    ->setAttribute(TraceAttributes::DB_SYSTEM_NAME, static::DB_SYSTEM_NAME)
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(static::ATTRIBUTE_SEARCH_INDEXES, implode(',', $indexes))
                     ->setAttribute(static::ATTRIBUTE_SEARCH_IDS, implode(',', array_keys($indexes)))
@@ -249,6 +260,7 @@ class ElasticaInstrumentation
                     ->spanBuilder(static::SPAN_NAME_ADD_DOCUMENTS)
                     ->setSpanKind(SpanKind::KIND_CLIENT)
                     ->setParent($context)
+                    ->setAttribute(TraceAttributes::DB_SYSTEM_NAME, static::DB_SYSTEM_NAME)
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(static::ATTRIBUTE_SEARCH_INDEXES, implode(',', $indexes))
                     ->setAttribute(static::ATTRIBUTE_SEARCH_IDS, implode(',', array_keys($indexes)))
@@ -296,6 +308,7 @@ class ElasticaInstrumentation
                     ->spanBuilder(static::SPAN_NAME_UPDATE_DOCUMENT)
                     ->setSpanKind(SpanKind::KIND_CLIENT)
                     ->setParent($context)
+                    ->setAttribute(TraceAttributes::DB_SYSTEM_NAME, static::DB_SYSTEM_NAME)
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(static::ATTRIBUTE_SEARCH_ID, $params[0])
                     ->setAttribute(static::ATTRIBUTE_SEARCH_INDEX, $params[2])
@@ -345,6 +358,7 @@ class ElasticaInstrumentation
                     ->spanBuilder(static::SPAN_NAME_DELETE_DOCUMENTS)
                     ->setSpanKind(SpanKind::KIND_CLIENT)
                     ->setParent($context)
+                    ->setAttribute(TraceAttributes::DB_SYSTEM_NAME, static::DB_SYSTEM_NAME)
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(static::ATTRIBUTE_SEARCH_INDEXES, implode(',', $indexes))
                     ->setAttribute(static::ATTRIBUTE_SEARCH_IDS, implode(',', array_keys($indexes)))
@@ -394,6 +408,7 @@ class ElasticaInstrumentation
                     ->spanBuilder(static::SPAN_NAME_DELETE_IDS)
                     ->setSpanKind(SpanKind::KIND_CLIENT)
                     ->setParent($context)
+                    ->setAttribute(TraceAttributes::DB_SYSTEM_NAME, static::DB_SYSTEM_NAME)
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(static::ATTRIBUTE_SEARCH_INDEXES, implode(',', $indexes))
                     ->setAttribute(static::ATTRIBUTE_SEARCH_IDS, implode(',', array_keys($indexes)))
@@ -440,5 +455,21 @@ class ElasticaInstrumentation
         }
 
         return $indexes;
+    }
+
+    /**
+     * @param array $query
+     *
+     * @return array
+     */
+    protected static function sanityzeQueryStringBool(array $query): array
+    {
+        foreach ($query as $key => $value) {
+            if (\is_bool($value)) {
+                $query[$key] = ($value) ? 'true' : 'false';
+            }
+        }
+
+        return $query;
     }
 }
