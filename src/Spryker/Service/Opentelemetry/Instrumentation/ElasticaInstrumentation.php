@@ -139,9 +139,10 @@ class ElasticaInstrumentation
                 if (TraceSampleResult::shouldSkipTraceBody()) {
                     return;
                 }
+                $path = $params[0];
+                $method = $params[1];
 
                 $instrumentation = CachedInstrumentation::getCachedInstrumentation();
-                $request = new RequestProcessor();
                 $context = Context::getCurrent();
 
                 $span = $instrumentation->tracer()
@@ -151,8 +152,8 @@ class ElasticaInstrumentation
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(static::ATTRIBUTE_SEARCH_INDEX, $params[0])
                     ->setAttribute(TraceAttributes::DB_QUERY_TEXT, serialize($params[2]))
-                    ->setAttribute(TraceAttributes::URL_FULL, $request->getRequest()->getUri())
-                    ->setAttribute(TraceAttributes::URL_DOMAIN, $request->getRequest()->headers->get(static::HEADER_HOST))
+                    ->setAttribute(TraceAttributes::URL_FULL, $path)
+                    ->setAttribute(TraceAttributes::HTTP_REQUEST_METHOD, $method)
                     ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));
@@ -191,7 +192,6 @@ class ElasticaInstrumentation
                 }
 
                 $instrumentation = CachedInstrumentation::getCachedInstrumentation();
-                $request = new RequestProcessor();
                 $context = Context::getCurrent();
 
                 $indexes = static::getIndexesIndexedByIdsFromDocuments($params[0]);
@@ -203,8 +203,6 @@ class ElasticaInstrumentation
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(static::ATTRIBUTE_SEARCH_INDEXES, implode(',', $indexes))
                     ->setAttribute(static::ATTRIBUTE_SEARCH_IDS, implode(',', array_keys($indexes)))
-                    ->setAttribute(TraceAttributes::URL_FULL, $request->getRequest()->getUri())
-                    ->setAttribute(TraceAttributes::URL_DOMAIN, $request->getRequest()->headers->get(static::HEADER_HOST))
                     ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));
@@ -243,7 +241,6 @@ class ElasticaInstrumentation
                 }
 
                 $instrumentation = CachedInstrumentation::getCachedInstrumentation();
-                $request = new RequestProcessor();
                 $context = Context::getCurrent();
 
                 $indexes = static::getIndexesIndexedByIdsFromDocuments($params[0]);
@@ -255,8 +252,6 @@ class ElasticaInstrumentation
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(static::ATTRIBUTE_SEARCH_INDEXES, implode(',', $indexes))
                     ->setAttribute(static::ATTRIBUTE_SEARCH_IDS, implode(',', array_keys($indexes)))
-                    ->setAttribute(TraceAttributes::URL_FULL, $request->getRequest()->getUri())
-                    ->setAttribute(TraceAttributes::URL_DOMAIN, $request->getRequest()->headers->get(static::HEADER_HOST))
                     ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));
@@ -295,7 +290,6 @@ class ElasticaInstrumentation
                 }
 
                 $instrumentation = CachedInstrumentation::getCachedInstrumentation();
-                $request = new RequestProcessor();
                 $context = Context::getCurrent();
 
                 $span = $instrumentation->tracer()
@@ -305,8 +299,6 @@ class ElasticaInstrumentation
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(static::ATTRIBUTE_SEARCH_ID, $params[0])
                     ->setAttribute(static::ATTRIBUTE_SEARCH_INDEX, $params[2])
-                    ->setAttribute(TraceAttributes::URL_FULL, $request->getRequest()->getUri())
-                    ->setAttribute(TraceAttributes::URL_DOMAIN, $request->getRequest()->headers->get(static::HEADER_HOST))
                     ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));
@@ -345,7 +337,6 @@ class ElasticaInstrumentation
                 }
 
                 $instrumentation = CachedInstrumentation::getCachedInstrumentation();
-                $request = new RequestProcessor();
                 $context = Context::getCurrent();
 
                 $indexes = static::getIndexesIndexedByIdsFromDocuments($params[0]);
@@ -357,8 +348,6 @@ class ElasticaInstrumentation
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(static::ATTRIBUTE_SEARCH_INDEXES, implode(',', $indexes))
                     ->setAttribute(static::ATTRIBUTE_SEARCH_IDS, implode(',', array_keys($indexes)))
-                    ->setAttribute(TraceAttributes::URL_FULL, $request->getRequest()->getUri())
-                    ->setAttribute(TraceAttributes::URL_DOMAIN, $request->getRequest()->headers->get(static::HEADER_HOST))
                     ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));
@@ -397,7 +386,6 @@ class ElasticaInstrumentation
                 }
 
                 $instrumentation = CachedInstrumentation::getCachedInstrumentation();
-                $request = new RequestProcessor();
                 $context = Context::getCurrent();
 
                 $indexes = static::getIndexesIndexedByIdsFromDocuments($params[0]);
@@ -409,8 +397,6 @@ class ElasticaInstrumentation
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(static::ATTRIBUTE_SEARCH_INDEXES, implode(',', $indexes))
                     ->setAttribute(static::ATTRIBUTE_SEARCH_IDS, implode(',', array_keys($indexes)))
-                    ->setAttribute(TraceAttributes::URL_FULL, $request->getRequest()->getUri())
-                    ->setAttribute(TraceAttributes::URL_DOMAIN, $request->getRequest()->headers->get(static::HEADER_HOST))
                     ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));

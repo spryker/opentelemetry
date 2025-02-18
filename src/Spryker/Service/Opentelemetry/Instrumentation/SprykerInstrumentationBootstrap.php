@@ -301,7 +301,7 @@ class SprykerInstrumentationBootstrap
         $spanBuilder = $instrumentation->tracer()
             ->spanBuilder($name)
             ->setParent($parent)
-            ->setSpanKind(SpanKind::KIND_SERVER)
+            ->setSpanKind($cli ? SpanKind::KIND_INTERNAL : SpanKind::KIND_SERVER)
             ->setAttribute(CriticalSpanRatioSampler::IS_SYSTEM_ATTRIBUTE, true)
             ->setAttribute(static::ROOT_ATTRIBUTE, true)
             ->setAttribute(static::ATTRIBUTE_IS_DETAILED_TRACE, !TraceSampleResult::shouldSkipTraceBody());
