@@ -14,6 +14,7 @@ use OpenTelemetry\API\Trace\SpanInterface;
 use OpenTelemetry\API\Trace\SpanKind;
 use OpenTelemetry\API\Trace\StatusCode;
 use OpenTelemetry\Context\Context;
+use OpenTelemetry\Context\Propagation\PropagationGetterInterface;
 use OpenTelemetry\Contrib\Grpc\GrpcTransportFactory;
 use OpenTelemetry\Contrib\Otlp\OtlpUtil;
 use OpenTelemetry\SDK\Common\Util\ShutdownHandler;
@@ -24,6 +25,7 @@ use OpenTelemetry\SDK\Trace\SpanProcessorInterface;
 use OpenTelemetry\SDK\Trace\TracerProviderInterface;
 use OpenTelemetry\SemConv\ResourceAttributes;
 use OpenTelemetry\SemConv\TraceAttributes;
+use Spryker\Service\Opentelemetry\Instrumentation\Propagation\SymfonyRequestPropagationGetter;
 use Spryker\Service\Opentelemetry\Instrumentation\Resource\ResourceInfo;
 use Spryker\Service\Opentelemetry\Instrumentation\Resource\ResourceInfoFactory;
 use Spryker\Service\Opentelemetry\Instrumentation\Sampler\CriticalSpanRatioSampler;
@@ -42,7 +44,6 @@ use Spryker\Service\Opentelemetry\Storage\ResourceNameStorage;
 use Spryker\Service\Opentelemetry\Storage\RootSpanNameStorage;
 use Spryker\Shared\Opentelemetry\Instrumentation\CachedInstrumentation;
 use Spryker\Shared\Opentelemetry\Request\RequestProcessor;
-use Spryker\Zed\Opentelemetry\Business\Generator\HookGenerator;
 use Symfony\Component\Console\Application;
 use Symfony\Component\HttpFoundation\Request;
 use Throwable;
@@ -66,12 +67,12 @@ class SprykerInstrumentationBootstrap
     /**
      * @var string
      */
-    protected const SPAN_NAME_PLACEHOLDER = '%s %s';
+    public const INSTRUMENTATION_VERSION = '1.7.0';
 
     /**
      * @var string
      */
-    protected const INSTRUMENTATION_VERSION = '1.0';
+    protected const SPAN_NAME_PLACEHOLDER = '%s %s';
 
     /**
      * @var string
@@ -84,6 +85,11 @@ class SprykerInstrumentationBootstrap
     protected const ZED_CLI_APPLICATION_NAME = 'CLI ZED';
 
     /**
+     * @var string
+     */
+    protected const ROOT_ATTRIBUTE = 'spr.root';
+
+    /**
      * @var \Spryker\Service\Opentelemetry\Instrumentation\Resource\ResourceInfo|null
      */
     protected static ?ResourceInfo $resourceInfo = null;
@@ -94,9 +100,9 @@ class SprykerInstrumentationBootstrap
     protected static ?SpanInterface $rootSpan = null;
 
     /**
-     * @var bool|null
+     * @var int|null
      */
-    protected static ?bool $cliSuccess = null;
+    protected static ?int $cliReturnCode = null;
 
     /**
      * @return void
@@ -146,6 +152,8 @@ class SprykerInstrumentationBootstrap
             return;
         }
 
+        $classmap = [];
+
         require_once $classmapFileName;
 
         $autoload = function (string $class) use ($classmap)
@@ -169,7 +177,7 @@ class SprykerInstrumentationBootstrap
             'doRun',
             function () {},
             function ($instance, array $params, $returnValue, ?Throwable $exception) {
-                static::$cliSuccess = $returnValue === 0 ||  $returnValue === null;
+                static::$cliReturnCode = $returnValue;
             }
         );
     }
@@ -250,7 +258,8 @@ class SprykerInstrumentationBootstrap
 
         $cli = $request->server->get('argv');
         if ($cli) {
-            [$vendor, $bin, $application] = explode('/', $cli[0]);
+            $cliLine = explode('/', $cli[0]);
+            $application = end($cliLine);
 
             if ($application === static::ZED_BIN_FILE_NAME) {
                 return static::ZED_CLI_APPLICATION_NAME;
@@ -286,18 +295,65 @@ class SprykerInstrumentationBootstrap
 
         $instrumentation = CachedInstrumentation::getCachedInstrumentation();
         $parent = Context::getCurrent();
-        $span = $instrumentation->tracer()
+        if (OpentelemetryInstrumentationConfig::getIsDistributedTracingEnabled()) {
+            $parent = TraceContextPropagator::getInstance()->extract($request, static::createRequestPropagatorGetter());
+        }
+        $spanBuilder = $instrumentation->tracer()
             ->spanBuilder($name)
             ->setParent($parent)
-            ->setSpanKind(SpanKind::KIND_SERVER)
-            ->setAttribute(TraceAttributes::URL_FULL, $request->getUri())
-            ->setAttribute(static::ATTRIBUTE_IS_DETAILED_TRACE, !TraceSampleResult::shouldSkipTraceBody())
-            ->setAttribute(TraceAttributes::HTTP_REQUEST_METHOD, $request->getMethod())
-            ->startSpan();
+            ->setSpanKind($cli ? SpanKind::KIND_INTERNAL : SpanKind::KIND_SERVER)
+            ->setAttribute(CriticalSpanRatioSampler::IS_SYSTEM_ATTRIBUTE, true)
+            ->setAttribute(static::ROOT_ATTRIBUTE, true)
+            ->setAttribute(static::ATTRIBUTE_IS_DETAILED_TRACE, !TraceSampleResult::shouldSkipTraceBody());
+
+            $span = $spanBuilder->startSpan();
 
         Context::storage()->attach($span->storeInContext($parent));
 
         static::$rootSpan = $span;
+    }
+
+    /**
+     * @param \OpenTelemetry\API\Trace\SpanInterface $span
+     * @param \Symfony\Component\HttpFoundation\Request $request
+     *
+     * @return \OpenTelemetry\API\Trace\SpanInterface
+     */
+    protected static function addHttpAttributes(SpanInterface $span, Request $request): SpanInterface
+    {
+        $span->setAttribute(TraceAttributes::URL_FULL, $request->getUri())
+            ->setAttribute(TraceAttributes::URL_PATH, $request->getPathInfo())
+            ->setAttribute(TraceAttributes::URL_SCHEME, $request->getScheme())
+            ->setAttribute(TraceAttributes::HTTP_REQUEST_METHOD, $request->getMethod())
+            ->setAttribute(TraceAttributes::SERVER_PORT, $request->getPort())
+            ->setAttribute(TraceAttributes::SERVER_ADDRESS, $request->getHost())
+            ->setAttribute(TraceAttributes::HTTP_ROUTE, $request->attributes->get('_route'))
+            ->setAttribute(TraceAttributes::URL_QUERY, $request->getQueryString())
+            ->setAttribute(TraceAttributes::CLIENT_ADDRESS, $request->getClientIp())
+            ->setAttribute(TraceAttributes::HTTP_RESPONSE_STATUS_CODE, http_response_code());
+
+        return $span;
+    }
+
+    /**
+     * @param \OpenTelemetry\API\Trace\SpanInterface $span
+     * @param \Symfony\Component\HttpFoundation\Request $request
+     *
+     * @return \OpenTelemetry\API\Trace\SpanInterface
+     */
+    protected static function addCliAttributes(SpanInterface $span, Request $request): SpanInterface
+    {
+        $span->setAttribute(TraceAttributes::PROCESS_EXIT_CODE, static::$cliReturnCode);
+
+        return $span;
+    }
+
+    /**
+     * @return \OpenTelemetry\Context\Propagation\PropagationGetterInterface
+     */
+    protected static function createRequestPropagatorGetter(): PropagationGetterInterface
+    {
+        return new SymfonyRequestPropagationGetter();
     }
 
     /**
@@ -307,9 +363,9 @@ class SprykerInstrumentationBootstrap
      */
     protected static function formatSpanName(Request $request): string
     {
-        $relativeUriWithoutQueryString = str_replace('?' . $request->getQueryString(), '', $request->getUri());
+        $target = $request->attributes->get('_route') ?: $request->getPathInfo();
 
-        return sprintf(static::SPAN_NAME_PLACEHOLDER, $request->getMethod(), $relativeUriWithoutQueryString);
+        return sprintf(static::SPAN_NAME_PLACEHOLDER, $request->getMethod(), $target);
     }
 
     /**
@@ -317,10 +373,12 @@ class SprykerInstrumentationBootstrap
      */
     public static function shutdownHandler(): void
     {
+        $request = RequestProcessor::getRequest();
         $resourceName = ResourceNameStorage::getInstance()->getName();
         $customParamsStorage = CustomParameterStorage::getInstance();
+        $cli = $customParamsStorage->getAttribute(OpentelemetryMonitoringExtensionPlugin::ATTRIBUTE_IS_CONSOLE_COMMAND);
         if ($resourceName) {
-            if ($customParamsStorage->getAttribute(OpentelemetryMonitoringExtensionPlugin::ATTRIBUTE_IS_CONSOLE_COMMAND)) {
+            if ($cli) {
                 $resourceName = sprintf('CLI %s', $resourceName);
             }
             static::$resourceInfo->setServiceName($resourceName);
@@ -332,10 +390,15 @@ class SprykerInstrumentationBootstrap
 
         $scope->detach();
         $span = static::$rootSpan;
-        $name = RootSpanNameStorage::getInstance()->getName();
-        if ($name) {
-            $span->updateName($name);
+
+        if (!$cli) {
+            $span = static::addHttpAttributes($span, $request);
+        } else {
+            $span = static::addCliAttributes($span, $request);
         }
+
+        $name = RootSpanNameStorage::getInstance()->getName();
+        $span->updateName($name ?: static::formatSpanName($request));
 
         $exceptions = ExceptionStorage::getInstance()->getExceptions();
         foreach ($exceptions as $exception) {
@@ -347,10 +410,32 @@ class SprykerInstrumentationBootstrap
             $span->addEvent($eventName, $eventAttributes);
         }
 
-        $span->setStatus($exceptions || static::$cliSuccess === false ? StatusCode::STATUS_ERROR : StatusCode::STATUS_OK);
+        $span->setStatus(static::getSpanStatus());
 
         $span->setAttributes($customParamsStorage->getAttributes());
-        $span->setAttribute(TraceAttributes::HTTP_RESPONSE_STATUS_CODE, http_response_code());
         $span->end();
+    }
+
+    /**
+     * @return string
+     */
+    protected static function getSpanStatus(): string
+    {
+        $exceptions = ExceptionStorage::getInstance()->getExceptions();
+
+        if ($exceptions !== []) {
+            return StatusCode::STATUS_ERROR;
+        }
+
+        if (static::$cliReturnCode !== null && static::$cliReturnCode !== 0) {
+            return StatusCode::STATUS_ERROR;
+        }
+
+        $httpResponseCode = http_response_code();
+        if (is_int($httpResponseCode) && $httpResponseCode >= 500) {
+            return StatusCode::STATUS_ERROR;
+        }
+
+        return StatusCode::STATUS_OK;
     }
 }

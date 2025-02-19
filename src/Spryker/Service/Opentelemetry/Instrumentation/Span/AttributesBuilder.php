@@ -138,6 +138,7 @@ class AttributesBuilder implements AttributesBuilderInterface
             TraceAttributes::HTTP_REQUEST_METHOD,
             TraceAttributes::URL_FULL,
             TraceAttributes::DB_QUERY_TEXT,
+            TraceAttributes::DB_SYSTEM_NAME,
             TraceAttributes::MESSAGING_DESTINATION_NAME,
             TraceAttributes::USER_AGENT_ORIGINAL,
             TraceAttributes::NETWORK_PROTOCOL_VERSION,

@@ -39,6 +39,11 @@ class RedisInstrumentation
     protected const PARAM_EXPIRATION = 'expiration';
 
     /**
+     * @var string
+     */
+    protected const DB_SYSTEM_NAME = 'redis';
+
+    /**
      * @return void
      */
     public static function register(): void
@@ -62,6 +67,7 @@ class RedisInstrumentation
                     ->spanBuilder('Redis::get')
                     ->setSpanKind(SpanKind::KIND_CLIENT)
                     ->setParent($context)
+                    ->setAttribute(TraceAttributes::DB_SYSTEM_NAME, static::DB_SYSTEM_NAME)
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(TraceAttributes::DB_QUERY_TEXT, isset($params[0]) ? 'GET ' . $params[0] : 'undefined')
                     ->startSpan();
@@ -106,6 +112,7 @@ class RedisInstrumentation
                     ->spanBuilder('Redis::mget')
                     ->setSpanKind(SpanKind::KIND_CLIENT)
                     ->setParent($context)
+                    ->setAttribute(TraceAttributes::DB_SYSTEM_NAME, static::DB_SYSTEM_NAME)
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(TraceAttributes::DB_QUERY_TEXT, implode(' ', $params[0]))
                     ->startSpan();
@@ -150,6 +157,7 @@ class RedisInstrumentation
                     ->spanBuilder('Redis::eval')
                     ->setSpanKind(SpanKind::KIND_CLIENT)
                     ->setParent($context)
+                    ->setAttribute(TraceAttributes::DB_SYSTEM_NAME, static::DB_SYSTEM_NAME)
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(static::ATTRIBUTE_EVAL_SCRIPT, $params[0] ?? 'undefined')
                     ->startSpan();
@@ -194,6 +202,7 @@ class RedisInstrumentation
                     ->spanBuilder('Redis::mset')
                     ->setSpanKind(SpanKind::KIND_CLIENT)
                     ->setParent($context)
+                    ->setAttribute(TraceAttributes::DB_SYSTEM_NAME, static::DB_SYSTEM_NAME)
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(TraceAttributes::DB_QUERY_TEXT, implode(' ', array_keys($params[0])))
                     ->startSpan();
@@ -238,6 +247,7 @@ class RedisInstrumentation
                     ->spanBuilder('Redis::set')
                     ->setSpanKind(SpanKind::KIND_CLIENT)
                     ->setParent($context)
+                    ->setAttribute(TraceAttributes::DB_SYSTEM_NAME, static::DB_SYSTEM_NAME)
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(TraceAttributes::DB_QUERY_TEXT, $params[0] ?? 'undefined')
                     ->startSpan();
@@ -282,6 +292,7 @@ class RedisInstrumentation
                     ->spanBuilder('Redis::set')
                     ->setSpanKind(SpanKind::KIND_CLIENT)
                     ->setParent($context)
+                    ->setAttribute(TraceAttributes::DB_SYSTEM_NAME, static::DB_SYSTEM_NAME)
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(TraceAttributes::DB_QUERY_TEXT, $params[0] ?? 'undefined')
                     ->setAttribute(static::PARAM_EXPIRATION, $params[0] ?? 'undefined')

@@ -27,6 +27,11 @@ class CriticalSpanRatioSampler implements SamplerInterface, ParentSpanAwareSampl
     public const NO_CRITICAL_ATTRIBUTE = 'no_critical';
 
     /**
+     * @var string
+     */
+    public const IS_SYSTEM_ATTRIBUTE = 'spr.is_system_span';
+
+    /**
      * @var float
      */
     protected float $probability;
@@ -71,7 +76,7 @@ class CriticalSpanRatioSampler implements SamplerInterface, ParentSpanAwareSampl
         AttributesInterface $attributes,
         array $links,
     ): SamplingResult {
-        if (!$this->parentSpan->getContext()->isValid()) {
+        if (!$this->parentSpan->getContext()->isValid() || $attributes->has(static::IS_SYSTEM_ATTRIBUTE)) {
             return new SamplingResult(SamplingResult::RECORD_AND_SAMPLE, [], $this->parentSpan->getContext()->getTraceState());
         }
         $probability = $this->probability;

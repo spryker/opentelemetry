@@ -30,7 +30,7 @@ class PropelInstrumentation
     /**
      * @var string
      */
-    protected const SPAN_NAME_PATTERN = 'Propel query: %s...';
+    protected const SPAN_NAME_PATTERN = '%s...';
 
     /**
      * @var string
@@ -51,10 +51,12 @@ class PropelInstrumentation
             return;
         }
 
+        $dbEngine = strtolower((getenv('SPRYKER_DB_ENGINE') ?: '')) ?: 'mysql';
+
         hook(
             class: StatementInterface::class,
             function: static::METHOD_NAME,
-            pre: function (StatementInterface $statement, array $params): void {
+            pre: function (StatementInterface $statement, array $params) use ($dbEngine): void {
                 if (TraceSampleResult::shouldSkipTraceBody()) {
                     return;
                 }
@@ -68,6 +70,7 @@ class PropelInstrumentation
                     ->spanBuilder(sprintf(static::SPAN_NAME_PATTERN, substr($query, 0, 20)))
                     ->setParent($context)
                     ->setSpanKind(SpanKind::KIND_CLIENT)
+                    ->setAttribute(TraceAttributes::DB_SYSTEM_NAME, $dbEngine)
                     ->setAttribute(TraceAttributes::DB_QUERY_TEXT, $query)
                     ->setAttribute($criticalAttr, true)
                     ->startSpan();
