@@ -287,11 +287,7 @@ class SprykerInstrumentationBootstrap
     protected static function registerRootSpan(Request $request): void
     {
         $cli = $request->server->get('argv');
-        if ($cli) {
-            $name = implode(' ', $cli);
-        } else {
-            $name = static::formatSpanName($request);
-        }
+        $name = static::formatGeneralSpanName($request);
 
         $instrumentation = CachedInstrumentation::getCachedInstrumentation();
         $parent = Context::getCurrent();
@@ -391,14 +387,14 @@ class SprykerInstrumentationBootstrap
         $scope->detach();
         $span = static::$rootSpan;
 
-        if (!$cli) {
-            $span = static::addHttpAttributes($span, $request);
-        } else {
+        if ($cli || $request->server->get('argv')) {
             $span = static::addCliAttributes($span, $request);
+        } else {
+            $span = static::addHttpAttributes($span, $request);
         }
 
         $name = RootSpanNameStorage::getInstance()->getName();
-        $span->updateName($name ?: static::formatSpanName($request));
+        $span->updateName($name ?: static::formatGeneralSpanName($request));
 
         $exceptions = ExceptionStorage::getInstance()->getExceptions();
         foreach ($exceptions as $exception) {
@@ -437,5 +433,20 @@ class SprykerInstrumentationBootstrap
         }
 
         return StatusCode::STATUS_OK;
+    }
+
+    /**
+     * @param \Symfony\Component\HttpFoundation\Request $request
+     *
+     * @return string
+     */
+    protected static function formatGeneralSpanName(Request $request): string
+    {
+        $cli = $request->server->get('argv');
+        if ($cli) {
+            return implode(' ', $cli);
+        }
+
+        return static::formatSpanName($request);
     }
 }
