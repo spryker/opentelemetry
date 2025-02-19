@@ -387,10 +387,10 @@ class SprykerInstrumentationBootstrap
         $scope->detach();
         $span = static::$rootSpan;
 
-        if (!$cli || $request->server->get('argv')) {
-            $span = static::addHttpAttributes($span, $request);
-        } else {
+        if ($cli || $request->server->get('argv')) {
             $span = static::addCliAttributes($span, $request);
+        } else {
+            $span = static::addHttpAttributes($span, $request);
         }
 
         $name = RootSpanNameStorage::getInstance()->getName();
