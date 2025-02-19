@@ -444,11 +444,9 @@ class SprykerInstrumentationBootstrap
     {
         $cli = $request->server->get('argv');
         if ($cli) {
-            $name = implode(' ', $cli);
-        } else {
-            $name = static::formatSpanName($request);
+            return implode(' ', $cli);
         }
 
-        return $name;
+        return static::formatSpanName($request);
     }
 }
