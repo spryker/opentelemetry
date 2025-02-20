@@ -12,7 +12,6 @@ use OpenTelemetry\API\Trace\StatusCode;
 use OpenTelemetry\Context\Context;
 use OpenTelemetry\SDK\Sdk;
 use OpenTelemetry\SemConv\TraceAttributes;
-use Redis;
 use Spryker\Client\Redis\Adapter\RedisAdapterInterface;
 use Spryker\Service\Opentelemetry\Instrumentation\Sampler\CriticalSpanRatioSampler;
 use Spryker\Service\Opentelemetry\Instrumentation\Sampler\TraceSampleResult;
@@ -280,7 +279,7 @@ class RedisInstrumentation
         );
 
         hook(
-            Redis::class,
+            RedisAdapterInterface::class,
             'setex',
             pre: static function (RedisAdapterInterface $redis, array $params) use ($instrumentation): void {
 
