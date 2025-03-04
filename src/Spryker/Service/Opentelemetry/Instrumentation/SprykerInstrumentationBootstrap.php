@@ -46,6 +46,7 @@ use Spryker\Shared\Opentelemetry\Instrumentation\CachedInstrumentation;
 use Spryker\Shared\Opentelemetry\Request\RequestProcessor;
 use Symfony\Component\Console\Application;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\Matcher\CompiledUrlMatcher;
 use Throwable;
 use function OpenTelemetry\Instrumentation\hook;
 
@@ -105,6 +106,11 @@ class SprykerInstrumentationBootstrap
     protected static ?int $cliReturnCode = null;
 
     /**
+     * @var string|null
+     */
+    protected static ?string $route = null;
+
+    /**
      * @return void
      */
     public static function register(): void
@@ -141,6 +147,7 @@ class SprykerInstrumentationBootstrap
     protected static function registerAdditionalHooks(): void
     {
         static::registerConsoleReturnCodeHook();
+        static::registerRouteMatcherHooks();
         if (TraceSampleResult::shouldSkipTraceBody()) {
             putenv('OTEL_PHP_DISABLED_INSTRUMENTATIONS=all');
 
@@ -180,6 +187,43 @@ class SprykerInstrumentationBootstrap
                 static::$cliReturnCode = $returnValue;
             }
         );
+    }
+
+    /**
+     * @return void
+     */
+    protected static function registerRouteMatcherHooks(): void
+    {
+        //Backoffice and Yves
+        hook(
+            \Symfony\Component\Routing\Matcher\UrlMatcher::class,
+            'matchRequest',
+            function () {},
+            function ($instance, array $params, $returnValue, ?Throwable $exception) {
+                static::$route = $returnValue['_route'] ?? null;
+            }
+        );
+
+        //REST API
+        hook(
+            \Spryker\Glue\GlueApplication\Rest\ResourceRouter::class,
+            'matchRequest',
+            function () {},
+            function ($instance, array $params, $returnValue, ?Throwable $exception) {
+                static::$route = $returnValue['_route'] ?? null;
+            }
+        );
+
+        //Storefront/Backend API
+        hook(
+            \Symfony\Component\Routing\Router::class,
+            'match',
+            function () {},
+            function ($instance, array $params, $returnValue, ?Throwable $exception) {
+                static::$route = $returnValue['_route'] ?? null;
+            }
+        );
+
     }
 
     /**
@@ -359,7 +403,7 @@ class SprykerInstrumentationBootstrap
      */
     protected static function formatSpanName(Request $request): string
     {
-        $target = $request->attributes->get('_route') ?: $request->getPathInfo();
+        $target = static::$route ?: $request->getPathInfo();
 
         return sprintf(static::SPAN_NAME_PLACEHOLDER, $request->getMethod(), $target);
     }
@@ -432,7 +476,7 @@ class SprykerInstrumentationBootstrap
             return StatusCode::STATUS_ERROR;
         }
 
-        return StatusCode::STATUS_OK;
+        return StatusCode::STATUS_UNSET;
     }
 
     /**
