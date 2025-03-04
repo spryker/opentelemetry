@@ -25,6 +25,7 @@ use OpenTelemetry\SDK\Trace\SpanProcessorInterface;
 use OpenTelemetry\SDK\Trace\TracerProviderInterface;
 use OpenTelemetry\SemConv\ResourceAttributes;
 use OpenTelemetry\SemConv\TraceAttributes;
+use Spryker\Glue\GlueApplication\Rest\ResourceRouter;
 use Spryker\Service\Opentelemetry\Instrumentation\Propagation\SymfonyRequestPropagationGetter;
 use Spryker\Service\Opentelemetry\Instrumentation\Resource\ResourceInfo;
 use Spryker\Service\Opentelemetry\Instrumentation\Resource\ResourceInfoFactory;
@@ -46,7 +47,8 @@ use Spryker\Shared\Opentelemetry\Instrumentation\CachedInstrumentation;
 use Spryker\Shared\Opentelemetry\Request\RequestProcessor;
 use Symfony\Component\Console\Application;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Routing\Matcher\CompiledUrlMatcher;
+use Symfony\Component\Routing\Matcher\UrlMatcher;
+use Symfony\Component\Routing\Router;
 use Throwable;
 use function OpenTelemetry\Instrumentation\hook;
 
@@ -196,7 +198,7 @@ class SprykerInstrumentationBootstrap
     {
         //Backoffice and Yves
         hook(
-            \Symfony\Component\Routing\Matcher\UrlMatcher::class,
+            UrlMatcher::class,
             'matchRequest',
             function () {},
             function ($instance, array $params, $returnValue, ?Throwable $exception) {
@@ -204,19 +206,21 @@ class SprykerInstrumentationBootstrap
             }
         );
 
-        //REST API
-        hook(
-            \Spryker\Glue\GlueApplication\Rest\ResourceRouter::class,
-            'matchRequest',
-            function () {},
-            function ($instance, array $params, $returnValue, ?Throwable $exception) {
-                static::$route = $returnValue['_route'] ?? null;
-            }
-        );
-
+        if (class_exists(ResourceRouter::class)) {
+            //REST API
+            hook(
+                ResourceRouter::class,
+                'matchRequest',
+                function () {},
+                function ($instance, array $params, $returnValue, ?Throwable $exception) {
+                    static::$route = $returnValue['_route'] ?? null;
+                }
+            );
+        }
+        
         //Storefront/Backend API
         hook(
-            \Symfony\Component\Routing\Router::class,
+            Router::class,
             'match',
             function () {},
             function ($instance, array $params, $returnValue, ?Throwable $exception) {
