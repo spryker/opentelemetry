@@ -70,7 +70,7 @@ class SprykerInstrumentationBootstrap
     /**
      * @var string
      */
-    public const INSTRUMENTATION_VERSION = '1.7.0';
+    public const INSTRUMENTATION_VERSION = '1.7.4';
 
     /**
      * @var string
@@ -217,7 +217,7 @@ class SprykerInstrumentationBootstrap
                 }
             );
         }
-        
+
         //Storefront/Backend API
         hook(
             Router::class,
