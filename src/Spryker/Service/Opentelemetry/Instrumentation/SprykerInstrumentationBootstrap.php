@@ -25,6 +25,7 @@ use OpenTelemetry\SDK\Trace\SpanProcessorInterface;
 use OpenTelemetry\SDK\Trace\TracerProviderInterface;
 use OpenTelemetry\SemConv\ResourceAttributes;
 use OpenTelemetry\SemConv\TraceAttributes;
+use Spryker\Glue\GlueApplication\Rest\ResourceRouter;
 use Spryker\Service\Opentelemetry\Instrumentation\Propagation\SymfonyRequestPropagationGetter;
 use Spryker\Service\Opentelemetry\Instrumentation\Resource\ResourceInfo;
 use Spryker\Service\Opentelemetry\Instrumentation\Resource\ResourceInfoFactory;
@@ -46,6 +47,8 @@ use Spryker\Shared\Opentelemetry\Instrumentation\CachedInstrumentation;
 use Spryker\Shared\Opentelemetry\Request\RequestProcessor;
 use Symfony\Component\Console\Application;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\Matcher\UrlMatcher;
+use Symfony\Component\Routing\Router;
 use Throwable;
 use function OpenTelemetry\Instrumentation\hook;
 
@@ -67,7 +70,7 @@ class SprykerInstrumentationBootstrap
     /**
      * @var string
      */
-    public const INSTRUMENTATION_VERSION = '1.7.0';
+    public const INSTRUMENTATION_VERSION = '1.7.4';
 
     /**
      * @var string
@@ -103,6 +106,11 @@ class SprykerInstrumentationBootstrap
      * @var int|null
      */
     protected static ?int $cliReturnCode = null;
+
+    /**
+     * @var string|null
+     */
+    protected static ?string $route = null;
 
     /**
      * @return void
@@ -141,6 +149,7 @@ class SprykerInstrumentationBootstrap
     protected static function registerAdditionalHooks(): void
     {
         static::registerConsoleReturnCodeHook();
+        static::registerRouteMatcherHooks();
         if (TraceSampleResult::shouldSkipTraceBody()) {
             putenv('OTEL_PHP_DISABLED_INSTRUMENTATIONS=all');
 
@@ -180,6 +189,45 @@ class SprykerInstrumentationBootstrap
                 static::$cliReturnCode = $returnValue;
             }
         );
+    }
+
+    /**
+     * @return void
+     */
+    protected static function registerRouteMatcherHooks(): void
+    {
+        //Backoffice and Yves
+        hook(
+            UrlMatcher::class,
+            'matchRequest',
+            function () {},
+            function ($instance, array $params, $returnValue, ?Throwable $exception) {
+                static::$route = $returnValue['_route'] ?? null;
+            }
+        );
+
+        if (class_exists(ResourceRouter::class)) {
+            //REST API
+            hook(
+                ResourceRouter::class,
+                'matchRequest',
+                function () {},
+                function ($instance, array $params, $returnValue, ?Throwable $exception) {
+                    static::$route = $returnValue['_route'] ?? null;
+                }
+            );
+        }
+
+        //Storefront/Backend API
+        hook(
+            Router::class,
+            'match',
+            function () {},
+            function ($instance, array $params, $returnValue, ?Throwable $exception) {
+                static::$route = $returnValue['_route'] ?? null;
+            }
+        );
+
     }
 
     /**
@@ -359,7 +407,7 @@ class SprykerInstrumentationBootstrap
      */
     protected static function formatSpanName(Request $request): string
     {
-        $target = $request->attributes->get('_route') ?: $request->getPathInfo();
+        $target = static::$route ?: $request->getPathInfo();
 
         return sprintf(static::SPAN_NAME_PLACEHOLDER, $request->getMethod(), $target);
     }
@@ -432,7 +480,7 @@ class SprykerInstrumentationBootstrap
             return StatusCode::STATUS_ERROR;
         }
 
-        return StatusCode::STATUS_OK;
+        return StatusCode::STATUS_UNSET;
     }
 
     /**
