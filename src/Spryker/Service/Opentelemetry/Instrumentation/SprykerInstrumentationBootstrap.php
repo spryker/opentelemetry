@@ -43,7 +43,9 @@ use Spryker\Service\Opentelemetry\Storage\CustomParameterStorage;
 use Spryker\Service\Opentelemetry\Storage\ExceptionStorage;
 use Spryker\Service\Opentelemetry\Storage\ResourceNameStorage;
 use Spryker\Service\Opentelemetry\Storage\RootSpanNameStorage;
+use Spryker\Shared\Config\Config;
 use Spryker\Shared\Opentelemetry\Instrumentation\CachedInstrumentation;
+use Spryker\Shared\Opentelemetry\OpentelemetryConstants;
 use Spryker\Shared\Opentelemetry\Request\RequestProcessor;
 use Symfony\Component\Console\Application;
 use Symfony\Component\HttpFoundation\Request;
@@ -70,7 +72,7 @@ class SprykerInstrumentationBootstrap
     /**
      * @var string
      */
-    public const INSTRUMENTATION_VERSION = '1.7.4';
+    public const INSTRUMENTATION_VERSION = '1.8.0';
 
     /**
      * @var string
@@ -91,6 +93,11 @@ class SprykerInstrumentationBootstrap
      * @var string
      */
     protected const ROOT_ATTRIBUTE = 'spr.root';
+
+    /**
+     * @var string
+     */
+    protected const FINAL_HTTP_ROOT_SPAN_NAME = '/*';
 
     /**
      * @var \Spryker\Service\Opentelemetry\Instrumentation\Resource\ResourceInfo|null
@@ -335,7 +342,7 @@ class SprykerInstrumentationBootstrap
     protected static function registerRootSpan(Request $request): void
     {
         $cli = $request->server->get('argv');
-        $name = static::formatGeneralSpanName($request);
+        $name = static::formatGeneralSpanName($request, false);
 
         $instrumentation = CachedInstrumentation::getCachedInstrumentation();
         $parent = Context::getCurrent();
@@ -402,12 +409,13 @@ class SprykerInstrumentationBootstrap
 
     /**
      * @param \Symfony\Component\HttpFoundation\Request $request
+     * @param bool $isApplicationAvailable
      *
      * @return string
      */
-    protected static function formatSpanName(Request $request): string
+    protected static function formatSpanName(Request $request, bool $isApplicationAvailable = false): string
     {
-        $target = static::$route ?: $request->getPathInfo();
+        $target = static::$route ?: ($isApplicationAvailable ? Config::get(OpentelemetryConstants::FALLBACK_HTTP_ROOT_SPAN_NAME, static::FINAL_HTTP_ROOT_SPAN_NAME) : static::FINAL_HTTP_ROOT_SPAN_NAME);
 
         return sprintf(static::SPAN_NAME_PLACEHOLDER, $request->getMethod(), $target);
     }
@@ -442,7 +450,7 @@ class SprykerInstrumentationBootstrap
         }
 
         $name = RootSpanNameStorage::getInstance()->getName();
-        $span->updateName($name ?: static::formatGeneralSpanName($request));
+        $span->updateName($name ?: static::formatGeneralSpanName($request, true));
 
         $exceptions = ExceptionStorage::getInstance()->getExceptions();
         foreach ($exceptions as $exception) {
@@ -485,16 +493,17 @@ class SprykerInstrumentationBootstrap
 
     /**
      * @param \Symfony\Component\HttpFoundation\Request $request
+     * @param bool $isApplicationAvailable
      *
      * @return string
      */
-    protected static function formatGeneralSpanName(Request $request): string
+    protected static function formatGeneralSpanName(Request $request, bool $isApplicationAvailable = false): string
     {
         $cli = $request->server->get('argv');
         if ($cli) {
             return implode(' ', $cli);
         }
 
-        return static::formatSpanName($request);
+        return static::formatSpanName($request, $isApplicationAvailable);
     }
 }
