@@ -21,4 +21,14 @@ interface OpentelemetryConstants
      * @var string
      */
     public const FALLBACK_HTTP_ROOT_SPAN_NAME = 'OPENTELEMETRY:FALLBACK_HTTP_ROOT_SPAN_NAME';
+
+    /**
+     * Specification:
+     * - Defines if HTTP method should be shown in root span name if no name was provided via MonitoringService.
+     *
+     * @api
+     *
+     * @var string
+     */
+    public const SHOW_HTTP_METHOD_IN_ROOT_SPAN_NAME = 'OPENTELEMETRY:SHOW_HTTP_METHOD_IN_ROOT_SPAN_NAME';
 }

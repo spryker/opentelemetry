@@ -417,7 +417,7 @@ class SprykerInstrumentationBootstrap
     {
         $target = static::$route ?: ($isApplicationAvailable ? Config::get(OpentelemetryConstants::FALLBACK_HTTP_ROOT_SPAN_NAME, static::FINAL_HTTP_ROOT_SPAN_NAME) : static::FINAL_HTTP_ROOT_SPAN_NAME);
 
-        return sprintf(static::SPAN_NAME_PLACEHOLDER, $request->getMethod(), $target);
+        return trim(sprintf(static::SPAN_NAME_PLACEHOLDER, $isApplicationAvailable && !Config::get(OpentelemetryConstants::SHOW_HTTP_METHOD_IN_ROOT_SPAN_NAME, true) ? '' : $request->getMethod(), $target));
     }
 
     /**
