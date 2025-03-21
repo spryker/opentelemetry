@@ -152,6 +152,11 @@ class PostFilterBatchSpanProcessor implements SpanProcessorInterface
     protected static $parentSpanIdMapping = [];
 
     /**
+     * @var int
+     */
+    protected static int $processedSpans = 0;
+
+    /**
      * @param \OpenTelemetry\SDK\Trace\SpanExporterInterface $exporter
      * @param \OpenTelemetry\API\Common\Time\ClockInterface $clock
      * @param int $maxQueueSize
@@ -178,6 +183,14 @@ class PostFilterBatchSpanProcessor implements SpanProcessorInterface
         $this->flush = new SplQueue();
 
         $this->initMetrics($meterProvider);
+    }
+
+    /**
+     * @return int
+     */
+    public static function getNumberOfProcessedSpans(): int
+    {
+        return static::$processedSpans;
     }
 
     /**
@@ -228,6 +241,7 @@ class PostFilterBatchSpanProcessor implements SpanProcessorInterface
         }
 
         $this->queueSize++;
+        static::$processedSpans++;
 
         if (isset(static::$parentSpanIdMapping[$span->getParentContext()->getSpanId()]) && $span->getParentContext() instanceof SpanIdUpdateAwareSpanContextInterface) {
             $span->getParentContext()->updateSpanId(static::$parentSpanIdMapping[$span->getParentContext()->getSpanId()]);

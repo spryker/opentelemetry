@@ -97,6 +97,11 @@ class SprykerInstrumentationBootstrap
     /**
      * @var string
      */
+    protected const ATTRIBUTE_PROCESSED_SPANS = 'spr.processed_spans';
+
+    /**
+     * @var string
+     */
     protected const FINAL_HTTP_ROOT_SPAN_NAME = '/*';
 
     /**
@@ -461,6 +466,10 @@ class SprykerInstrumentationBootstrap
         foreach ($events as $eventName => $eventAttributes) {
             $span->addEvent($eventName, $eventAttributes);
         }
+
+        $processedSpans = PostFilterBatchSpanProcessor::getNumberOfProcessedSpans();
+        $span->setAttribute(static::ATTRIBUTE_PROCESSED_SPANS, $processedSpans);
+        $span->setAttribute(static::ATTRIBUTE_IS_DETAILED_TRACE, $processedSpans >= 1);
 
         $span->setStatus(static::getSpanStatus());
 
