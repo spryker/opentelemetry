@@ -94,7 +94,8 @@ class OpentelemetryInstrumentationConfig
      */
     public static function getSamplerThresholdNano(): int
     {
-        $multiplicator = getenv(static::OTEL_BSP_MIN_SPAN_DURATION_THRESHOLD) ?: 20;
+        $envValue = getenv(static::OTEL_BSP_MIN_SPAN_DURATION_THRESHOLD);
+        $multiplicator = $envValue !== false ? $envValue : 20;
 
         return $multiplicator * 1000000;
     }
@@ -109,7 +110,8 @@ class OpentelemetryInstrumentationConfig
      */
     public static function getSamplerThresholdNanoForCriticalSpan(): int
     {
-        $multiplicator = getenv(static::OTEL_BSP_MIN_CRITICAL_SPAN_DURATION_THRESHOLD) ?: 10;
+        $envValue = getenv(static::OTEL_BSP_MIN_CRITICAL_SPAN_DURATION_THRESHOLD);
+        $multiplicator = $envValue !== false ? $envValue : 10;
 
         return $multiplicator * 1000000;
     }
@@ -188,7 +190,8 @@ class OpentelemetryInstrumentationConfig
      */
     public static function getSamplerProbability(): float
     {
-        $probability = getenv(static::OTEL_TRACES_SAMPLER_ARG) ?: 0.1;
+        $envVar = getenv(static::OTEL_TRACES_SAMPLER_ARG);
+        $probability = $envVar !== false ? $envVar : 0.1;
 
         return (float)$probability;
     }
@@ -200,7 +203,8 @@ class OpentelemetryInstrumentationConfig
      */
     public static function getSamplerProbabilityForCriticalSpans(): float
     {
-        $probability = getenv(static::OTEL_TRACES_CRITICAL_SAMPLER_ARG) ?: 0.5;
+        $envVar = getenv(static::OTEL_TRACES_CRITICAL_SAMPLER_ARG);
+        $probability = $envVar !== false ? $envVar : 0.5;
 
         return (float)$probability;
     }
@@ -212,7 +216,8 @@ class OpentelemetryInstrumentationConfig
      */
     public static function getSamplerProbabilityForNonCriticalSpans(): float
     {
-        $probability = getenv(static::OTEL_TRACES_NON_CRITICAL_SAMPLER_ARG) ?: 0.1;
+        $envVar = getenv(static::OTEL_TRACES_NON_CRITICAL_SAMPLER_ARG);
+        $probability = $envVar !== false ? $envVar : 0.1;
 
         return (float)$probability;
     }
@@ -261,7 +266,8 @@ class OpentelemetryInstrumentationConfig
      */
     public static function getTraceSamplerProbability(): float
     {
-        $probability = getenv(static::OTEL_TRACE_PROBABILITY) ?: 0.3;
+        $envVar = getenv(static::OTEL_TRACE_PROBABILITY);
+        $probability = $envVar !== false ? $envVar : 0.3;
 
         return (float)$probability;
     }
@@ -271,7 +277,8 @@ class OpentelemetryInstrumentationConfig
      */
     public static function getTraceCLISamplerProbability(): float
     {
-        $probability = getenv(static::OTEL_CLI_TRACE_PROBABILITY) ?: 0.5;
+        $envVar = getenv(static::OTEL_CLI_TRACE_PROBABILITY);
+        $probability = $envVar !== false ? $envVar : 0.5;
 
         return (float)$probability;
     }
