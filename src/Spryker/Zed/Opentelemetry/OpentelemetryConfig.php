@@ -8,6 +8,7 @@
 namespace Spryker\Zed\Opentelemetry;
 
 use Spryker\Shared\Config\Config;
+use Spryker\Shared\Opentelemetry\OpentelemetryConfig as SharedOpentelemetryConfig;
 use Spryker\Zed\Kernel\AbstractBundleConfig;
 
 class OpentelemetryConfig extends AbstractBundleConfig
@@ -1078,7 +1079,7 @@ class OpentelemetryConfig extends AbstractBundleConfig
      */
     public function getOutputDir(): string
     {
-        return APPLICATION_SOURCE_DIR . '/Generated/OpenTelemetry/Hooks/';
+        return SharedOpentelemetryConfig::getHooksDir();
     }
 
     /**

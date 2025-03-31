@@ -49,7 +49,7 @@ class TraceSampleResult
             return static::$result;
         }
 
-        if (static::decideForRootSpan($isCli)) {
+        if (static::decideForRootSpan($isCli, $request)) {
             static::$result = static::SAMPLING_RESULT_ALLOW_ROOT_SPAN;
 
             return static::$result;
@@ -78,12 +78,20 @@ class TraceSampleResult
 
     /**
      * @param bool $isCli
+     * @param \Symfony\Component\HttpFoundation\Request $request
      *
      * @return bool
      */
-    protected static function decideForRootSpan(bool $isCli): bool
+    protected static function decideForRootSpan(bool $isCli, Request $request): bool
     {
-        $probability = $isCli ? OpentelemetryInstrumentationConfig::getTraceCLISamplerProbability() : OpentelemetryInstrumentationConfig::getTraceSamplerProbability();
+        if ($isCli) {
+            $probability = OpentelemetryInstrumentationConfig::getTraceCLISamplerProbability();
+        } else {
+            $probability = $request->getMethod() === Request::METHOD_GET
+                ? OpentelemetryInstrumentationConfig::getTraceSamplerProbability()
+                : OpentelemetryInstrumentationConfig::getTraceSamplerProbabilityNonGet();
+        }
+
         return (mt_rand() / mt_getrandmax()) >= $probability;
     }
 }
