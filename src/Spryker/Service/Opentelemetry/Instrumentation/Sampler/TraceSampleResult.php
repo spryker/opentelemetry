@@ -84,13 +84,11 @@ class TraceSampleResult
      */
     protected static function decideForRootSpan(bool $isCli, Request $request): bool
     {
-        if ($isCli) {
-            $probability = OpentelemetryInstrumentationConfig::getTraceCLISamplerProbability();
-        } else {
-            $probability = $request->getMethod() === Request::METHOD_GET
+        $probability = $isCli
+            ? OpentelemetryInstrumentationConfig::getTraceCLISamplerProbability()
+            : ($request->getMethod() === Request::METHOD_GET
                 ? OpentelemetryInstrumentationConfig::getTraceSamplerProbability()
-                : OpentelemetryInstrumentationConfig::getTraceSamplerProbabilityNonGet();
-        }
+                : OpentelemetryInstrumentationConfig::getTraceSamplerProbabilityNonGet());
 
         return (mt_rand() / mt_getrandmax()) >= $probability;
     }
