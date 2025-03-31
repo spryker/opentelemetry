@@ -2,6 +2,8 @@
 
 namespace Spryker\Service\Opentelemetry;
 
+use Spryker\Shared\Opentelemetry\OpentelemetryConfig;
+
 class OpentelemetryInstrumentationConfig
 {
     /**
@@ -85,6 +87,11 @@ class OpentelemetryInstrumentationConfig
     protected const OTEL_DISTRIBUTED_TRACING_ENABLED = 'OTEL_DISTRIBUTED_TRACING_ENABLED';
 
     /**
+     * @string
+     */
+    protected const OTEL_TRACE_PROBABILITY_NON_GET = 'OTEL_TRACE_PROBABILITY_NON_GET';
+
+    /**
      * Specification:
      * - The threshold in nanoseconds for the span to be sampled.
      *
@@ -117,6 +124,9 @@ class OpentelemetryInstrumentationConfig
     }
 
     /**
+     * Specification:
+     * - Returns a namespace for the service that is added to resource attributes.
+     *
      * @api
      *
      * @return string
@@ -127,6 +137,9 @@ class OpentelemetryInstrumentationConfig
     }
 
     /**
+     * Specification:
+     * - Returns the endpoint for the OTLP exporter.
+     *
      * @api
      *
      * @return string
@@ -137,6 +150,9 @@ class OpentelemetryInstrumentationConfig
     }
 
     /**
+     * Specification:
+     * - Returns the excluded routes for the instrumentation. Instrumentation will not be executed to these routes.
+     *
      * @api
      *
      * @return array<string>
@@ -149,6 +165,9 @@ class OpentelemetryInstrumentationConfig
     }
 
     /**
+     * Specification:
+     * - An key => value array where key is a service name and value is a regex pattern to match the service name.
+     * - Those values are used in order to determine the fallback service name based on the current request.
      * @api
      *
      * @return array<string>
@@ -174,6 +193,9 @@ class OpentelemetryInstrumentationConfig
     }
 
     /**
+     * Specification:
+     * - Returns the default service name that will be used if no service name is determined or provided by other means.
+     *
      * @api
      *
      * @return string
@@ -184,6 +206,10 @@ class OpentelemetryInstrumentationConfig
     }
 
     /**
+     * Specification:
+     * - Returns the probability for the sampler to sample spans in transaction.
+     * - This values is used for `regular` spans.
+     *
      * @api
      *
      * @return float
@@ -197,6 +223,10 @@ class OpentelemetryInstrumentationConfig
     }
 
     /**
+     * Specification:
+     *  - Returns the probability for the sampler to sample spans in transaction.
+     *  - This values is used for `critical` spans, like facade methods or not SELECT database queries.
+     *
      * @api
      *
      * @return float
@@ -210,6 +240,10 @@ class OpentelemetryInstrumentationConfig
     }
 
     /**
+     * Specification:
+     *  - Returns the probability for the sampler to sample spans in transaction.
+     *  - This values is used for `not critical` spans, like SELECT database queries.
+     *
      * @api
      *
      * @return float
@@ -223,6 +257,11 @@ class OpentelemetryInstrumentationConfig
     }
 
     /**
+     * Specification:
+     * - Defines the delay in milliseconds before sending a batch of spans to the exporter.
+     *
+     * @api
+     *
      * @return int
      */
     public static function getSpanProcessorScheduleDelay(): int
@@ -236,6 +275,11 @@ class OpentelemetryInstrumentationConfig
     }
 
     /**
+     * Specification:
+     * - Defines the maximum queue size for the span processor. All spans that are not processed will be dropped.
+     *
+     * @api
+     *
      * @return int
      */
     public static function getSpanProcessorMaxQueueSize(): int
@@ -249,6 +293,11 @@ class OpentelemetryInstrumentationConfig
     }
 
     /**
+     * Specification:
+     * - Defines the batch size for spans. Once this limit is reached, the batch is sent to the exporter.
+     *
+     * @api
+     *
      * @return int
      */
     public static function getSpanProcessorMaxBatchSize(): int
@@ -262,6 +311,11 @@ class OpentelemetryInstrumentationConfig
     }
 
     /**
+     * Specification:
+     * - Returns the probability for the trace to be detailed or not for HTTP GET requests.
+     *
+     * @api
+     *
      * @return float
      */
     public static function getTraceSamplerProbability(): float
@@ -273,6 +327,27 @@ class OpentelemetryInstrumentationConfig
     }
 
     /**
+     * Specification:
+     * - Returns the probability for the trace to be detailed or not for HTTP non GET requests.
+     *
+     * @api
+     *
+     * @return float
+     */
+    public static function getTraceSamplerProbabilityNonGet(): float
+    {
+        $envVar = getenv(static::OTEL_TRACE_PROBABILITY_NON_GET);
+        $probability = $envVar !== false ? $envVar : 1;
+
+        return (float)$probability;
+    }
+
+    /**
+     * Specification:
+     * - Returns the probability for the trace for CLI commands.
+     *
+     * @api
+     *
      * @return float
      */
     public static function getTraceCLISamplerProbability(): float
@@ -284,6 +359,11 @@ class OpentelemetryInstrumentationConfig
     }
 
     /**
+     * Specification:
+     * - Defines if distributed tracing is enabled. if set to false the traceparent header will not be propagated or processed.
+     *
+     * @api
+     *
      * @return bool
      */
     public static function getIsDistributedTracingEnabled(): bool
@@ -295,5 +375,18 @@ class OpentelemetryInstrumentationConfig
         }
 
         return true;
+    }
+
+    /**
+     * Specification:
+     * - Returns the directory where the generated hooks are stored.
+     *
+     * @api
+     *
+     * @return string
+     */
+    public static function getHooksDir(): string
+    {
+        return OpentelemetryConfig::getHooksDir();
     }
 }
