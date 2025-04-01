@@ -15,6 +15,7 @@ use OpenTelemetry\SDK\Sdk;
 use OpenTelemetry\SDK\Trace\SpanBuilder;
 use OpenTelemetry\SemConv\TraceAttributes;
 use Propel\Runtime\Connection\StatementInterface;
+use Propel\Runtime\Connection\StatementWrapper;
 use Spryker\Service\Opentelemetry\Instrumentation\Sampler\CriticalSpanRatioSampler;
 use Spryker\Service\Opentelemetry\Instrumentation\Sampler\TraceSampleResult;
 use Spryker\Service\Opentelemetry\Instrumentation\Span\Span;
@@ -62,7 +63,7 @@ class PropelInstrumentation
                 if (TraceSampleResult::shouldSkipTraceBody()) {
                     return;
                 }
-                
+
                 $context = Context::getCurrent();
 
                 $query = $statement->getStatement()->queryString;
@@ -73,11 +74,9 @@ class PropelInstrumentation
                     ->setParent($context)
                     ->setSpanKind(SpanKind::KIND_CLIENT)
                     ->setAttribute(TraceAttributes::DB_SYSTEM_NAME, $dbEngine)
-                    ->setAttribute(TraceAttributes::DB_QUERY_TEXT, $query);
-
-                $span = static::addQueryAttributes($span, $statement);
-
-                $span ->startSpan();
+                    ->setAttribute(TraceAttributes::DB_QUERY_TEXT, $query)
+                    ->setAttributes(static::getQueryAttributes($statement))
+                    ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));
             },
@@ -109,12 +108,11 @@ class PropelInstrumentation
     }
 
     /**
-     * @param \OpenTelemetry\API\Trace\SpanBuilderInterface $span
-     * @param \Propel\Runtime\Connection\StatementWrapper $statement
+     * @param \OPropel\Runtime\Connection\StatementWrapper $statement
      *
-     * @return \OpenTelemetry\API\Trace\SpanBuilderInterface
+     * @return array
      */
-    protected static function addQueryAttributes($span, $statement): SpanBuilderInterface
+    protected static function getQueryAttributes(StatementWrapper $statement): array
     {
         $operations = [
             'INSERT' => 'INTO',
@@ -141,12 +139,12 @@ class PropelInstrumentation
         $criticalAttr = $operation === 'SELECT'
             ? CriticalSpanRatioSampler::NO_CRITICAL_ATTRIBUTE : CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE;
 
-        $span->setAttribute('db.operation.name', $operation)
-            ->setAttribute('db.collection.name', $tablename)
-            ->setAttribute('db.query.summary', $operation . ' ' . $tablename)
-            ->setAttribute('db.response.returned_rows', $statement->rowCount())
-            ->setAttribute($criticalAttr, true);
-
-        return $span;
+        return [
+            'db.operation.name' =>  $operation,
+            'db.collection.name' =>  $tablename,
+            'db.query.summary' =>  $operation . ' ' . $tablename,
+            'db.response.returned_rows' =>  $statement->rowCount(),
+            $criticalAttr => true,
+        ];
     }
 }

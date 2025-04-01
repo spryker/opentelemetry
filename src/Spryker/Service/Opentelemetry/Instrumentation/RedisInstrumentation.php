@@ -7,6 +7,7 @@
 
 namespace Spryker\Service\Opentelemetry\Instrumentation;
 
+use OpenTelemetry\API\Trace\SpanBuilderInterface;
 use OpenTelemetry\API\Trace\SpanKind;
 use OpenTelemetry\API\Trace\StatusCode;
 use OpenTelemetry\Context\Context;
@@ -323,5 +324,47 @@ class RedisInstrumentation
                 $span->end();
             },
         );
+    }
+
+    /**
+     * @param \OpenTelemetry\API\Trace\SpanBuilderInterface $span
+     * @param \Propel\Runtime\Connection\StatementWrapper $statement
+     *
+     * @return \OpenTelemetry\API\Trace\SpanBuilderInterface
+     */
+    protected static function addQueryAttributes($span, $statement): SpanBuilderInterface
+    {
+        $operations = [
+            'INSERT' => 'INTO',
+            'DELETE' => 'FROM',
+            'SELECT' => 'FROM',
+            'UPDATE' => 'UPDATE',
+        ];
+
+        $query = $statement->getStatement()->queryString;
+
+        foreach ($operations as $operation => $searchTerm) {
+            if (str_contains($query, $operation)) {
+
+                preg_match(
+                    "/(?<=\b" . $searchTerm . "\s)(?:[\w-]+)/is",
+                    $query,
+                    $matches
+                );
+                $tablename = $matches[0] ?? 'N/A';
+                break;
+            }
+        }
+
+        $criticalAttr = $operation === 'SELECT'
+            ? CriticalSpanRatioSampler::NO_CRITICAL_ATTRIBUTE : CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE;
+
+        $span->setAttribute('db.operation.name', $operation)
+            ->setAttribute('db.collection.name', $tablename)
+            ->setAttribute('db.query.summary', $operation . ' ' . $tablename)
+            ->setAttribute('db.response.returned_rows', $statement->rowCount())
+            ->setAttribute($criticalAttr, true);
+
+        return $span;
     }
 }
