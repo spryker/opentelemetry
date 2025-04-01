@@ -61,10 +61,37 @@ class PropelInstrumentation
                     return;
                 }
 
+                $count = $statement->rowCount();
+
                 $context = Context::getCurrent();
 
                 $query = $statement->getStatement()->queryString;
-                $criticalAttr = str_contains($query, 'SELECT') ? CriticalSpanRatioSampler::NO_CRITICAL_ATTRIBUTE : CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE;
+
+                $query = "INSERT INTO spy_product_offer_availability_storage (id_product_offer_availability_storage, product_offer_reference, data, key, store, created_at, updated_at) VALUES (:p0, :p1, :p2, :p3, :p4, :p5, :p6)";
+
+                $operations = [
+                    'INSERT' => 'INTO',
+                    'DELETE' => 'FROM',
+                    'SELECT' => 'FROM',
+                    'UPDATE' => 'UPDATE',
+                ];
+
+                foreach($operations as $operation => $searchTerm) {
+                    if (str_contains($query, $operation)) {
+
+                        preg_match(
+                            "/(?<=\b" . $searchTerm . "\s)(?:[\w-]+)/is",
+                            $query,
+                            $matches
+                        );
+                        $tablename = $matches[0] ?? 'N/A';
+                        break;
+                    }
+                }
+
+                $summary = $operation . ' ' . $tablename;
+
+                $criticalAttr = $operation === 'SELECT' ? CriticalSpanRatioSampler::NO_CRITICAL_ATTRIBUTE : CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE;
                 $span = CachedInstrumentation::getCachedInstrumentation()
                     ->tracer()
                     ->spanBuilder(sprintf(static::SPAN_NAME_PATTERN, substr($query, 0, 20)))
@@ -73,6 +100,10 @@ class PropelInstrumentation
                     ->setAttribute(TraceAttributes::DB_SYSTEM_NAME, $dbEngine)
                     ->setAttribute(TraceAttributes::DB_QUERY_TEXT, $query)
                     ->setAttribute($criticalAttr, true)
+                    ->setAttribute('db.operation.name', $operation)
+                    ->setAttribute('db.collection.name', $tablename)
+                    ->setAttribute('db.query.summary', $summary)
+                    ->setAttribute('db.response.returned_rows', $count)
                     ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));

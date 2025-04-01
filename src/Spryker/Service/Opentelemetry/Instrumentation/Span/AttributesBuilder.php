@@ -156,6 +156,10 @@ class AttributesBuilder implements AttributesBuilderInterface
             CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE,
             CriticalSpanRatioSampler::NO_CRITICAL_ATTRIBUTE,
             SprykerInstrumentationBootstrap::ATTRIBUTE_IS_DETAILED_TRACE,
+            'db.operation.name',
+            'db.collection.name',
+            'db.response.returned_rows',
+            'db.query.summary',
         ];
     }
 }
