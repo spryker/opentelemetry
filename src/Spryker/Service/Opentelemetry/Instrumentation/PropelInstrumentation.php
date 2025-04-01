@@ -7,6 +7,7 @@
 
 namespace Spryker\Service\Opentelemetry\Instrumentation;
 
+use OpenTelemetry\API\Trace\SpanBuilderInterface;
 use OpenTelemetry\API\Trace\SpanKind;
 use OpenTelemetry\API\Trace\StatusCode;
 use OpenTelemetry\Context\Context;
@@ -108,12 +109,12 @@ class PropelInstrumentation
     }
 
     /**
-     * @param \Spryker\Service\Opentelemetry\Instrumentation\Span\SpanBuilder $span
+     * @param \OpenTelemetry\API\Trace\SpanBuilderInterface $span
      * @param \Propel\Runtime\Connection\StatementWrapper $statement
      *
-     * @return \Spryker\Service\Opentelemetry\Instrumentation\Span\SpanBuilder
+     * @return \OpenTelemetry\API\Trace\SpanBuilderInterface
      */
-    protected static function addQueryAttributes($span, $statement): SpanBuilder
+    protected static function addQueryAttributes($span, $statement): SpanBuilderInterface
     {
         $operations = [
             'INSERT' => 'INTO',
