@@ -95,6 +95,8 @@ class PropelInstrumentation
 
                 $span = Span::fromContext($scope->context());
 
+                $span->setAttribute('db.response.returned_rows', $statement->rowCount());
+
                 if ($exception !== null) {
                     $span->recordException($exception);
                     $span->setStatus(StatusCode::STATUS_ERROR);
@@ -108,7 +110,7 @@ class PropelInstrumentation
     }
 
     /**
-     * @param \OPropel\Runtime\Connection\StatementWrapper $statement
+     * @param \Propel\Runtime\Connection\StatementWrapper $statement
      *
      * @return array
      */
@@ -143,7 +145,6 @@ class PropelInstrumentation
             'db.operation.name' =>  $operation,
             'db.collection.name' =>  $tablename,
             'db.query.summary' =>  $operation . ' ' . $tablename,
-            'db.response.returned_rows' =>  $statement->rowCount(),
             $criticalAttr => true,
         ];
     }
