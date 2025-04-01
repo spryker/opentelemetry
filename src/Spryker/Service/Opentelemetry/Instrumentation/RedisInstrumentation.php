@@ -13,6 +13,7 @@ use OpenTelemetry\API\Trace\StatusCode;
 use OpenTelemetry\Context\Context;
 use OpenTelemetry\SDK\Sdk;
 use OpenTelemetry\SemConv\TraceAttributes;
+use Propel\Runtime\Connection\StatementWrapper;
 use Spryker\Client\Redis\Adapter\RedisAdapterInterface;
 use Spryker\Service\Opentelemetry\Instrumentation\Sampler\CriticalSpanRatioSampler;
 use Spryker\Service\Opentelemetry\Instrumentation\Sampler\TraceSampleResult;
@@ -70,6 +71,7 @@ class RedisInstrumentation
                     ->setAttribute(TraceAttributes::DB_SYSTEM_NAME, static::DB_SYSTEM_NAME)
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(TraceAttributes::DB_QUERY_TEXT, isset($params[0]) ? 'GET ' . $params[0] : 'undefined')
+                    ->setAttributes(static::getQueryAttributes('GET', $params))
                     ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));
@@ -115,6 +117,7 @@ class RedisInstrumentation
                     ->setAttribute(TraceAttributes::DB_SYSTEM_NAME, static::DB_SYSTEM_NAME)
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(TraceAttributes::DB_QUERY_TEXT, implode(' ', $params[0]))
+                    ->setAttributes(static::getQueryAttributes('MGET', $params))
                     ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));
@@ -205,6 +208,7 @@ class RedisInstrumentation
                     ->setAttribute(TraceAttributes::DB_SYSTEM_NAME, static::DB_SYSTEM_NAME)
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(TraceAttributes::DB_QUERY_TEXT, implode(' ', array_keys($params[0])))
+                    ->setAttributes(static::getQueryAttributes('MSET', $params))
                     ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));
@@ -250,6 +254,7 @@ class RedisInstrumentation
                     ->setAttribute(TraceAttributes::DB_SYSTEM_NAME, static::DB_SYSTEM_NAME)
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(TraceAttributes::DB_QUERY_TEXT, $params[0] ?? 'undefined')
+                    ->setAttributes(static::getQueryAttributes('SET', $params))
                     ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));
@@ -296,6 +301,7 @@ class RedisInstrumentation
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(TraceAttributes::DB_QUERY_TEXT, $params[0] ?? 'undefined')
                     ->setAttribute(static::PARAM_EXPIRATION, $params[0] ?? 'undefined')
+                    ->setAttributes(static::getQueryAttributes('SETEX', $params))
                     ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));
@@ -327,44 +333,20 @@ class RedisInstrumentation
     }
 
     /**
-     * @param \OpenTelemetry\API\Trace\SpanBuilderInterface $span
-     * @param \Propel\Runtime\Connection\StatementWrapper $statement
+     * @param string $operation
+     * @param array<string> $params
      *
-     * @return \OpenTelemetry\API\Trace\SpanBuilderInterface
+     * @return array
      */
-    protected static function addQueryAttributes($span, $statement): SpanBuilderInterface
+    protected static function getQueryAttributes(string $operation, array $params): array
     {
-        $operations = [
-            'INSERT' => 'INTO',
-            'DELETE' => 'FROM',
-            'SELECT' => 'FROM',
-            'UPDATE' => 'UPDATE',
+        $split = explode(':', $params[0]);
+
+        return [
+            'db.operation.name' =>  $operation,
+            'db.collection.name' =>  $split[0],
+            'db.query.summary' =>  $operation . ' ' . $split[0],
+            'db.response.returned_rows' =>  'N/A', // TODO
         ];
-
-        $query = $statement->getStatement()->queryString;
-
-        foreach ($operations as $operation => $searchTerm) {
-            if (str_contains($query, $operation)) {
-
-                preg_match(
-                    "/(?<=\b" . $searchTerm . "\s)(?:[\w-]+)/is",
-                    $query,
-                    $matches
-                );
-                $tablename = $matches[0] ?? 'N/A';
-                break;
-            }
-        }
-
-        $criticalAttr = $operation === 'SELECT'
-            ? CriticalSpanRatioSampler::NO_CRITICAL_ATTRIBUTE : CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE;
-
-        $span->setAttribute('db.operation.name', $operation)
-            ->setAttribute('db.collection.name', $tablename)
-            ->setAttribute('db.query.summary', $operation . ' ' . $tablename)
-            ->setAttribute('db.response.returned_rows', $statement->rowCount())
-            ->setAttribute($criticalAttr, true);
-
-        return $span;
     }
 }
