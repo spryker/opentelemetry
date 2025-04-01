@@ -11,6 +11,7 @@ use OpenTelemetry\API\Trace\SpanKind;
 use OpenTelemetry\API\Trace\StatusCode;
 use OpenTelemetry\Context\Context;
 use OpenTelemetry\SDK\Sdk;
+use OpenTelemetry\SDK\Trace\SpanBuilder;
 use OpenTelemetry\SemConv\TraceAttributes;
 use Propel\Runtime\Connection\StatementInterface;
 use Spryker\Service\Opentelemetry\Instrumentation\Sampler\CriticalSpanRatioSampler;
@@ -60,51 +61,22 @@ class PropelInstrumentation
                 if (TraceSampleResult::shouldSkipTraceBody()) {
                     return;
                 }
-
-                $count = $statement->rowCount();
-
+                
                 $context = Context::getCurrent();
 
                 $query = $statement->getStatement()->queryString;
 
-                $query = "INSERT INTO spy_product_offer_availability_storage (id_product_offer_availability_storage, product_offer_reference, data, key, store, created_at, updated_at) VALUES (:p0, :p1, :p2, :p3, :p4, :p5, :p6)";
-
-                $operations = [
-                    'INSERT' => 'INTO',
-                    'DELETE' => 'FROM',
-                    'SELECT' => 'FROM',
-                    'UPDATE' => 'UPDATE',
-                ];
-
-                foreach($operations as $operation => $searchTerm) {
-                    if (str_contains($query, $operation)) {
-
-                        preg_match(
-                            "/(?<=\b" . $searchTerm . "\s)(?:[\w-]+)/is",
-                            $query,
-                            $matches
-                        );
-                        $tablename = $matches[0] ?? 'N/A';
-                        break;
-                    }
-                }
-
-                $summary = $operation . ' ' . $tablename;
-
-                $criticalAttr = $operation === 'SELECT' ? CriticalSpanRatioSampler::NO_CRITICAL_ATTRIBUTE : CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE;
                 $span = CachedInstrumentation::getCachedInstrumentation()
                     ->tracer()
                     ->spanBuilder(sprintf(static::SPAN_NAME_PATTERN, substr($query, 0, 20)))
                     ->setParent($context)
                     ->setSpanKind(SpanKind::KIND_CLIENT)
                     ->setAttribute(TraceAttributes::DB_SYSTEM_NAME, $dbEngine)
-                    ->setAttribute(TraceAttributes::DB_QUERY_TEXT, $query)
-                    ->setAttribute($criticalAttr, true)
-                    ->setAttribute('db.operation.name', $operation)
-                    ->setAttribute('db.collection.name', $tablename)
-                    ->setAttribute('db.query.summary', $summary)
-                    ->setAttribute('db.response.returned_rows', $count)
-                    ->startSpan();
+                    ->setAttribute(TraceAttributes::DB_QUERY_TEXT, $query);
+
+                $span = static::addQueryAttributes($span, $statement);
+
+                $span ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));
             },
@@ -133,5 +105,47 @@ class PropelInstrumentation
                 $span->end();
             }
         );
+    }
+
+    /**
+     * @param \Spryker\Service\Opentelemetry\Instrumentation\Span\SpanBuilder $span
+     * @param \Propel\Runtime\Connection\StatementWrapper $statement
+     *
+     * @return \Spryker\Service\Opentelemetry\Instrumentation\Span\SpanBuilder
+     */
+    protected static function addQueryAttributes($span, $statement): SpanBuilder
+    {
+        $operations = [
+            'INSERT' => 'INTO',
+            'DELETE' => 'FROM',
+            'SELECT' => 'FROM',
+            'UPDATE' => 'UPDATE',
+        ];
+
+        $query = $statement->getStatement()->queryString;
+
+        foreach ($operations as $operation => $searchTerm) {
+            if (str_contains($query, $operation)) {
+
+                preg_match(
+                    "/(?<=\b" . $searchTerm . "\s)(?:[\w-]+)/is",
+                    $query,
+                    $matches
+                );
+                $tablename = $matches[0] ?? 'N/A';
+                break;
+            }
+        }
+
+        $criticalAttr = $operation === 'SELECT'
+            ? CriticalSpanRatioSampler::NO_CRITICAL_ATTRIBUTE : CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE;
+
+        $span->setAttribute('db.operation.name', $operation)
+            ->setAttribute('db.collection.name', $tablename)
+            ->setAttribute('db.query.summary', $operation . ' ' . $tablename)
+            ->setAttribute('db.response.returned_rows', $statement->rowCount())
+            ->setAttribute($criticalAttr, true);
+
+        return $span;
     }
 }
