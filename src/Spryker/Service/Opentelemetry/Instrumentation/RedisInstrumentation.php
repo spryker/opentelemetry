@@ -361,17 +361,17 @@ class RedisInstrumentation
      */
     protected static function getQueryAttributes(string $operation, array $params): array
     {
-        $collectionName = 'undefined';
+        $tablename = 'undefined';
 
         if(isset($params[0])) {
             $split = explode(':', $params[0]);
-            $collectionName = $split[0] ?? 'undefined';
+            $tablename = $split[0] ?? 'undefined';
         }
 
         return [
             TraceAttributes::DB_OPERATION_NAME => $operation,
-            TraceAttributes::DB_COLLECTION_NAME => $collectionName,
-            TraceAttributes::DB_QUERY_SUMMARY => $operation . ' ' . $collectionName,
+            TraceAttributes::DB_COLLECTION_NAME => $tablename,
+            TraceAttributes::DB_QUERY_SUMMARY => $operation . ' ' . $tablename,
         ];
     }
 }
