@@ -7,12 +7,10 @@
 
 namespace Spryker\Service\Opentelemetry\Instrumentation;
 
-use OpenTelemetry\API\Trace\SpanBuilderInterface;
 use OpenTelemetry\API\Trace\SpanKind;
 use OpenTelemetry\API\Trace\StatusCode;
 use OpenTelemetry\Context\Context;
 use OpenTelemetry\SDK\Sdk;
-use OpenTelemetry\SDK\Trace\SpanBuilder;
 use OpenTelemetry\SemConv\TraceAttributes;
 use Propel\Runtime\Connection\StatementInterface;
 use Propel\Runtime\Connection\StatementWrapper;
@@ -105,7 +103,7 @@ class PropelInstrumentation
                 }
 
                 $span->end();
-            }
+            },
         );
     }
 
@@ -127,13 +125,13 @@ class PropelInstrumentation
 
         foreach ($operations as $operation => $searchTerm) {
             if (str_contains($query, $operation)) {
-
                 preg_match(
                     "/(?<=\b" . $searchTerm . "\s)(?:[\w-]+)/is",
                     $query,
-                    $matches
+                    $matches,
                 );
                 $tablename = $matches[0] ?? 'N/A';
+
                 break;
             }
         }
@@ -142,9 +140,9 @@ class PropelInstrumentation
             ? CriticalSpanRatioSampler::NO_CRITICAL_ATTRIBUTE : CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE;
 
         return [
-            TraceAttributes::DB_OPERATION_NAME =>  $operation,
-            TraceAttributes::DB_COLLECTION_NAME =>  $tablename,
-            TraceAttributes::DB_QUERY_SUMMARY =>  $operation . ' ' . $tablename,
+            TraceAttributes::DB_OPERATION_NAME => $operation,
+            TraceAttributes::DB_COLLECTION_NAME => $tablename,
+            TraceAttributes::DB_QUERY_SUMMARY => $operation . ' ' . $tablename,
             $criticalAttr => true,
         ];
     }
