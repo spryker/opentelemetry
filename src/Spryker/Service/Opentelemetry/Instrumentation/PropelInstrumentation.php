@@ -123,7 +123,7 @@ class PropelInstrumentation
             'UPDATE' => 'UPDATE',
         ];
 
-        $query = $statement->getStatement()->queryString;
+        $query = str_replace('`', '', $statement->getStatement()->queryString);
 
         foreach ($operations as $operation => $searchTerm) {
             if (str_contains($query, $operation)) {
