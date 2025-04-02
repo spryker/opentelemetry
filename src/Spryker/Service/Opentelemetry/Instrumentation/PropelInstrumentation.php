@@ -142,9 +142,9 @@ class PropelInstrumentation
             ? CriticalSpanRatioSampler::NO_CRITICAL_ATTRIBUTE : CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE;
 
         return [
-            'db.operation.name' =>  $operation,
-            'db.collection.name' =>  $tablename,
-            'db.query.summary' =>  $operation . ' ' . $tablename,
+            TraceAttributes::DB_OPERATION_NAME =>  $operation,
+            TraceAttributes::DB_COLLECTION_NAME =>  $tablename,
+            TraceAttributes::DB_QUERY_SUMMARY =>  $operation . ' ' . $tablename,
             $criticalAttr => true,
         ];
     }

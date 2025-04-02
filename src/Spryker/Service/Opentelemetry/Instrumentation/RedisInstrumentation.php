@@ -343,10 +343,9 @@ class RedisInstrumentation
         $split = explode(':', $params[0]);
 
         return [
-            'db.operation.name' =>  $operation,
-            'db.collection.name' =>  $split[0],
-            'db.query.summary' =>  $operation . ' ' . $split[0],
-            'db.response.returned_rows' =>  'N/A', // TODO
+            TraceAttributes::DB_OPERATION_NAME =>  $operation,
+            TraceAttributes::DB_COLLECTION_NAME =>  $split[0],
+            TraceAttributes::DB_QUERY_SUMMARY =>  $operation . ' ' . $split[0],
         ];
     }
 }
