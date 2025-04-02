@@ -97,7 +97,7 @@ class RedisInstrumentation
                             ? static::OPERATION_GET . ' ' . $params[0]
                             : 'undefined'
                     )
-                    ->setAttributes(static::getQueryAttributes('GET', $params))
+                    ->setAttributes(static::getQueryAttributes(static::OPERATION_GET, $params))
                     ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));
