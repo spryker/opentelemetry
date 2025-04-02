@@ -22,6 +22,10 @@ if (extension_loaded('opentelemetry') === false) {
     return;
 }
 
+if (!defined('APPLICATION_ROOT_DIR')) {
+    define('APPLICATION_ROOT_DIR', realpath(__DIR__ . '/../../..'));
+}
+
 ElasticaInstrumentation::register();
 PropelInstrumentation::register();
 RabbitMqInstrumentation::register();
