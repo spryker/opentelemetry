@@ -93,7 +93,10 @@ class PropelInstrumentation
 
                 $span = Span::fromContext($scope->context());
 
-                $span->setAttribute('db.response.returned_rows', $statement->rowCount());
+                $span->setAttribute(
+                    TraceAttributes::DB_RESPONSE_RETURNED_ROWS,
+                    $statement->rowCount(),
+                );
 
                 if ($exception !== null) {
                     $span->recordException($exception);
@@ -130,7 +133,7 @@ class PropelInstrumentation
                     $query,
                     $matches,
                 );
-                $tablename = $matches[0] ?? 'N/A';
+                $tablename = $matches[0] ?? 'undefined';
 
                 break;
             }
