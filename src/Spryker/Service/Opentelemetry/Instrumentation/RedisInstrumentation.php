@@ -43,6 +43,31 @@ class RedisInstrumentation
     protected const DB_SYSTEM_NAME = 'redis';
 
     /**
+     * @var string
+     */
+    protected const OPERATION_GET = 'GET';
+
+    /**
+     * @var string
+     */
+    protected const OPERATION_MGET = 'MGET';
+
+    /**
+     * @var string
+     */
+    protected const OPERATION_SET = 'SET';
+
+    /**
+     * @var string
+     */
+    protected const OPERATION_MSET = 'MSET';
+
+    /**
+     * @var string
+     */
+    protected const OPERATION_SETEX = 'SETEX';
+
+    /**
      * @return void
      */
     public static function register(): void
@@ -67,7 +92,11 @@ class RedisInstrumentation
                     ->setParent($context)
                     ->setAttribute(TraceAttributes::DB_SYSTEM_NAME, static::DB_SYSTEM_NAME)
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
-                    ->setAttribute(TraceAttributes::DB_QUERY_TEXT, isset($params[0]) ? 'GET ' . $params[0] : 'undefined')
+                    ->setAttribute(
+                        TraceAttributes::DB_QUERY_TEXT, isset($params[0])
+                            ? static::OPERATION_GET . ' ' . $params[0]
+                            : 'undefined'
+                    )
                     ->setAttributes(static::getQueryAttributes('GET', $params))
                     ->startSpan();
 
@@ -113,7 +142,7 @@ class RedisInstrumentation
                     ->setAttribute(TraceAttributes::DB_SYSTEM_NAME, static::DB_SYSTEM_NAME)
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(TraceAttributes::DB_QUERY_TEXT, implode(' ', $params[0]))
-                    ->setAttributes(static::getQueryAttributes('MGET', $params))
+                    ->setAttributes(static::getQueryAttributes(static::OPERATION_MGET, $params))
                     ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));
@@ -202,7 +231,7 @@ class RedisInstrumentation
                     ->setAttribute(TraceAttributes::DB_SYSTEM_NAME, static::DB_SYSTEM_NAME)
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(TraceAttributes::DB_QUERY_TEXT, implode(' ', array_keys($params[0])))
-                    ->setAttributes(static::getQueryAttributes('MSET', $params))
+                    ->setAttributes(static::getQueryAttributes(static::MSET, $params))
                     ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));
@@ -247,7 +276,7 @@ class RedisInstrumentation
                     ->setAttribute(TraceAttributes::DB_SYSTEM_NAME, static::DB_SYSTEM_NAME)
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(TraceAttributes::DB_QUERY_TEXT, $params[0] ?? 'undefined')
-                    ->setAttributes(static::getQueryAttributes('SET', $params))
+                    ->setAttributes(static::getQueryAttributes(static::OPERATION_SET, $params))
                     ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));
@@ -293,7 +322,7 @@ class RedisInstrumentation
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(TraceAttributes::DB_QUERY_TEXT, $params[0] ?? 'undefined')
                     ->setAttribute(static::PARAM_EXPIRATION, $params[0] ?? 'undefined')
-                    ->setAttributes(static::getQueryAttributes('SETEX', $params))
+                    ->setAttributes(static::getQueryAttributes(static::OPERATION_SETEX, $params))
                     ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));
@@ -332,12 +361,17 @@ class RedisInstrumentation
      */
     protected static function getQueryAttributes(string $operation, array $params): array
     {
-        $split = explode(':', $params[0]);
+        $collectionName = 'undefined';
+
+        if(isset($params[0])) {
+            $split = explode(':', $params[0]);
+            $collectionName = $split[0] ?? 'undefined';
+        }
 
         return [
             TraceAttributes::DB_OPERATION_NAME => $operation,
-            TraceAttributes::DB_COLLECTION_NAME => $split[0],
-            TraceAttributes::DB_QUERY_SUMMARY => $operation . ' ' . $split[0],
+            TraceAttributes::DB_COLLECTION_NAME => $collectionName,
+            TraceAttributes::DB_QUERY_SUMMARY => $operation . ' ' . $collectionName,
         ];
     }
 }
