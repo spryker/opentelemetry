@@ -39,6 +39,16 @@ class PropelInstrumentation
     protected const METHOD_NAME = 'execute';
 
     /**
+     * @var string
+     */
+    protected const UNDEFINED = 'undefined';
+
+    /**
+     * @var string
+     */
+    protected const TABLE_NAME_REGEX = '/(?<=\b%s\s)([\w-]+)/is';
+
+    /**
      * @return void
      */
     public static function register(): void
@@ -124,28 +134,31 @@ class PropelInstrumentation
             'UPDATE' => 'UPDATE',
         ];
 
+        $matchedOperation = static::UNDEFINED;
+        $tableName = static::UNDEFINED;
         $query = str_replace('`', '', $statement->getStatement()->queryString);
 
         foreach ($operations as $operation => $searchTerm) {
             if (str_contains($query, $operation)) {
                 preg_match(
-                    "/(?<=\b" . $searchTerm . "\s)(?:[\w-]+)/is",
+                    sprintf(self::TABLE_NAME_REGEX, $searchTerm),
                     $query,
                     $matches,
                 );
-                $tablename = $matches[0] ?? 'undefined';
+                $tableName = $matches[0] ?? static::UNDEFINED;
+                $matchedOperation = $operation;
 
                 break;
             }
         }
 
-        $criticalAttr = $operation === 'SELECT'
+        $criticalAttr = $matchedOperation === 'SELECT'
             ? CriticalSpanRatioSampler::NO_CRITICAL_ATTRIBUTE : CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE;
 
         return [
             TraceAttributes::DB_OPERATION_NAME => $operation,
-            TraceAttributes::DB_COLLECTION_NAME => $tablename,
-            TraceAttributes::DB_QUERY_SUMMARY => $operation . ' ' . $tablename,
+            TraceAttributes::DB_COLLECTION_NAME => $tableName,
+            TraceAttributes::DB_QUERY_SUMMARY => $operation . ' ' . $tableName,
             $criticalAttr => true,
         ];
     }
