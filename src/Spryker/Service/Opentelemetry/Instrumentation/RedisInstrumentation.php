@@ -43,6 +43,31 @@ class RedisInstrumentation
     protected const DB_SYSTEM_NAME = 'redis';
 
     /**
+     * @var string
+     */
+    protected const OPERATION_GET = 'GET';
+
+    /**
+     * @var string
+     */
+    protected const OPERATION_MGET = 'MGET';
+
+    /**
+     * @var string
+     */
+    protected const OPERATION_SET = 'SET';
+
+    /**
+     * @var string
+     */
+    protected const OPERATION_MSET = 'MSET';
+
+    /**
+     * @var string
+     */
+    protected const OPERATION_SETEX = 'SETEX';
+
+    /**
      * @return void
      */
     public static function register(): void
@@ -57,7 +82,6 @@ class RedisInstrumentation
             RedisAdapterInterface::class,
             'get',
             pre: static function (RedisAdapterInterface $redis, array $params) use ($instrumentation): void {
-
                 if (TraceSampleResult::shouldSkipTraceBody()) {
                     return;
                 }
@@ -68,7 +92,12 @@ class RedisInstrumentation
                     ->setParent($context)
                     ->setAttribute(TraceAttributes::DB_SYSTEM_NAME, static::DB_SYSTEM_NAME)
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
-                    ->setAttribute(TraceAttributes::DB_QUERY_TEXT, isset($params[0]) ? 'GET ' . $params[0] : 'undefined')
+                    ->setAttribute(
+                        TraceAttributes::DB_QUERY_TEXT, isset($params[0])
+                            ? static::OPERATION_GET . ' ' . $params[0]
+                            : 'undefined'
+                    )
+                    ->setAttributes(static::getQueryAttributes(static::OPERATION_GET, $params))
                     ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));
@@ -102,7 +131,6 @@ class RedisInstrumentation
             RedisAdapterInterface::class,
             'mget',
             pre: static function (RedisAdapterInterface $redis, array $params) use ($instrumentation): void {
-
                 if (TraceSampleResult::shouldSkipTraceBody()) {
                     return;
                 }
@@ -114,6 +142,7 @@ class RedisInstrumentation
                     ->setAttribute(TraceAttributes::DB_SYSTEM_NAME, static::DB_SYSTEM_NAME)
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(TraceAttributes::DB_QUERY_TEXT, implode(' ', $params[0]))
+                    ->setAttributes(static::getQueryAttributes(static::OPERATION_MGET, $params))
                     ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));
@@ -147,7 +176,6 @@ class RedisInstrumentation
             RedisAdapterInterface::class,
             'eval',
             pre: static function (RedisAdapterInterface $redis, array $params) use ($instrumentation): void {
-
                 if (TraceSampleResult::shouldSkipTraceBody()) {
                     return;
                 }
@@ -192,7 +220,6 @@ class RedisInstrumentation
             RedisAdapterInterface::class,
             'mset',
             pre: static function (RedisAdapterInterface $redis, array $params) use ($instrumentation): void {
-
                 if (TraceSampleResult::shouldSkipTraceBody()) {
                     return;
                 }
@@ -204,6 +231,7 @@ class RedisInstrumentation
                     ->setAttribute(TraceAttributes::DB_SYSTEM_NAME, static::DB_SYSTEM_NAME)
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(TraceAttributes::DB_QUERY_TEXT, implode(' ', array_keys($params[0])))
+                    ->setAttributes(static::getQueryAttributes(static::MSET, $params))
                     ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));
@@ -237,7 +265,6 @@ class RedisInstrumentation
             RedisAdapterInterface::class,
             'set',
             pre: static function (RedisAdapterInterface $redis, array $params) use ($instrumentation): void {
-
                 if (TraceSampleResult::shouldSkipTraceBody()) {
                     return;
                 }
@@ -249,6 +276,7 @@ class RedisInstrumentation
                     ->setAttribute(TraceAttributes::DB_SYSTEM_NAME, static::DB_SYSTEM_NAME)
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(TraceAttributes::DB_QUERY_TEXT, $params[0] ?? 'undefined')
+                    ->setAttributes(static::getQueryAttributes(static::OPERATION_SET, $params))
                     ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));
@@ -282,7 +310,6 @@ class RedisInstrumentation
             RedisAdapterInterface::class,
             'setex',
             pre: static function (RedisAdapterInterface $redis, array $params) use ($instrumentation): void {
-
                 if (TraceSampleResult::shouldSkipTraceBody()) {
                     return;
                 }
@@ -295,6 +322,7 @@ class RedisInstrumentation
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(TraceAttributes::DB_QUERY_TEXT, $params[0] ?? 'undefined')
                     ->setAttribute(static::PARAM_EXPIRATION, $params[0] ?? 'undefined')
+                    ->setAttributes(static::getQueryAttributes(static::OPERATION_SETEX, $params))
                     ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));
@@ -323,5 +351,27 @@ class RedisInstrumentation
                 $span->end();
             },
         );
+    }
+
+    /**
+     * @param string $operation
+     * @param array<string> $params
+     *
+     * @return array
+     */
+    protected static function getQueryAttributes(string $operation, array $params): array
+    {
+        $tablename = 'undefined';
+
+        if(isset($params[0])) {
+            $split = explode(':', $params[0]);
+            $tablename = $split[0] ?? 'undefined';
+        }
+
+        return [
+            TraceAttributes::DB_OPERATION_NAME => $operation,
+            TraceAttributes::DB_COLLECTION_NAME => $tablename,
+            TraceAttributes::DB_QUERY_SUMMARY => $operation . ' ' . $tablename,
+        ];
     }
 }

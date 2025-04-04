@@ -13,6 +13,7 @@ use OpenTelemetry\Context\Context;
 use OpenTelemetry\SDK\Sdk;
 use OpenTelemetry\SemConv\TraceAttributes;
 use Propel\Runtime\Connection\StatementInterface;
+use Propel\Runtime\Connection\StatementWrapper;
 use Spryker\Service\Opentelemetry\Instrumentation\Sampler\CriticalSpanRatioSampler;
 use Spryker\Service\Opentelemetry\Instrumentation\Sampler\TraceSampleResult;
 use Spryker\Service\Opentelemetry\Instrumentation\Span\Span;
@@ -36,6 +37,16 @@ class PropelInstrumentation
      * @var string
      */
     protected const METHOD_NAME = 'execute';
+
+    /**
+     * @var string
+     */
+    protected const UNDEFINED = 'undefined';
+
+    /**
+     * @var string
+     */
+    protected const TABLE_NAME_REGEX = '/(?<=\b%s\s)([\w-]+)/is';
 
     /**
      * @return void
@@ -64,7 +75,7 @@ class PropelInstrumentation
                 $context = Context::getCurrent();
 
                 $query = $statement->getStatement()->queryString;
-                $criticalAttr = str_contains($query, 'SELECT') ? CriticalSpanRatioSampler::NO_CRITICAL_ATTRIBUTE : CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE;
+
                 $span = CachedInstrumentation::getCachedInstrumentation()
                     ->tracer()
                     ->spanBuilder(sprintf(static::SPAN_NAME_PATTERN, substr($query, 0, 20)))
@@ -72,7 +83,7 @@ class PropelInstrumentation
                     ->setSpanKind(SpanKind::KIND_CLIENT)
                     ->setAttribute(TraceAttributes::DB_SYSTEM_NAME, $dbEngine)
                     ->setAttribute(TraceAttributes::DB_QUERY_TEXT, $query)
-                    ->setAttribute($criticalAttr, true)
+                    ->setAttributes(static::getQueryAttributes($statement))
                     ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));
@@ -92,6 +103,11 @@ class PropelInstrumentation
 
                 $span = Span::fromContext($scope->context());
 
+                $span->setAttribute(
+                    TraceAttributes::DB_RESPONSE_RETURNED_ROWS,
+                    $statement->rowCount(),
+                );
+
                 if ($exception !== null) {
                     $span->recordException($exception);
                     $span->setStatus(StatusCode::STATUS_ERROR);
@@ -100,7 +116,50 @@ class PropelInstrumentation
                 }
 
                 $span->end();
-            }
+            },
         );
+    }
+
+    /**
+     * @param \Propel\Runtime\Connection\StatementWrapper $statement
+     *
+     * @return array
+     */
+    protected static function getQueryAttributes(StatementWrapper $statement): array
+    {
+        $operations = [
+            'INSERT' => 'INTO',
+            'DELETE' => 'FROM',
+            'SELECT' => 'FROM',
+            'UPDATE' => 'UPDATE',
+        ];
+
+        $matchedOperation = static::UNDEFINED;
+        $tableName = static::UNDEFINED;
+        $query = str_replace('`', '', $statement->getStatement()->queryString);
+
+        foreach ($operations as $operation => $searchTerm) {
+            if (str_contains($query, $operation)) {
+                preg_match(
+                    sprintf(self::TABLE_NAME_REGEX, $searchTerm),
+                    $query,
+                    $matches,
+                );
+                $tableName = $matches[0] ?? static::UNDEFINED;
+                $matchedOperation = $operation;
+
+                break;
+            }
+        }
+
+        $criticalAttr = $matchedOperation === 'SELECT'
+            ? CriticalSpanRatioSampler::NO_CRITICAL_ATTRIBUTE : CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE;
+
+        return [
+            TraceAttributes::DB_OPERATION_NAME => $matchedOperation,
+            TraceAttributes::DB_COLLECTION_NAME => $tableName,
+            TraceAttributes::DB_QUERY_SUMMARY => $matchedOperation . ' ' . $tableName,
+            $criticalAttr => true,
+        ];
     }
 }
