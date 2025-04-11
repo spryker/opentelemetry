@@ -8,6 +8,7 @@
 namespace Spryker\Service\Opentelemetry\Instrumentation;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\BadResponseException;
 use GuzzleHttp\Promise\PromiseInterface;
 use OpenTelemetry\API\Trace\Propagation\TraceContextPropagator;
 use OpenTelemetry\API\Trace\SpanKind;
@@ -129,6 +130,10 @@ class GuzzleInstrumentation
                         $span->recordException($exception);
                         $span->setStatus(StatusCode::STATUS_ERROR);
                         $span->setAttribute(TraceAttributes::ERROR_TYPE, get_class($exception));
+                        if ($exception instanceof BadResponseException) {
+                            $response = $exception->getResponse();
+                            $span->setAttribute(TraceAttributes::HTTP_RESPONSE_STATUS_CODE, $response->getStatusCode());
+                        }
                         $span->end();
 
                         throw $exception;

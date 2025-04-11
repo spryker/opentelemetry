@@ -363,7 +363,7 @@ class RedisInstrumentation
     {
         $tablename = 'undefined';
 
-        if(isset($params[0])) {
+        if(isset($params[0]) && is_string($params[0])) {
             $split = explode(':', $params[0]);
             $tablename = $split[0] ?? 'undefined';
         }
