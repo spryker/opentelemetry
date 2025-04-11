@@ -76,6 +76,7 @@ class CriticalSpanRatioSampler implements SamplerInterface, ParentSpanAwareSampl
         AttributesInterface $attributes,
         array $links,
     ): SamplingResult {
+        //Root span nd system span MUST be sampled always
         if (!$this->parentSpan->getContext()->isValid() || $attributes->has(static::IS_SYSTEM_ATTRIBUTE)) {
             return new SamplingResult(SamplingResult::RECORD_AND_SAMPLE, [], $this->parentSpan->getContext()->getTraceState());
         }
