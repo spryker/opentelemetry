@@ -72,7 +72,7 @@ class SprykerInstrumentationBootstrap
     /**
      * @var string
      */
-    public const INSTRUMENTATION_VERSION = '1.11.0';
+    public const INSTRUMENTATION_VERSION = '1.12.1';
 
     /**
      * @var string
