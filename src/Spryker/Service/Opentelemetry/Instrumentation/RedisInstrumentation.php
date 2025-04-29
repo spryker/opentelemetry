@@ -231,7 +231,7 @@ class RedisInstrumentation
                     ->setAttribute(TraceAttributes::DB_SYSTEM_NAME, static::DB_SYSTEM_NAME)
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(TraceAttributes::DB_QUERY_TEXT, implode(' ', array_keys($params[0])))
-                    ->setAttributes(static::getQueryAttributes(static::MSET, $params))
+                    ->setAttributes(static::getQueryAttributes(static::OPERATION_MSET, $params))
                     ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));
