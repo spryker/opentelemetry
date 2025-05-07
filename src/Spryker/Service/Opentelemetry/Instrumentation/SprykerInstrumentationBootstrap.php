@@ -129,6 +129,9 @@ class SprykerInstrumentationBootstrap
      */
     public static function register(): void
     {
+        //Disabling error reporting for Otel. Will be overwritten by the application.
+        error_reporting(0);
+
         $request = RequestProcessor::getRequest();
 
         TraceSampleResult::shouldSample($request);
