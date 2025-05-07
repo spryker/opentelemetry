@@ -16,6 +16,7 @@ use OpenTelemetry\SDK\Resource\Detectors\Process;
 use OpenTelemetry\SDK\Resource\Detectors\ProcessRuntime;
 use OpenTelemetry\SDK\Resource\Detectors\Sdk;
 use OpenTelemetry\SDK\Resource\Detectors\SdkProvided;
+use OpenTelemetry\SDK\Resource\Detectors\Service;
 use Spryker\Service\Opentelemetry\Instrumentation\Span\Attributes;
 
 class ResourceInfoFactory
@@ -32,14 +33,12 @@ class ResourceInfoFactory
     {
         return (new CompositeResourceDetector([
             new Host(),
-            new OperatingSystem(),
             new Process(),
-            new ProcessRuntime(),
-            new Sdk(),
-            new SdkProvided(),
             new Composer(),
             ...Registry::resourceDetectors(),
             new Environment(),
+            new Sdk(),
+            new Service(),
         ]))->getResource();
     }
 

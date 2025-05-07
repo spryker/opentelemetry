@@ -72,7 +72,7 @@ class SprykerInstrumentationBootstrap
     /**
      * @var string
      */
-    public const INSTRUMENTATION_VERSION = '1.12.1';
+    public const INSTRUMENTATION_VERSION = '1.13.0';
 
     /**
      * @var string
@@ -129,6 +129,9 @@ class SprykerInstrumentationBootstrap
      */
     public static function register(): void
     {
+        //Disabling error reporting for Otel. Will be overwritten by the application.
+        error_reporting(0);
+
         $request = RequestProcessor::getRequest();
 
         TraceSampleResult::shouldSample($request);
