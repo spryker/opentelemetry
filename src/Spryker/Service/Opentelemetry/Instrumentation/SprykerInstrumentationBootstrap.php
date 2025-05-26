@@ -26,6 +26,8 @@ use OpenTelemetry\SDK\Trace\TracerProviderInterface;
 use OpenTelemetry\SemConv\ResourceAttributes;
 use OpenTelemetry\SemConv\TraceAttributes;
 use Spryker\Glue\GlueApplication\Rest\ResourceRouter;
+use Spryker\Service\Kernel\ClassResolver\AbstractClassResolver;
+use Spryker\Service\Kernel\ClassResolver\Factory\FactoryResolver;
 use Spryker\Service\Opentelemetry\Instrumentation\Propagation\SymfonyRequestPropagationGetter;
 use Spryker\Service\Opentelemetry\Instrumentation\Resource\ResourceInfo;
 use Spryker\Service\Opentelemetry\Instrumentation\Resource\ResourceInfoFactory;
@@ -54,9 +56,6 @@ use Symfony\Component\Routing\Router;
 use Throwable;
 use function OpenTelemetry\Instrumentation\hook;
 
-/**
- * @method \Spryker\Service\Opentelemetry\OpentelemetryServiceFactory getFactory()
- */
 class SprykerInstrumentationBootstrap
 {
     /**
@@ -72,7 +71,7 @@ class SprykerInstrumentationBootstrap
     /**
      * @var string
      */
-    public const INSTRUMENTATION_VERSION = '1.13.0';
+    public const INSTRUMENTATION_VERSION = '1.14.0';
 
     /**
      * @var string
@@ -123,6 +122,11 @@ class SprykerInstrumentationBootstrap
      * @var string|null
      */
     protected static ?string $route = null;
+
+    /**
+     * @var null|\Spryker\Service\Opentelemetry\OpentelemetryServiceFactory
+     */
+    protected static $factory = null;
 
     /**
      * @return void
@@ -434,8 +438,8 @@ class SprykerInstrumentationBootstrap
     public static function shutdownHandler(): void
     {
         $request = RequestProcessor::getRequest();
-        $resourceName = ResourceNameStorage::getInstance()->getName();
-        $customParamsStorage = CustomParameterStorage::getInstance();
+        $resourceName = static::getFactory()->createResourceNameStorage()->getName();
+        $customParamsStorage = static::getFactory()->createCustomParameterStorage();
         $cli = $customParamsStorage->getAttribute(OpentelemetryMonitoringExtensionPlugin::ATTRIBUTE_IS_CONSOLE_COMMAND);
         if ($resourceName) {
             if ($cli) {
@@ -457,17 +461,17 @@ class SprykerInstrumentationBootstrap
             $span = static::addHttpAttributes($span, $request);
         }
 
-        $name = RootSpanNameStorage::getInstance()->getName();
+        $name = static::getFactory()->createRootSpanNameStorage()->getName();
         $span->updateName($name ?: static::formatGeneralSpanName($request, true));
 
-        $exceptions = ExceptionStorage::getInstance()->getExceptions();
+        $exceptions = static::getFactory()->createExceptionStorage()->getExceptions();
         foreach ($exceptions as $exception) {
             $span->recordException($exception);
         }
 
-        $events = CustomEventsStorage::getInstance()->getEvents();
-        foreach ($events as $eventName => $eventAttributes) {
-            $span->addEvent($eventName, $eventAttributes);
+        $events = static::getFactory()->createCustomEventsStorage()->getEvents();
+        foreach ($events as $eventAttributes) {
+            $span->addEvent($eventAttributes[CustomEventsStorage::EVENT_NAME], $eventAttributes[CustomEventsStorage::EVENT_ATTRIBUTES]);
         }
 
         $processedSpans = PostFilterBatchSpanProcessor::getNumberOfProcessedSpans();
@@ -485,7 +489,7 @@ class SprykerInstrumentationBootstrap
      */
     protected static function getSpanStatus(): string
     {
-        $exceptions = ExceptionStorage::getInstance()->getExceptions();
+        $exceptions = static::getFactory()->createExceptionStorage()->getExceptions();
 
         if ($exceptions !== []) {
             return StatusCode::STATUS_ERROR;
@@ -517,5 +521,25 @@ class SprykerInstrumentationBootstrap
         }
 
         return static::formatSpanName($request, $isApplicationAvailable);
+    }
+
+    /**
+     * @return \Spryker\Service\Opentelemetry\OpentelemetryServiceFactory
+     */
+    protected static function getFactory()
+    {
+        if (static::$factory === null) {
+            static::$factory = static::getFactoryResolver()->resolve(static::class);
+        }
+
+        return static::$factory;
+    }
+
+    /**
+     * @return \Spryker\Service\Kernel\ClassResolver\AbstractClassResolver
+     */
+    protected static function getFactoryResolver(): AbstractClassResolver
+    {
+        return new FactoryResolver();
     }
 }
