@@ -60,7 +60,7 @@ class SprykerInstrumentationBootstrap
     public const NAME = 'spryker';
 
     /**
-     * @var string Attribute to mark a trace with at least one more span except the root one present.
+     * @var string Attribute to mark a trace that is has at least one more span except the root one.
      */
     public const ATTRIBUTE_IS_DETAILED_TRACE = 'detailed';
 
@@ -536,7 +536,7 @@ class SprykerInstrumentationBootstrap
 
     /**
      * @param \OpenTelemetry\API\Trace\SpanInterface $span
-     * 
+     *
      * @return \OpenTelemetry\API\Trace\SpanInterface
      */
     protected static function recordCountOfProcessesSpans(SpanInterface $span): SpanInterface
