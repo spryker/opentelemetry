@@ -60,7 +60,7 @@ class CustomEventsStorage implements CustomEventsStorageInterface
     public function addEvent(string $name, array $attributes): void
     {
         if (count($this->events) >= static::$eventsLimit) {
-            return; // Do not add more events than the limit
+            array_shift($this->events);
         }
         /**
          * Events should be not indexed by name, as it is not guaranteed that the same event will not be added multiple times.

@@ -229,7 +229,7 @@ class Span extends OtelSpan implements ReadWriteSpanInterface, SpanDataInterface
             return $this;
         }
         if (++$this->totalRecordedEvents > $this->spanLimits->getEventCountLimit()) {
-            return $this;
+            array_shift($this->events);
         }
 
         $timestamp ??= Clock::getDefault()->now();
@@ -253,7 +253,7 @@ class Span extends OtelSpan implements ReadWriteSpanInterface, SpanDataInterface
             return $this;
         }
         if (++$this->totalRecordedEvents > $this->spanLimits->getEventCountLimit()) {
-            return $this;
+            array_shift($this->events);
         }
 
         $timestamp ??= Clock::getDefault()->now();
