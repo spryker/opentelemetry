@@ -26,6 +26,8 @@ use OpenTelemetry\SDK\Trace\TracerProviderInterface;
 use OpenTelemetry\SemConv\ResourceAttributes;
 use OpenTelemetry\SemConv\TraceAttributes;
 use Spryker\Glue\GlueApplication\Rest\ResourceRouter;
+use Spryker\Service\Kernel\ClassResolver\AbstractClassResolver;
+use Spryker\Service\Kernel\ClassResolver\Factory\FactoryResolver;
 use Spryker\Service\Opentelemetry\Instrumentation\Propagation\SymfonyRequestPropagationGetter;
 use Spryker\Service\Opentelemetry\Instrumentation\Resource\ResourceInfo;
 use Spryker\Service\Opentelemetry\Instrumentation\Resource\ResourceInfoFactory;
@@ -39,10 +41,6 @@ use Spryker\Service\Opentelemetry\Instrumentation\Tracer\TracerProvider;
 use Spryker\Service\Opentelemetry\OpentelemetryInstrumentationConfig;
 use Spryker\Service\Opentelemetry\Plugin\OpentelemetryMonitoringExtensionPlugin;
 use Spryker\Service\Opentelemetry\Storage\CustomEventsStorage;
-use Spryker\Service\Opentelemetry\Storage\CustomParameterStorage;
-use Spryker\Service\Opentelemetry\Storage\ExceptionStorage;
-use Spryker\Service\Opentelemetry\Storage\ResourceNameStorage;
-use Spryker\Service\Opentelemetry\Storage\RootSpanNameStorage;
 use Spryker\Shared\Config\Config;
 use Spryker\Shared\Opentelemetry\Instrumentation\CachedInstrumentation;
 use Spryker\Shared\Opentelemetry\OpentelemetryConstants;
@@ -54,9 +52,6 @@ use Symfony\Component\Routing\Router;
 use Throwable;
 use function OpenTelemetry\Instrumentation\hook;
 
-/**
- * @method \Spryker\Service\Opentelemetry\OpentelemetryServiceFactory getFactory()
- */
 class SprykerInstrumentationBootstrap
 {
     /**
@@ -65,42 +60,42 @@ class SprykerInstrumentationBootstrap
     public const NAME = 'spryker';
 
     /**
-     * @var string
+     * @var string Attribute to mark a trace that is has at least one more span except the root one.
      */
     public const ATTRIBUTE_IS_DETAILED_TRACE = 'detailed';
 
     /**
-     * @var string
+     * @var string Version of the instrumentation. Must be equal to the release version. This version is shown in the traces.
      */
-    public const INSTRUMENTATION_VERSION = '1.13.0';
+    public const INSTRUMENTATION_VERSION = '1.14.0';
 
     /**
-     * @var string
+     * @var string Default span name placeholder for root spans. By default the first placeholder is for HTTP method and the second one for the route.
      */
     protected const SPAN_NAME_PLACEHOLDER = '%s %s';
 
     /**
-     * @var string
+     * @var string File name of the ZED console binary.
      */
     protected const ZED_BIN_FILE_NAME = 'console';
 
     /**
-     * @var string
+     * @var string Default service name for CLI ZED application.
      */
     protected const ZED_CLI_APPLICATION_NAME = 'CLI ZED';
 
     /**
-     * @var string
+     * @var string Attribute to mark a span as a root span. Required as the span that is considered as root, can be a child span if the trace is collected from multiple services, e.g. Yves call to Zed.
      */
     protected const ROOT_ATTRIBUTE = 'spr.root';
 
     /**
-     * @var string
+     * @var string Attribute to store the number of spans in the trace.
      */
     protected const ATTRIBUTE_PROCESSED_SPANS = 'spr.processed_spans';
 
     /**
-     * @var string
+     * @var string The name of the root span if no other mechanism was executed during the request.
      */
     protected const FINAL_HTTP_ROOT_SPAN_NAME = '/*';
 
@@ -110,19 +105,24 @@ class SprykerInstrumentationBootstrap
     protected static ?ResourceInfo $resourceInfo = null;
 
     /**
-     * @var \OpenTelemetry\API\Trace\SpanInterface|null
+     * @var \OpenTelemetry\API\Trace\SpanInterface|null In order to always have a reference to the root span, it is stored statically.
      */
     protected static ?SpanInterface $rootSpan = null;
 
     /**
-     * @var int|null
+     * @var int|null Will have a value only for CLI applications. It will be set to the return code of the console command.
      */
     protected static ?int $cliReturnCode = null;
 
     /**
-     * @var string|null
+     * @var string|null Will have a value only for HTTP requests. It will be set to the route name of the request.
      */
     protected static ?string $route = null;
+
+    /**
+     * @var null|\Spryker\Service\Opentelemetry\OpentelemetryServiceFactory
+     */
+    protected static $factory = null;
 
     /**
      * @return void
@@ -132,10 +132,13 @@ class SprykerInstrumentationBootstrap
         //Disabling error reporting for Otel. Will be overwritten by the application.
         error_reporting(0);
 
+        //Get a request
         $request = RequestProcessor::getRequest();
 
+        //Decide whether to sample the request or not
         TraceSampleResult::shouldSample($request);
 
+        //Skip the instrumentation if the request should not be sampled. E.g. the the route is in the stop list.
         if (TraceSampleResult::shouldSkipRootSpan()) {
             return;
         }
@@ -145,6 +148,7 @@ class SprykerInstrumentationBootstrap
 
         $tracerProvider = static::createTracerProvider($resource);
 
+        //Prepare a main SDK instance
         Sdk::builder()
             ->setTracerProvider($tracerProvider)
             ->setPropagator(TraceContextPropagator::getInstance())
@@ -152,9 +156,11 @@ class SprykerInstrumentationBootstrap
 
         static::registerRootSpan($request);
 
+        // Add a shutdown handler to ensure that the root span is ended and additional attributes are set.
         ShutdownHandler::register($tracerProvider->shutdown(...));
         ShutdownHandler::register([static::class, 'shutdownHandler']);
 
+        //Register the autogenerated and system hooks.
         static::registerAdditionalHooks();
     }
 
@@ -163,14 +169,18 @@ class SprykerInstrumentationBootstrap
      */
     protected static function registerAdditionalHooks(): void
     {
+        //Will catch return code of the console command.
         static::registerConsoleReturnCodeHook();
+        //Will catch the route name of the request.
         static::registerRouteMatcherHooks();
+        //Disable all other hooks
         if (TraceSampleResult::shouldSkipTraceBody()) {
             putenv('OTEL_PHP_DISABLED_INSTRUMENTATIONS=all');
 
             return;
         }
 
+        //Autoloading of the generated hooks.
         $classmapFileName = APPLICATION_ROOT_DIR . '/src/Generated/OpenTelemetry/Hooks/classmap.php';
         if (!file_exists($classmapFileName)) {
             return;
@@ -192,6 +202,8 @@ class SprykerInstrumentationBootstrap
     }
 
     /**
+     * Creates a hook to capture the return code of the console command.
+     *
      * @return void
      */
     protected static function registerConsoleReturnCodeHook(): void
@@ -207,6 +219,8 @@ class SprykerInstrumentationBootstrap
     }
 
     /**
+     * Creates hooks to capture the route name of the request. Different hooks are used for different routing systems.
+     *
      * @return void
      */
     protected static function registerRouteMatcherHooks(): void
@@ -246,6 +260,8 @@ class SprykerInstrumentationBootstrap
     }
 
     /**
+     * Prepares a resource with the service name and other attributes.
+     *
      * @param string $serviceName
      *
      * @return \Spryker\Service\Opentelemetry\Instrumentation\Resource\ResourceInfo
@@ -276,6 +292,8 @@ class SprykerInstrumentationBootstrap
     }
 
     /**
+     * Hardcoded span exporter for OTLP gRPC. It is used to export spans to the OpenTelemetry Collector or other OTLP-compatible backends.
+     *
      * @return \OpenTelemetry\SDK\Trace\SpanExporterInterface
      */
     protected static function createSpanExporter(): SpanExporterInterface
@@ -287,6 +305,8 @@ class SprykerInstrumentationBootstrap
     }
 
     /**
+     * Creates a span processor with a post-filtering mechanism that filters out spans that are faster than the configured threshold.
+     *
      * @return \OpenTelemetry\SDK\Trace\SpanProcessorInterface
      */
     protected static function createSpanProcessor(): SpanProcessorInterface
@@ -408,6 +428,8 @@ class SprykerInstrumentationBootstrap
     }
 
     /**
+     * Creates a getter for the request propagator. It cannot be created via factory as root span is created before the factory is initialized.
+     *
      * @return \OpenTelemetry\Context\Propagation\PropagationGetterInterface
      */
     protected static function createRequestPropagatorGetter(): PropagationGetterInterface
@@ -434,8 +456,8 @@ class SprykerInstrumentationBootstrap
     public static function shutdownHandler(): void
     {
         $request = RequestProcessor::getRequest();
-        $resourceName = ResourceNameStorage::getInstance()->getName();
-        $customParamsStorage = CustomParameterStorage::getInstance();
+        $resourceName = static::getFactory()->createResourceNameStorage()->getName();
+        $customParamsStorage = static::getFactory()->createCustomParameterStorage();
         $cli = $customParamsStorage->getAttribute(OpentelemetryMonitoringExtensionPlugin::ATTRIBUTE_IS_CONSOLE_COMMAND);
         if ($resourceName) {
             if ($cli) {
@@ -457,22 +479,10 @@ class SprykerInstrumentationBootstrap
             $span = static::addHttpAttributes($span, $request);
         }
 
-        $name = RootSpanNameStorage::getInstance()->getName();
-        $span->updateName($name ?: static::formatGeneralSpanName($request, true));
-
-        $exceptions = ExceptionStorage::getInstance()->getExceptions();
-        foreach ($exceptions as $exception) {
-            $span->recordException($exception);
-        }
-
-        $events = CustomEventsStorage::getInstance()->getEvents();
-        foreach ($events as $eventName => $eventAttributes) {
-            $span->addEvent($eventName, $eventAttributes);
-        }
-
-        $processedSpans = PostFilterBatchSpanProcessor::getNumberOfProcessedSpans();
-        $span->setAttribute(static::ATTRIBUTE_PROCESSED_SPANS, $processedSpans);
-        $span->setAttribute(static::ATTRIBUTE_IS_DETAILED_TRACE, $processedSpans >= 1);
+        $span = static::updateRootSpanName($span, $request);
+        $span = static::recordExceptions($span);
+        $span = static::recordEvents($span);
+        $span = static::recordCountOfProcessesSpans($span);
 
         $span->setStatus(static::getSpanStatus());
 
@@ -481,11 +491,69 @@ class SprykerInstrumentationBootstrap
     }
 
     /**
+     * @param \OpenTelemetry\API\Trace\SpanInterface $span
+     * @param \Symfony\Component\HttpFoundation\Request $request
+     *
+     * @return \OpenTelemetry\API\Trace\SpanInterface
+     */
+    protected static function updateRootSpanName(SpanInterface $span, Request $request): SpanInterface
+    {
+        $name = static::getFactory()->createRootSpanNameStorage()->getName();
+        $span->updateName($name ?: static::formatGeneralSpanName($request, true));
+
+        return $span;
+    }
+
+    /**
+     * @param \OpenTelemetry\API\Trace\SpanInterface $span
+     *
+     * @return \OpenTelemetry\API\Trace\SpanInterface
+     */
+    protected static function recordExceptions(SpanInterface $span): SpanInterface
+    {
+        $exceptions = static::getFactory()->createExceptionStorage()->getExceptions();
+        foreach ($exceptions as $exception) {
+            $span->recordException($exception);
+        }
+
+        return $span;
+    }
+
+    /**
+     * @param \OpenTelemetry\API\Trace\SpanInterface $span
+     *
+     * @return \OpenTelemetry\API\Trace\SpanInterface
+     */
+    protected static function recordEvents(SpanInterface $span): SpanInterface
+    {
+        $events = static::getFactory()->createCustomEventsStorage()->getEvents();
+        foreach ($events as $eventAttributes) {
+            $span->addEvent($eventAttributes[CustomEventsStorage::EVENT_NAME], $eventAttributes[CustomEventsStorage::EVENT_ATTRIBUTES]);
+        }
+
+        return $span;
+    }
+
+    /**
+     * @param \OpenTelemetry\API\Trace\SpanInterface $span
+     *
+     * @return \OpenTelemetry\API\Trace\SpanInterface
+     */
+    protected static function recordCountOfProcessesSpans(SpanInterface $span): SpanInterface
+    {
+        $processedSpans = PostFilterBatchSpanProcessor::getNumberOfProcessedSpans();
+        $span->setAttribute(static::ATTRIBUTE_PROCESSED_SPANS, $processedSpans);
+        $span->setAttribute(static::ATTRIBUTE_IS_DETAILED_TRACE, $processedSpans >= 1);
+
+        return $span;
+    }
+
+    /**
      * @return string
      */
     protected static function getSpanStatus(): string
     {
-        $exceptions = ExceptionStorage::getInstance()->getExceptions();
+        $exceptions = static::getFactory()->createExceptionStorage()->getExceptions();
 
         if ($exceptions !== []) {
             return StatusCode::STATUS_ERROR;
@@ -517,5 +585,27 @@ class SprykerInstrumentationBootstrap
         }
 
         return static::formatSpanName($request, $isApplicationAvailable);
+    }
+
+    /**
+     * Gets a service factory instance. Should be used with caution, as if it called to early, it may fail as Spryker application was not boot properly yet.
+     *
+     * @return \Spryker\Service\Opentelemetry\OpentelemetryServiceFactory
+     */
+    protected static function getFactory()
+    {
+        if (static::$factory === null) {
+            static::$factory = static::getFactoryResolver()->resolve(static::class);
+        }
+
+        return static::$factory;
+    }
+
+    /**
+     * @return \Spryker\Service\Kernel\ClassResolver\AbstractClassResolver
+     */
+    protected static function getFactoryResolver(): AbstractClassResolver
+    {
+        return new FactoryResolver();
     }
 }

@@ -107,6 +107,10 @@ class GuzzleInstrumentation
                 if ($exception) {
                     $span->recordException($exception);
                     $span->setStatus(StatusCode::STATUS_ERROR);
+                    if ($exception instanceof BadResponseException) {
+                        $response = $exception->getResponse();
+                        $span->setAttribute(TraceAttributes::HTTP_RESPONSE_STATUS_CODE, $response->getStatusCode());
+                    }
                     $span->end();
 
                     return;
