@@ -45,7 +45,7 @@ class CustomEventsStorage implements CustomEventsStorageInterface
     {
         if (self::$instance === null) {
             self::$instance = new self();
-            static::$eventsLimit = Configuration::getInt(Env::OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT, SpanLimits::DEFAULT_EVENT_ATTRIBUTE_COUNT_LIMIT);
+            static::$eventsLimit = Configuration::getInt(Env::OTEL_SPAN_EVENT_COUNT_LIMIT, SpanLimits::DEFAULT_SPAN_EVENT_COUNT_LIMIT);
         }
 
         return self::$instance;
