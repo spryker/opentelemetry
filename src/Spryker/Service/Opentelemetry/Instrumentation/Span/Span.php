@@ -260,6 +260,7 @@ class Span extends OtelSpan implements ReadWriteSpanInterface, SpanDataInterface
         $eventAttributesBuilder = $this->spanLimits->getEventAttributesFactory()->builder([
             'exception.type' => $exception::class,
             'exception.message' => $exception->getMessage(),
+            'exception.previous_message' => $exception->getPrevious()?->getMessage(),
             'exception.stacktrace' => StackTraceFormatter::format($exception),
         ]);
 
