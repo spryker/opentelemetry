@@ -104,7 +104,7 @@ class RedisInstrumentation
 
                 Context::storage()->attach($span->storeInContext($context));
             },
-            post: static function (RedisAdapterInterface $redis, array $params, $response, ?Throwable $exception) use ($redisHost, $redisPort): void {
+            post: static function (RedisAdapterInterface $redis, array $params, $response, ?Throwable $exception): void {
                 $scope = Context::storage()->scope();
 
                 if ($scope === null) {
