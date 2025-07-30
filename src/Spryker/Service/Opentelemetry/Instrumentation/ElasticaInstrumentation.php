@@ -171,7 +171,7 @@ class ElasticaInstrumentation
                     ->startSpan();
                 Context::storage()->attach($span->storeInContext($context));
             },
-            post: function (Client $client, array $params, $response, ?Throwable $exception) use ($host, $port): void {
+            post: function (Client $client, array $params, $response, ?Throwable $exception) : void {
                 if (TraceSampleResult::shouldSkipTraceBody()) {
                     return;
                 }
@@ -226,7 +226,7 @@ class ElasticaInstrumentation
                     ->startSpan();
                 Context::storage()->attach($span->storeInContext($context));
             },
-            post: function (Client $client, array $params, $response, ?Throwable $exception) use ($host, $port): void {
+            post: function (Client $client, array $params, $response, ?Throwable $exception) : void {
                 if (TraceSampleResult::shouldSkipTraceBody()) {
                     return;
                 }
@@ -281,7 +281,7 @@ class ElasticaInstrumentation
                     ->startSpan();
                 Context::storage()->attach($span->storeInContext($context));
             },
-            post: function (Client $client, array $params, $response, ?Throwable $exception) use ($host, $port): void {
+            post: function (Client $client, array $params, $response, ?Throwable $exception) : void {
                 if (TraceSampleResult::shouldSkipTraceBody()) {
                     return;
                 }
@@ -335,7 +335,7 @@ class ElasticaInstrumentation
                     ->startSpan();
                 Context::storage()->attach($span->storeInContext($context));
             },
-            post: function (Client $client, array $params, $response, ?Throwable $exception) use ($host, $port): void {
+            post: function (Client $client, array $params, $response, ?Throwable $exception) : void {
                 if (TraceSampleResult::shouldSkipTraceBody()) {
                     return;
                 }
@@ -390,7 +390,7 @@ class ElasticaInstrumentation
                     ->startSpan();
                 Context::storage()->attach($span->storeInContext($context));
             },
-            post: function (Client $client, array $params, $response, ?Throwable $exception) use ($host, $port): void {
+            post: function (Client $client, array $params, $response, ?Throwable $exception) : void {
                 if (TraceSampleResult::shouldSkipTraceBody()) {
                     return;
                 }
@@ -445,7 +445,7 @@ class ElasticaInstrumentation
                     ->startSpan();
                 Context::storage()->attach($span->storeInContext($context));
             },
-            post: function (Client $client, array $params, $response, ?Throwable $exception) use ($host, $port): void {
+            post: function (Client $client, array $params, $response, ?Throwable $exception) : void {
                 if (TraceSampleResult::shouldSkipTraceBody()) {
                     return;
                 }
