@@ -76,6 +76,8 @@ class GuzzleInstrumentation
                     ->setAttribute(TraceAttributes::CODE_LINE_NUMBER, $lineno)
                     ->setAttribute(TraceAttributes::SERVER_ADDRESS, $uriObject->getHost())
                     ->setAttribute(TraceAttributes::SERVER_PORT, $uriObject->getPort() ?: 80)
+                    ->setAttribute(TraceAttributes::NETWORK_PEER_ADDRESS, $uriObject->getHost())
+                    ->setAttribute(TraceAttributes::NETWORK_PEER_PORT, $uriObject->getPort() ?: 80)
                     ->setAttribute(TraceAttributes::URL_PATH, $uriObject->getPath())
                     ->setAttribute(TraceAttributes::URL_FULL, $url)
                     ->setAttribute(TraceAttributes::HTTP_REQUEST_METHOD, $method)
@@ -107,6 +109,7 @@ class GuzzleInstrumentation
                 if ($exception) {
                     $span->recordException($exception);
                     $span->setStatus(StatusCode::STATUS_ERROR);
+                    $span->setAttribute(TraceAttributes::ERROR_TYPE, get_class($exception));
                     if ($exception instanceof BadResponseException) {
                         $response = $exception->getResponse();
                         $span->setAttribute(TraceAttributes::HTTP_RESPONSE_STATUS_CODE, $response->getStatusCode());

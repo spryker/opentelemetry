@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Copyright © 2016-present Spryker Systems GmbH. All rights reserved.
+ * Copyright 2016-present Spryker Systems GmbH. All rights reserved.
  * Use of this software requires acceptance of the Evaluation License Agreement. See LICENSE file.
  */
 
@@ -135,10 +135,14 @@ class RabbitMqInstrumentation
         $instrumentation = CachedInstrumentation::getCachedInstrumentation();
         $request = (new RequestProcessor())->getRequest();
 
+        $rabbitHost = getenv('SPRYKER_RABBITMQ_HOST') ?: getenv('RABBITMQ_HOST') ?: ($request->headers->get(static::HEADER_HOST) ?: 'localhost');
+        $rabbitPort = getenv('SPRYKER_RABBITMQ_PORT') ?: getenv('RABBITMQ_PORT') ?: 5672;
+        $rabbitProtocol = 'AMQP';
+
         hook(
             class: RabbitMqAdapter::class,
             function: $functionName,
-            pre: function (RabbitMqAdapter $rabbitMqAdapter, array $params) use ($instrumentation, $spanName, $request, $spanKind): void {
+            pre: function (RabbitMqAdapter $rabbitMqAdapter, array $params) use ($instrumentation, $spanName, $request, $spanKind, $rabbitHost, $rabbitPort, $rabbitProtocol): void {
                 if (TraceSampleResult::shouldSkipTraceBody()) {
                     return;
                 }
@@ -150,7 +154,15 @@ class RabbitMqInstrumentation
                     ->setAttribute(TraceAttributes::MESSAGING_SYSTEM, static::MESSAGING_SYSTEM_VALUE)
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(TraceAttributes::HTTP_REQUEST_METHOD, $request->getMethod())
-                    ->setAttribute(TraceAttributes::MESSAGING_DESTINATION_NAME, $params[0]);
+                    ->setAttribute(TraceAttributes::MESSAGING_DESTINATION_NAME, $params[0])
+                    // OTEL 1.36.0 attributes:
+                    ->setAttribute(TraceAttributes::SERVER_ADDRESS, $rabbitHost)
+                    ->setAttribute(TraceAttributes::SERVER_PORT, (int)$rabbitPort)
+                    ->setAttribute(TraceAttributes::NETWORK_PEER_ADDRESS, $rabbitHost)
+                    ->setAttribute(TraceAttributes::NETWORK_PEER_PORT, (int)$rabbitPort)
+                    ->setAttribute(TraceAttributes::MESSAGING_DESTINATION_KIND, 'queue')
+                    ->setAttribute(TraceAttributes::MESSAGING_PROTOCOL, $rabbitProtocol)
+                    ->setAttribute(TraceAttributes::MESSAGING_URL, sprintf('amqp://%s:%s', $rabbitHost, $rabbitPort));
 
                 if (static::isValidMessage($params)) {
                     $eventQueueSendMessageBodyArray = json_decode($params[1][0]->getBody(), true);
@@ -161,13 +173,12 @@ class RabbitMqInstrumentation
                         $span->setAttribute(static::ATTRIBUTE_EVENT_LISTENER_CLASS_NAME, $eventQueueSendMessageBodyArray[EventQueueSendMessageBodyTransfer::LISTENER_CLASS_NAME]);
                     }
                 }
-
-                $span = $span->setAttribute(TraceAttributes::URL_DOMAIN, $request->headers->get(static::HEADER_HOST))
+                $span = $span->setAttribute(TraceAttributes::URL_DOMAIN, $rabbitHost)
                     ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));
             },
-            post: function (RabbitMqAdapter $rabbitMqAdapter, array $params, $response, ?Throwable $exception): void {
+            post: function (RabbitMqAdapter $rabbitMqAdapter, array $params, $response, ?Throwable $exception) use ($rabbitHost, $rabbitPort): void {
                 if (TraceSampleResult::shouldSkipTraceBody()) {
                     return;
                 }
@@ -184,6 +195,7 @@ class RabbitMqInstrumentation
                 if ($exception !== null) {
                     $span->recordException($exception);
                     $span->setStatus(StatusCode::STATUS_ERROR);
+                    $span->setAttribute(TraceAttributes::ERROR_TYPE, get_class($exception));
                 } else {
                     $span->setStatus(StatusCode::STATUS_OK);
                 }
