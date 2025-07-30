@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Copyright 2016-present Spryker Systems GmbH. All rights reserved.
+ * Copyright © 2016-present Spryker Systems GmbH. All rights reserved.
  * Use of this software requires acceptance of the Evaluation License Agreement. See LICENSE file.
  */
 
@@ -78,13 +78,10 @@ class RedisInstrumentation
 
         $instrumentation = CachedInstrumentation::getCachedInstrumentation();
 
-        $redisHost = getenv('SPRYKER_REDIS_HOST') ?: getenv('REDIS_HOST') ?: 'localhost';
-        $redisPort = getenv('SPRYKER_REDIS_PORT') ?: getenv('REDIS_PORT') ?: 6379;
-
         hook(
             RedisAdapterInterface::class,
             'get',
-            pre: static function (RedisAdapterInterface $redis, array $params) use ($instrumentation, $redisHost, $redisPort): void {
+            pre: static function (RedisAdapterInterface $redis, array $params) use ($instrumentation): void {
                 if (TraceSampleResult::shouldSkipTraceBody()) {
                     return;
                 }
@@ -95,12 +92,14 @@ class RedisInstrumentation
                     ->setParent($context)
                     ->setAttribute(TraceAttributes::DB_SYSTEM_NAME, static::DB_SYSTEM_NAME)
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
-                    ->setAttribute(TraceAttributes::DB_QUERY_TEXT, isset($params[0]) ? static::OPERATION_GET . ' ' . $params[0] : 'undefined')
+                    ->setAttribute(
+                        TraceAttributes::DB_QUERY_TEXT, isset($params[0])
+                            ? static::OPERATION_GET . ' ' . $params[0]
+                            : 'undefined'
+                    )
                     ->setAttributes(static::getQueryAttributes(static::OPERATION_GET, $params))
-                    ->setAttribute(TraceAttributes::SERVER_ADDRESS, $redisHost)
-                    ->setAttribute(TraceAttributes::SERVER_PORT, (int)$redisPort)
-                    ->setAttribute(TraceAttributes::NETWORK_PEER_ADDRESS, $redisHost)
-                    ->setAttribute(TraceAttributes::NETWORK_PEER_PORT, (int)$redisPort)
+                    ->setAttribute(TraceAttributes::SERVER_ADDRESS, static::getRedisHost())
+                    ->setAttribute(TraceAttributes::SERVER_PORT, static::getRedisPort())
                     ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));
@@ -119,10 +118,6 @@ class RedisInstrumentation
                 if ($exception !== null) {
                     $span->recordException($exception);
                     $span->setStatus(StatusCode::STATUS_ERROR);
-                    $span->setAttribute(TraceAttributes::ERROR_TYPE, get_class($exception));
-                    if (method_exists($exception, 'getCode')) {
-                        $span->setAttribute(TraceAttributes::DB_RESPONSE_STATUS_CODE, $exception->getCode());
-                    }
                 } else {
                     $span->setStatus(StatusCode::STATUS_OK);
                 }
@@ -134,7 +129,7 @@ class RedisInstrumentation
         hook(
             RedisAdapterInterface::class,
             'mget',
-            pre: static function (RedisAdapterInterface $redis, array $params) use ($instrumentation, $redisHost, $redisPort): void {
+            pre: static function (RedisAdapterInterface $redis, array $params) use ($instrumentation): void {
                 if (TraceSampleResult::shouldSkipTraceBody()) {
                     return;
                 }
@@ -147,15 +142,16 @@ class RedisInstrumentation
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(TraceAttributes::DB_QUERY_TEXT, implode(' ', $params[0]))
                     ->setAttributes(static::getQueryAttributes(static::OPERATION_MGET, $params))
-                    ->setAttribute(TraceAttributes::SERVER_ADDRESS, $redisHost)
-                    ->setAttribute(TraceAttributes::SERVER_PORT, (int)$redisPort)
-                    ->setAttribute(TraceAttributes::NETWORK_PEER_ADDRESS, $redisHost)
-                    ->setAttribute(TraceAttributes::NETWORK_PEER_PORT, (int)$redisPort)
+                    ->setAttribute(TraceAttributes::SERVER_ADDRESS, static::getRedisHost())
+                    ->setAttribute(TraceAttributes::SERVER_PORT, static::getRedisPort())
                     ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));
             },
-            post: static function (RedisAdapterInterface $redis, array $params, $response, ?Throwable $exception) use ($redisHost, $redisPort): void {
+            post: static function (RedisAdapterInterface $redis, array $params, mixed $ret, ?Throwable $exception): void {
+                if (TraceSampleResult::shouldSkipTraceBody()) {
+                    return;
+                }
                 $scope = Context::storage()->scope();
 
                 if ($scope === null) {
@@ -169,10 +165,6 @@ class RedisInstrumentation
                 if ($exception !== null) {
                     $span->recordException($exception);
                     $span->setStatus(StatusCode::STATUS_ERROR);
-                    $span->setAttribute(TraceAttributes::ERROR_TYPE, get_class($exception));
-                    if (method_exists($exception, 'getCode')) {
-                        $span->setAttribute(TraceAttributes::DB_RESPONSE_STATUS_CODE, $exception->getCode());
-                    }
                 } else {
                     $span->setStatus(StatusCode::STATUS_OK);
                 }
@@ -184,7 +176,7 @@ class RedisInstrumentation
         hook(
             RedisAdapterInterface::class,
             'eval',
-            pre: static function (RedisAdapterInterface $redis, array $params) use ($instrumentation, $redisHost, $redisPort): void {
+            pre: static function (RedisAdapterInterface $redis, array $params) use ($instrumentation): void {
                 if (TraceSampleResult::shouldSkipTraceBody()) {
                     return;
                 }
@@ -196,15 +188,16 @@ class RedisInstrumentation
                     ->setAttribute(TraceAttributes::DB_SYSTEM_NAME, static::DB_SYSTEM_NAME)
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(static::ATTRIBUTE_EVAL_SCRIPT, $params[0] ?? 'undefined')
-                    ->setAttribute(TraceAttributes::SERVER_ADDRESS, $redisHost)
-                    ->setAttribute(TraceAttributes::SERVER_PORT, (int)$redisPort)
-                    ->setAttribute(TraceAttributes::NETWORK_PEER_ADDRESS, $redisHost)
-                    ->setAttribute(TraceAttributes::NETWORK_PEER_PORT, (int)$redisPort)
+                    ->setAttribute(TraceAttributes::SERVER_ADDRESS, static::getRedisHost())
+                    ->setAttribute(TraceAttributes::SERVER_PORT, static::getRedisPort())
                     ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));
             },
-            post: static function (RedisAdapterInterface $redis, array $params, $response, ?Throwable $exception) use ($redisHost, $redisPort): void {
+            post: static function (RedisAdapterInterface $redis, array $params, mixed $ret, ?Throwable $exception): void {
+                if (TraceSampleResult::shouldSkipTraceBody()) {
+                    return;
+                }
                 $scope = Context::storage()->scope();
 
                 if ($scope === null) {
@@ -218,10 +211,6 @@ class RedisInstrumentation
                 if ($exception !== null) {
                     $span->recordException($exception);
                     $span->setStatus(StatusCode::STATUS_ERROR);
-                    $span->setAttribute(TraceAttributes::ERROR_TYPE, get_class($exception));
-                    if (method_exists($exception, 'getCode')) {
-                        $span->setAttribute(TraceAttributes::DB_RESPONSE_STATUS_CODE, $exception->getCode());
-                    }
                 } else {
                     $span->setStatus(StatusCode::STATUS_OK);
                 }
@@ -233,7 +222,7 @@ class RedisInstrumentation
         hook(
             RedisAdapterInterface::class,
             'mset',
-            pre: static function (RedisAdapterInterface $redis, array $params) use ($instrumentation, $redisHost, $redisPort): void {
+            pre: static function (RedisAdapterInterface $redis, array $params) use ($instrumentation): void {
                 if (TraceSampleResult::shouldSkipTraceBody()) {
                     return;
                 }
@@ -246,15 +235,16 @@ class RedisInstrumentation
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(TraceAttributes::DB_QUERY_TEXT, implode(' ', array_keys($params[0])))
                     ->setAttributes(static::getQueryAttributes(static::OPERATION_MSET, $params))
-                    ->setAttribute(TraceAttributes::SERVER_ADDRESS, $redisHost)
-                    ->setAttribute(TraceAttributes::SERVER_PORT, (int)$redisPort)
-                    ->setAttribute(TraceAttributes::NETWORK_PEER_ADDRESS, $redisHost)
-                    ->setAttribute(TraceAttributes::NETWORK_PEER_PORT, (int)$redisPort)
+                    ->setAttribute(TraceAttributes::SERVER_ADDRESS, static::getRedisHost())
+                    ->setAttribute(TraceAttributes::SERVER_PORT, static::getRedisPort())
                     ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));
             },
-            post: static function (RedisAdapterInterface $redis, array $params, $response, ?Throwable $exception) use ($redisHost, $redisPort): void {
+            post: static function (RedisAdapterInterface $redis, array $params, mixed $ret, ?Throwable $exception): void {
+                if (TraceSampleResult::shouldSkipTraceBody()) {
+                    return;
+                }
                 $scope = Context::storage()->scope();
 
                 if ($scope === null) {
@@ -268,10 +258,6 @@ class RedisInstrumentation
                 if ($exception !== null) {
                     $span->recordException($exception);
                     $span->setStatus(StatusCode::STATUS_ERROR);
-                    $span->setAttribute(TraceAttributes::ERROR_TYPE, get_class($exception));
-                    if (method_exists($exception, 'getCode')) {
-                        $span->setAttribute(TraceAttributes::DB_RESPONSE_STATUS_CODE, $exception->getCode());
-                    }
                 } else {
                     $span->setStatus(StatusCode::STATUS_OK);
                 }
@@ -283,7 +269,7 @@ class RedisInstrumentation
         hook(
             RedisAdapterInterface::class,
             'set',
-            pre: static function (RedisAdapterInterface $redis, array $params) use ($instrumentation, $redisHost, $redisPort): void {
+            pre: static function (RedisAdapterInterface $redis, array $params) use ($instrumentation): void {
                 if (TraceSampleResult::shouldSkipTraceBody()) {
                     return;
                 }
@@ -296,15 +282,16 @@ class RedisInstrumentation
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(TraceAttributes::DB_QUERY_TEXT, $params[0] ?? 'undefined')
                     ->setAttributes(static::getQueryAttributes(static::OPERATION_SET, $params))
-                    ->setAttribute(TraceAttributes::SERVER_ADDRESS, $redisHost)
-                    ->setAttribute(TraceAttributes::SERVER_PORT, (int)$redisPort)
-                    ->setAttribute(TraceAttributes::NETWORK_PEER_ADDRESS, $redisHost)
-                    ->setAttribute(TraceAttributes::NETWORK_PEER_PORT, (int)$redisPort)
+                    ->setAttribute(TraceAttributes::SERVER_ADDRESS, static::getRedisHost())
+                    ->setAttribute(TraceAttributes::SERVER_PORT, static::getRedisPort())
                     ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));
             },
-            post: static function (RedisAdapterInterface $redis, array $params, $response, ?Throwable $exception) use ($redisHost, $redisPort): void {
+            post: static function (RedisAdapterInterface $redis, array $params, mixed $ret, ?Throwable $exception): void {
+                if (TraceSampleResult::shouldSkipTraceBody()) {
+                    return;
+                }
                 $scope = Context::storage()->scope();
 
                 if ($scope === null) {
@@ -318,10 +305,6 @@ class RedisInstrumentation
                 if ($exception !== null) {
                     $span->recordException($exception);
                     $span->setStatus(StatusCode::STATUS_ERROR);
-                    $span->setAttribute(TraceAttributes::ERROR_TYPE, get_class($exception));
-                    if (method_exists($exception, 'getCode')) {
-                        $span->setAttribute(TraceAttributes::DB_RESPONSE_STATUS_CODE, $exception->getCode());
-                    }
                 } else {
                     $span->setStatus(StatusCode::STATUS_OK);
                 }
@@ -333,7 +316,7 @@ class RedisInstrumentation
         hook(
             RedisAdapterInterface::class,
             'setex',
-            pre: static function (RedisAdapterInterface $redis, array $params) use ($instrumentation, $redisHost, $redisPort): void {
+            pre: static function (RedisAdapterInterface $redis, array $params) use ($instrumentation): void {
                 if (TraceSampleResult::shouldSkipTraceBody()) {
                     return;
                 }
@@ -347,15 +330,16 @@ class RedisInstrumentation
                     ->setAttribute(TraceAttributes::DB_QUERY_TEXT, $params[0] ?? 'undefined')
                     ->setAttribute(static::PARAM_EXPIRATION, $params[0] ?? 'undefined')
                     ->setAttributes(static::getQueryAttributes(static::OPERATION_SETEX, $params))
-                    ->setAttribute(TraceAttributes::SERVER_ADDRESS, $redisHost)
-                    ->setAttribute(TraceAttributes::SERVER_PORT, (int)$redisPort)
-                    ->setAttribute(TraceAttributes::NETWORK_PEER_ADDRESS, $redisHost)
-                    ->setAttribute(TraceAttributes::NETWORK_PEER_PORT, (int)$redisPort)
+                    ->setAttribute(TraceAttributes::SERVER_ADDRESS, static::getRedisHost())
+                    ->setAttribute(TraceAttributes::SERVER_PORT, static::getRedisPort())
                     ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));
             },
-            post: static function (RedisAdapterInterface $redis, array $params, $response, ?Throwable $exception) use ($redisHost, $redisPort): void {
+            post: static function (RedisAdapterInterface $redis, array $params, mixed $ret, ?Throwable $exception): void {
+                if (TraceSampleResult::shouldSkipTraceBody()) {
+                    return;
+                }
                 $scope = Context::storage()->scope();
 
                 if ($scope === null) {
@@ -369,10 +353,6 @@ class RedisInstrumentation
                 if ($exception !== null) {
                     $span->recordException($exception);
                     $span->setStatus(StatusCode::STATUS_ERROR);
-                    $span->setAttribute(TraceAttributes::ERROR_TYPE, get_class($exception));
-                    if (method_exists($exception, 'getCode')) {
-                        $span->setAttribute(TraceAttributes::DB_RESPONSE_STATUS_CODE, $exception->getCode());
-                    }
                 } else {
                     $span->setStatus(StatusCode::STATUS_OK);
                 }
@@ -402,5 +382,21 @@ class RedisInstrumentation
             TraceAttributes::DB_COLLECTION_NAME => $tablename,
             TraceAttributes::DB_QUERY_SUMMARY => $operation . ' ' . $tablename,
         ];
+    }
+
+    /**
+     * @return string
+     */
+    protected static function getRedisHost(): string
+    {
+        return getenv('SPRYKER_KEY_VALUE_STORE_HOST') ?: 'localhost';
+    }
+
+    /**
+     * @return int
+     */
+    protected static function getRedisPort(): int
+    {
+        return getenv('SPRYKER_KEY_VALUE_STORE_PORT') ?: 6379;
     }
 }

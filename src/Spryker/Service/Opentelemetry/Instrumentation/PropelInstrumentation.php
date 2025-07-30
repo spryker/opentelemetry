@@ -62,10 +62,10 @@ class PropelInstrumentation
             return;
         }
 
-        $dbHost = getenv('SPRYKER_DB_HOST') ?: getenv('DB_HOST') ?: 'localhost';
-        $dbPort = getenv('SPRYKER_DB_PORT') ?: getenv('DB_PORT') ?: 3306;
-        $dbName = getenv('SPRYKER_DB_DATABASE') ?: getenv('DB_DATABASE') ?: static::UNDEFINED;
-        $dbEngine = strtolower((getenv('SPRYKER_DB_ENGINE') ?: getenv('DB_ENGINE')) ?: 'mysql');
+        $dbHost = getenv('SPRYKER_DB_HOST') ?: 'localhost';
+        $dbPort = getenv('SPRYKER_DB_PORT') ?: 3306;
+        $dbName = getenv('SPRYKER_DB_DATABASE') ?: static::UNDEFINED;
+        $dbEngine = strtolower((getenv('SPRYKER_DB_ENGINE') ?: '')) ?: 'mysql';
 
         hook(
             class: StatementInterface::class,
@@ -87,12 +87,9 @@ class PropelInstrumentation
                     ->setAttribute(TraceAttributes::DB_SYSTEM_NAME, $dbEngine)
                     ->setAttribute(TraceAttributes::DB_QUERY_TEXT, $query)
                     ->setAttributes(static::getQueryAttributes($statement))
-                    // OTEL 1.36.0 attributes:
                     ->setAttribute(TraceAttributes::DB_NAMESPACE, $dbName)
                     ->setAttribute(TraceAttributes::SERVER_ADDRESS, $dbHost)
                     ->setAttribute(TraceAttributes::SERVER_PORT, (int)$dbPort)
-                    ->setAttribute(TraceAttributes::NETWORK_PEER_ADDRESS, $dbHost)
-                    ->setAttribute(TraceAttributes::NETWORK_PEER_PORT, (int)$dbPort)
                     ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));
@@ -118,10 +115,6 @@ class PropelInstrumentation
                 );
 
                 if ($exception !== null) {
-                    $errorCode = static::extractDatabaseErrorCode($exception);
-                    if ($errorCode !== null) {
-                        $span->setAttribute(TraceAttributes::DB_RESPONSE_STATUS_CODE, $errorCode);
-                    }
                     $span->recordException($exception);
                     $span->setStatus(StatusCode::STATUS_ERROR);
                 } else {
@@ -174,27 +167,5 @@ class PropelInstrumentation
             TraceAttributes::DB_QUERY_SUMMARY => $matchedOperation . ' ' . $tableName,
             $criticalAttr => true,
         ];
-    }
-
-    /**
-     * @param \Throwable $exception
-     * @return string|null
-     */
-    protected static function extractDatabaseErrorCode(Throwable $exception): ?string
-    {
-        $message = $exception->getMessage();
-        // MySQL SQLSTATE
-        if (preg_match('/SQLSTATE\\[([^\\]]+)\\]/', $message, $matches)) {
-            return $matches[1];
-        }
-        // MySQL numeric code
-        if (preg_match('/: (\d{4})/', $message, $matches)) {
-            return $matches[1];
-        }
-        // PostgreSQL code
-        if (preg_match('/ERROR:\\s*([A-Z0-9]{5})/', $message, $matches)) {
-            return $matches[1];
-        }
-        return null;
     }
 }

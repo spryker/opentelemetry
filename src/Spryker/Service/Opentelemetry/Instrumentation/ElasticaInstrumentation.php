@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Copyright 2016-present Spryker Systems GmbH. All rights reserved.
+ * Copyright © 2016-present Spryker Systems GmbH. All rights reserved.
  * Use of this software requires acceptance of the Evaluation License Agreement. See LICENSE file.
  */
 
@@ -145,8 +145,10 @@ class ElasticaInstrumentation
                     return;
                 }
                 $method = $params[1];
+
                 $instrumentation = CachedInstrumentation::getCachedInstrumentation();
                 $context = Context::getCurrent();
+
                 $connection = $client->getConnection();
                 $host = $connection->getHost();
                 $port = $connection->getPort();
@@ -166,8 +168,6 @@ class ElasticaInstrumentation
                     ->setAttribute(TraceAttributes::HTTP_REQUEST_METHOD, $method)
                     ->setAttribute(TraceAttributes::SERVER_ADDRESS, $host)
                     ->setAttribute(TraceAttributes::SERVER_PORT, (int)$port)
-                    ->setAttribute(TraceAttributes::NETWORK_PEER_ADDRESS, $host)
-                    ->setAttribute(TraceAttributes::NETWORK_PEER_PORT, (int)$port)
                     ->startSpan();
                 Context::storage()->attach($span->storeInContext($context));
             },
@@ -175,25 +175,24 @@ class ElasticaInstrumentation
                 if (TraceSampleResult::shouldSkipTraceBody()) {
                     return;
                 }
+
                 $scope = Context::storage()->scope();
+
                 if ($scope === null) {
                     return;
                 }
+
                 $scope->detach();
                 $span = Span::fromContext($scope->context());
                 if ($exception !== null) {
                     $span->recordException($exception);
                     $span->setStatus(StatusCode::STATUS_ERROR);
                     $span->setAttribute(TraceAttributes::ERROR_TYPE, get_class($exception));
-                    if (method_exists($exception, 'getCode')) {
-                        $span->setAttribute(TraceAttributes::DB_RESPONSE_STATUS_CODE, $exception->getCode());
-                    }
                 } else {
-                    if (is_object($response) && method_exists($response, 'getQueryTime')) {
-                        $span->setAttribute(static::ATTRIBUTE_QUERY_TIME, $response->getQueryTime());
-                    }
+                    $span->setAttribute(static::ATTRIBUTE_QUERY_TIME, $response->getQueryTime());
                     $span->setStatus(StatusCode::STATUS_OK);
                 }
+
                 $span->end();
             },
         );
@@ -205,12 +204,14 @@ class ElasticaInstrumentation
                 if (TraceSampleResult::shouldSkipTraceBody()) {
                     return;
                 }
+
                 $instrumentation = CachedInstrumentation::getCachedInstrumentation();
                 $context = Context::getCurrent();
                 $connection = $client->getConnection();
                 $host = $connection->getHost();
                 $port = $connection->getPort();
                 $indexes = static::getIndexesIndexedByIdsFromDocuments($params[0]);
+
                 $span = $instrumentation->tracer()
                     ->spanBuilder(static::SPAN_NAME_UPDATE_DOCUMENTS)
                     ->setSpanKind(SpanKind::KIND_CLIENT)
@@ -221,34 +222,32 @@ class ElasticaInstrumentation
                     ->setAttribute(static::ATTRIBUTE_SEARCH_IDS, implode(',', array_keys($indexes)))
                     ->setAttribute(TraceAttributes::SERVER_ADDRESS, $host)
                     ->setAttribute(TraceAttributes::SERVER_PORT, (int)$port)
-                    ->setAttribute(TraceAttributes::NETWORK_PEER_ADDRESS, $host)
-                    ->setAttribute(TraceAttributes::NETWORK_PEER_PORT, (int)$port)
                     ->startSpan();
+
                 Context::storage()->attach($span->storeInContext($context));
             },
-            post: function (Client $client, array $params, $response, ?Throwable $exception) : void {
+            post: function (Client $client, array $params, $response, ?Throwable $exception): void {
                 if (TraceSampleResult::shouldSkipTraceBody()) {
                     return;
                 }
+
                 $scope = Context::storage()->scope();
+
                 if ($scope === null) {
                     return;
                 }
+
                 $scope->detach();
                 $span = Span::fromContext($scope->context());
                 if ($exception !== null) {
                     $span->recordException($exception);
                     $span->setStatus(StatusCode::STATUS_ERROR);
                     $span->setAttribute(TraceAttributes::ERROR_TYPE, get_class($exception));
-                    if (method_exists($exception, 'getCode')) {
-                        $span->setAttribute(TraceAttributes::DB_RESPONSE_STATUS_CODE, $exception->getCode());
-                    }
                 } else {
-                    if (is_object($response) && method_exists($response, 'getQueryTime')) {
-                        $span->setAttribute(static::ATTRIBUTE_QUERY_TIME, $response->getQueryTime());
-                    }
+                    $span->setAttribute(static::ATTRIBUTE_QUERY_TIME, $response->getQueryTime());
                     $span->setStatus(StatusCode::STATUS_OK);
                 }
+
                 $span->end();
             },
         );
@@ -260,12 +259,14 @@ class ElasticaInstrumentation
                 if (TraceSampleResult::shouldSkipTraceBody()) {
                     return;
                 }
+
                 $instrumentation = CachedInstrumentation::getCachedInstrumentation();
                 $context = Context::getCurrent();
                 $connection = $client->getConnection();
                 $host = $connection->getHost();
                 $port = $connection->getPort();
                 $indexes = static::getIndexesIndexedByIdsFromDocuments($params[0]);
+
                 $span = $instrumentation->tracer()
                     ->spanBuilder(static::SPAN_NAME_ADD_DOCUMENTS)
                     ->setSpanKind(SpanKind::KIND_CLIENT)
@@ -276,34 +277,31 @@ class ElasticaInstrumentation
                     ->setAttribute(static::ATTRIBUTE_SEARCH_IDS, implode(',', array_keys($indexes)))
                     ->setAttribute(TraceAttributes::SERVER_ADDRESS, $host)
                     ->setAttribute(TraceAttributes::SERVER_PORT, (int)$port)
-                    ->setAttribute(TraceAttributes::NETWORK_PEER_ADDRESS, $host)
-                    ->setAttribute(TraceAttributes::NETWORK_PEER_PORT, (int)$port)
                     ->startSpan();
                 Context::storage()->attach($span->storeInContext($context));
             },
-            post: function (Client $client, array $params, $response, ?Throwable $exception) : void {
+            post: function (Client $client, array $params, $response, ?Throwable $exception): void {
                 if (TraceSampleResult::shouldSkipTraceBody()) {
                     return;
                 }
+
                 $scope = Context::storage()->scope();
+
                 if ($scope === null) {
                     return;
                 }
+
                 $scope->detach();
                 $span = Span::fromContext($scope->context());
                 if ($exception !== null) {
                     $span->recordException($exception);
                     $span->setStatus(StatusCode::STATUS_ERROR);
                     $span->setAttribute(TraceAttributes::ERROR_TYPE, get_class($exception));
-                    if (method_exists($exception, 'getCode')) {
-                        $span->setAttribute(TraceAttributes::DB_RESPONSE_STATUS_CODE, $exception->getCode());
-                    }
                 } else {
-                    if (is_object($response) && method_exists($response, 'getQueryTime')) {
-                        $span->setAttribute(static::ATTRIBUTE_QUERY_TIME, $response->getQueryTime());
-                    }
+                    $span->setAttribute(static::ATTRIBUTE_QUERY_TIME, $response->getQueryTime());
                     $span->setStatus(StatusCode::STATUS_OK);
                 }
+
                 $span->end();
             },
         );
@@ -330,34 +328,32 @@ class ElasticaInstrumentation
                     ->setAttribute(static::ATTRIBUTE_SEARCH_INDEX, $params[2])
                     ->setAttribute(TraceAttributes::SERVER_ADDRESS, $host)
                     ->setAttribute(TraceAttributes::SERVER_PORT, (int)$port)
-                    ->setAttribute(TraceAttributes::NETWORK_PEER_ADDRESS, $host)
-                    ->setAttribute(TraceAttributes::NETWORK_PEER_PORT, (int)$port)
                     ->startSpan();
+
                 Context::storage()->attach($span->storeInContext($context));
             },
-            post: function (Client $client, array $params, $response, ?Throwable $exception) : void {
+            post: function (Client $client, array $params, $response, ?Throwable $exception): void {
                 if (TraceSampleResult::shouldSkipTraceBody()) {
                     return;
                 }
+
                 $scope = Context::storage()->scope();
+
                 if ($scope === null) {
                     return;
                 }
+
                 $scope->detach();
                 $span = Span::fromContext($scope->context());
                 if ($exception !== null) {
                     $span->recordException($exception);
                     $span->setStatus(StatusCode::STATUS_ERROR);
                     $span->setAttribute(TraceAttributes::ERROR_TYPE, get_class($exception));
-                    if (method_exists($exception, 'getCode')) {
-                        $span->setAttribute(TraceAttributes::DB_RESPONSE_STATUS_CODE, $exception->getCode());
-                    }
                 } else {
-                    if (is_object($response) && method_exists($response, 'getQueryTime')) {
-                        $span->setAttribute(static::ATTRIBUTE_QUERY_TIME, $response->getQueryTime());
-                    }
+                    $span->setAttribute(static::ATTRIBUTE_QUERY_TIME, $response->getQueryTime());
                     $span->setStatus(StatusCode::STATUS_OK);
                 }
+
                 $span->end();
             },
         );
@@ -369,12 +365,14 @@ class ElasticaInstrumentation
                 if (TraceSampleResult::shouldSkipTraceBody()) {
                     return;
                 }
+
                 $instrumentation = CachedInstrumentation::getCachedInstrumentation();
                 $context = Context::getCurrent();
                 $connection = $client->getConnection();
                 $host = $connection->getHost();
                 $port = $connection->getPort();
                 $indexes = static::getIndexesIndexedByIdsFromDocuments($params[0]);
+
                 $span = $instrumentation->tracer()
                     ->spanBuilder(static::SPAN_NAME_DELETE_DOCUMENTS)
                     ->setSpanKind(SpanKind::KIND_CLIENT)
@@ -385,34 +383,32 @@ class ElasticaInstrumentation
                     ->setAttribute(static::ATTRIBUTE_SEARCH_IDS, implode(',', array_keys($indexes)))
                     ->setAttribute(TraceAttributes::SERVER_ADDRESS, $host)
                     ->setAttribute(TraceAttributes::SERVER_PORT, (int)$port)
-                    ->setAttribute(TraceAttributes::NETWORK_PEER_ADDRESS, $host)
-                    ->setAttribute(TraceAttributes::NETWORK_PEER_PORT, (int)$port)
                     ->startSpan();
+
                 Context::storage()->attach($span->storeInContext($context));
             },
-            post: function (Client $client, array $params, $response, ?Throwable $exception) : void {
+            post: function (Client $client, array $params, $response, ?Throwable $exception): void {
                 if (TraceSampleResult::shouldSkipTraceBody()) {
                     return;
                 }
+
                 $scope = Context::storage()->scope();
+
                 if ($scope === null) {
                     return;
                 }
+
                 $scope->detach();
                 $span = Span::fromContext($scope->context());
                 if ($exception !== null) {
                     $span->recordException($exception);
                     $span->setStatus(StatusCode::STATUS_ERROR);
                     $span->setAttribute(TraceAttributes::ERROR_TYPE, get_class($exception));
-                    if (method_exists($exception, 'getCode')) {
-                        $span->setAttribute(TraceAttributes::DB_RESPONSE_STATUS_CODE, $exception->getCode());
-                    }
                 } else {
-                    if (is_object($response) && method_exists($response, 'getQueryTime')) {
-                        $span->setAttribute(static::ATTRIBUTE_QUERY_TIME, $response->getQueryTime());
-                    }
+                    $span->setAttribute(static::ATTRIBUTE_QUERY_TIME, $response->getQueryTime());
                     $span->setStatus(StatusCode::STATUS_OK);
                 }
+
                 $span->end();
             },
         );
@@ -424,12 +420,14 @@ class ElasticaInstrumentation
                 if (TraceSampleResult::shouldSkipTraceBody()) {
                     return;
                 }
+
                 $instrumentation = CachedInstrumentation::getCachedInstrumentation();
                 $context = Context::getCurrent();
                 $connection = $client->getConnection();
                 $host = $connection->getHost();
                 $port = $connection->getPort();
                 $indexes = static::getIndexesIndexedByIdsFromDocuments($params[0]);
+
                 $span = $instrumentation->tracer()
                     ->spanBuilder(static::SPAN_NAME_DELETE_IDS)
                     ->setSpanKind(SpanKind::KIND_CLIENT)
@@ -440,34 +438,32 @@ class ElasticaInstrumentation
                     ->setAttribute(static::ATTRIBUTE_SEARCH_IDS, implode(',', array_keys($indexes)))
                     ->setAttribute(TraceAttributes::SERVER_ADDRESS, $host)
                     ->setAttribute(TraceAttributes::SERVER_PORT, (int)$port)
-                    ->setAttribute(TraceAttributes::NETWORK_PEER_ADDRESS, $host)
-                    ->setAttribute(TraceAttributes::NETWORK_PEER_PORT, (int)$port)
                     ->startSpan();
+
                 Context::storage()->attach($span->storeInContext($context));
             },
-            post: function (Client $client, array $params, $response, ?Throwable $exception) : void {
+            post: function (Client $client, array $params, $response, ?Throwable $exception): void {
                 if (TraceSampleResult::shouldSkipTraceBody()) {
                     return;
                 }
+
                 $scope = Context::storage()->scope();
+
                 if ($scope === null) {
                     return;
                 }
+
                 $scope->detach();
                 $span = Span::fromContext($scope->context());
                 if ($exception !== null) {
                     $span->recordException($exception);
                     $span->setStatus(StatusCode::STATUS_ERROR);
                     $span->setAttribute(TraceAttributes::ERROR_TYPE, get_class($exception));
-                    if (method_exists($exception, 'getCode')) {
-                        $span->setAttribute(TraceAttributes::DB_RESPONSE_STATUS_CODE, $exception->getCode());
-                    }
                 } else {
-                    if (is_object($response) && method_exists($response, 'getQueryTime')) {
-                        $span->setAttribute(static::ATTRIBUTE_QUERY_TIME, $response->getQueryTime());
-                    }
+                    $span->setAttribute(static::ATTRIBUTE_QUERY_TIME, $response->getQueryTime());
                     $span->setStatus(StatusCode::STATUS_OK);
                 }
+
                 $span->end();
             },
         );

@@ -76,8 +76,6 @@ class GuzzleInstrumentation
                     ->setAttribute(TraceAttributes::CODE_LINE_NUMBER, $lineno)
                     ->setAttribute(TraceAttributes::SERVER_ADDRESS, $uriObject->getHost())
                     ->setAttribute(TraceAttributes::SERVER_PORT, $uriObject->getPort() ?: 80)
-                    ->setAttribute(TraceAttributes::NETWORK_PEER_ADDRESS, $uriObject->getHost())
-                    ->setAttribute(TraceAttributes::NETWORK_PEER_PORT, $uriObject->getPort() ?: 80)
                     ->setAttribute(TraceAttributes::URL_PATH, $uriObject->getPath())
                     ->setAttribute(TraceAttributes::URL_FULL, $url)
                     ->setAttribute(TraceAttributes::HTTP_REQUEST_METHOD, $method)
