@@ -116,6 +116,7 @@ class PropelInstrumentation
 
                 if ($exception !== null) {
                     $span->recordException($exception);
+                    $span->setAttribute(TraceAttributes::ERROR_TYPE, get_class($exception));
                     $span->setStatus(StatusCode::STATUS_ERROR);
                 } else {
                     $span->setStatus(StatusCode::STATUS_OK);
