@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Copyright © 2016-present Spryker Systems GmbH. All rights reserved.
+ * Copyright 2016-present Spryker Systems GmbH. All rights reserved.
  * Use of this software requires acceptance of the Evaluation License Agreement. See LICENSE file.
  */
 
@@ -73,6 +73,16 @@ class RabbitMqInstrumentation
     /**
      * @var string
      */
+    protected const FUNCTION_ACKNOWLEDGE = 'acknowledge';
+
+    /**
+     * @var string
+     */
+    protected const FUNCTION_REJECT = 'reject';
+
+    /**
+     * @var string
+     */
     protected const SPAN_NAME_RECEIVE_MESSAGE = 'rabbitmq-receiveMessage';
 
     /**
@@ -83,7 +93,42 @@ class RabbitMqInstrumentation
     /**
      * @var string
      */
+    protected const SPAN_NAME_ACKNOWLEDGE = 'rabbitmq-acknowledge';
+
+    /**
+     * @var string
+     */
+    protected const SPAN_NAME_REJECT = 'rabbitmq-reject';
+
+    /**
+     * @var string
+     */
     protected const MESSAGING_SYSTEM_VALUE = 'rabbitmq';
+
+    /**
+     * @var string
+     */
+    protected const SEND = 'send';
+
+    /**
+     * @var string
+     */
+    protected const RECEIVE = 'receive';
+
+    /**
+     * @var string
+     */
+    protected const ACK = 'ack';
+
+    /**
+     * @var string
+     */
+    protected const NACK = 'nack';
+
+    /**
+     * @var string
+     */
+    protected const SETTLE = 'settle';
 
     /**
      * @return void
@@ -94,23 +139,43 @@ class RabbitMqInstrumentation
             static::FUNCTION_SEND_MESSAGE => [
                 static::SPAN_NAME_SEND_MESSAGE,
                 SpanKind::KIND_PRODUCER,
+                static::SEND,
+                static::SEND,
             ],
             static::FUNCTION_SEND_MESSAGES => [
                 static::SPAN_NAME_SEND_MESSAGES,
                 SpanKind::KIND_PRODUCER,
+                static::SEND,
+                static::SEND,
             ],
             static::FUNCTION_RECEIVE_MESSAGE => [
                 static::SPAN_NAME_RECEIVE_MESSAGE,
                 SpanKind::KIND_CONSUMER,
+                static::RECEIVE,
+                static::RECEIVE,
             ],
             static::FUNCTION_RECEIVE_MESSAGES => [
                 static::SPAN_NAME_RECEIVE_MESSAGES,
                 SpanKind::KIND_CONSUMER,
+                static::RECEIVE,
+                static::RECEIVE,
+            ],
+            static::FUNCTION_ACKNOWLEDGE => [
+                static::SPAN_NAME_ACKNOWLEDGE,
+                SpanKind::KIND_CONSUMER,
+                static::ACK,
+                static::SETTLE,
+            ],
+            static::FUNCTION_REJECT => [
+                static::SPAN_NAME_REJECT,
+                SpanKind::KIND_CONSUMER,
+                static::NACK,
+                static::SETTLE,
             ],
         ];
 
         foreach ($functions as $function => $spanName) {
-            static::registerHook($function, $spanName[0], $spanName[1]);
+            static::registerHook($function, $spanName[0], $spanName[1], $spanName[2], $spanName[3]);
         }
     }
 
@@ -121,7 +186,7 @@ class RabbitMqInstrumentation
      *
      * @return void
      */
-    protected static function registerHook(string $functionName, string $spanName, int $spanKind): void
+    protected static function registerHook(string $functionName, string $spanName, int $spanKind, string $operationName, string $operationType): void
     {
         //BC check
         if (class_exists('\Spryker\Service\OtelRabbitMqInstrumentation\OpenTelemetry\RabbitMqInstrumentation')) {
@@ -138,7 +203,7 @@ class RabbitMqInstrumentation
         hook(
             class: RabbitMqAdapter::class,
             function: $functionName,
-            pre: function (RabbitMqAdapter $rabbitMqAdapter, array $params) use ($instrumentation, $spanName, $request, $spanKind): void {
+            pre: function (RabbitMqAdapter $rabbitMqAdapter, array $params) use ($instrumentation, $spanName, $request, $spanKind, $operationName, $operationType): void {
                 if (TraceSampleResult::shouldSkipTraceBody()) {
                     return;
                 }
@@ -150,7 +215,11 @@ class RabbitMqInstrumentation
                     ->setAttribute(TraceAttributes::MESSAGING_SYSTEM, static::MESSAGING_SYSTEM_VALUE)
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(TraceAttributes::HTTP_REQUEST_METHOD, $request->getMethod())
-                    ->setAttribute(TraceAttributes::MESSAGING_DESTINATION_NAME, $params[0]);
+                    ->setAttribute(TraceAttributes::MESSAGING_DESTINATION_NAME, $params[0])
+                    ->setAttribute(TraceAttributes::MESSAGING_OPERATION_TYPE, $operationType)
+                    ->setAttribute(TraceAttributes::MESSAGING_OPERATION_NAME, $operationName)
+                    ->setAttribute(TraceAttributes::SERVER_ADDRESS, static::getHost())
+                    ->setAttribute(TraceAttributes::SERVER_PORT, static::getPort());
 
                 if (static::isValidMessage($params)) {
                     $eventQueueSendMessageBodyArray = json_decode($params[1][0]->getBody(), true);
@@ -184,6 +253,9 @@ class RabbitMqInstrumentation
                 if ($exception !== null) {
                     $span->recordException($exception);
                     $span->setStatus(StatusCode::STATUS_ERROR);
+                    $span->setAttribute(TraceAttributes::ERROR_TYPE, get_class($exception));
+                    $span->setAttribute(TraceAttributes::MESSAGING_OPERATION_NAME, static::NACK);
+                    $span->setAttribute(TraceAttributes::MESSAGING_OPERATION_TYPE, static::SETTLE);
                 } else {
                     $span->setStatus(StatusCode::STATUS_OK);
                 }
@@ -208,5 +280,21 @@ class RabbitMqInstrumentation
 
         return $queueSendMessageTransfer instanceof QueueSendMessageTransfer
             && is_string($queueSendMessageTransfer->getBody());
+    }
+
+    /**
+     * @return string
+     */
+    protected static function getHost(): string
+    {
+        return getenv('SPRYKER_BROKER_HOST') ?: 'localhost';
+    }
+
+    /**
+     * @return int
+     */
+    protected static function getPort(): int
+    {
+        return getenv('SPRYKER_BROKER_PORT') ?: 5672;
     }
 }

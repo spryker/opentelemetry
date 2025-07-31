@@ -98,14 +98,13 @@ class RedisInstrumentation
                             : 'undefined'
                     )
                     ->setAttributes(static::getQueryAttributes(static::OPERATION_GET, $params))
+                    ->setAttribute(TraceAttributes::SERVER_ADDRESS, static::getRedisHost())
+                    ->setAttribute(TraceAttributes::SERVER_PORT, static::getRedisPort())
                     ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));
             },
-            post: static function (RedisAdapterInterface $redis, array $params, mixed $ret, ?Throwable $exception): void {
-                if (TraceSampleResult::shouldSkipTraceBody()) {
-                    return;
-                }
+            post: static function (RedisAdapterInterface $redis, array $params, $response, ?Throwable $exception): void {
                 $scope = Context::storage()->scope();
 
                 if ($scope === null) {
@@ -143,6 +142,8 @@ class RedisInstrumentation
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(TraceAttributes::DB_QUERY_TEXT, implode(' ', $params[0]))
                     ->setAttributes(static::getQueryAttributes(static::OPERATION_MGET, $params))
+                    ->setAttribute(TraceAttributes::SERVER_ADDRESS, static::getRedisHost())
+                    ->setAttribute(TraceAttributes::SERVER_PORT, static::getRedisPort())
                     ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));
@@ -187,6 +188,8 @@ class RedisInstrumentation
                     ->setAttribute(TraceAttributes::DB_SYSTEM_NAME, static::DB_SYSTEM_NAME)
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(static::ATTRIBUTE_EVAL_SCRIPT, $params[0] ?? 'undefined')
+                    ->setAttribute(TraceAttributes::SERVER_ADDRESS, static::getRedisHost())
+                    ->setAttribute(TraceAttributes::SERVER_PORT, static::getRedisPort())
                     ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));
@@ -232,6 +235,8 @@ class RedisInstrumentation
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(TraceAttributes::DB_QUERY_TEXT, implode(' ', array_keys($params[0])))
                     ->setAttributes(static::getQueryAttributes(static::OPERATION_MSET, $params))
+                    ->setAttribute(TraceAttributes::SERVER_ADDRESS, static::getRedisHost())
+                    ->setAttribute(TraceAttributes::SERVER_PORT, static::getRedisPort())
                     ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));
@@ -277,6 +282,8 @@ class RedisInstrumentation
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(TraceAttributes::DB_QUERY_TEXT, $params[0] ?? 'undefined')
                     ->setAttributes(static::getQueryAttributes(static::OPERATION_SET, $params))
+                    ->setAttribute(TraceAttributes::SERVER_ADDRESS, static::getRedisHost())
+                    ->setAttribute(TraceAttributes::SERVER_PORT, static::getRedisPort())
                     ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));
@@ -323,6 +330,8 @@ class RedisInstrumentation
                     ->setAttribute(TraceAttributes::DB_QUERY_TEXT, $params[0] ?? 'undefined')
                     ->setAttribute(static::PARAM_EXPIRATION, $params[0] ?? 'undefined')
                     ->setAttributes(static::getQueryAttributes(static::OPERATION_SETEX, $params))
+                    ->setAttribute(TraceAttributes::SERVER_ADDRESS, static::getRedisHost())
+                    ->setAttribute(TraceAttributes::SERVER_PORT, static::getRedisPort())
                     ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));
@@ -363,7 +372,7 @@ class RedisInstrumentation
     {
         $tablename = 'undefined';
 
-        if(isset($params[0]) && is_string($params[0])) {
+        if (isset($params[0]) && is_string($params[0])) {
             $split = explode(':', $params[0]);
             $tablename = $split[0] ?? 'undefined';
         }
@@ -373,5 +382,21 @@ class RedisInstrumentation
             TraceAttributes::DB_COLLECTION_NAME => $tablename,
             TraceAttributes::DB_QUERY_SUMMARY => $operation . ' ' . $tablename,
         ];
+    }
+
+    /**
+     * @return string
+     */
+    protected static function getRedisHost(): string
+    {
+        return getenv('SPRYKER_KEY_VALUE_STORE_HOST') ?: 'localhost';
+    }
+
+    /**
+     * @return int
+     */
+    protected static function getRedisPort(): int
+    {
+        return getenv('SPRYKER_KEY_VALUE_STORE_PORT') ?: 6379;
     }
 }

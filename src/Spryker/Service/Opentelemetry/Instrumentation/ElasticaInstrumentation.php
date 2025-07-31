@@ -150,7 +150,9 @@ class ElasticaInstrumentation
                 $context = Context::getCurrent();
 
                 $connection = $client->getConnection();
-                $url = sprintf('%s://%s:%s/%s', strtolower($connection->getTransport()), $connection->getHost(), $connection->getPort(), $params[0]);
+                $host = $connection->getHost();
+                $port = $connection->getPort();
+                $url = sprintf('%s://%s:%s/%s', strtolower($connection->getTransport()), $host, $port, $params[0]);
                 if ($params[3] !== []) {
                     $url .= '?' . \http_build_query(static::sanityzeQueryStringBool($params[3]));
                 }
@@ -164,11 +166,12 @@ class ElasticaInstrumentation
                     ->setAttribute(TraceAttributes::DB_QUERY_TEXT, serialize($params[2]))
                     ->setAttribute(TraceAttributes::URL_FULL, $url)
                     ->setAttribute(TraceAttributes::HTTP_REQUEST_METHOD, $method)
+                    ->setAttribute(TraceAttributes::SERVER_ADDRESS, $host)
+                    ->setAttribute(TraceAttributes::SERVER_PORT, (int)$port)
                     ->startSpan();
-
                 Context::storage()->attach($span->storeInContext($context));
             },
-            post: function (Client $client, array $params, $response, ?Throwable $exception): void {
+            post: function (Client $client, array $params, $response, ?Throwable $exception) : void {
                 if (TraceSampleResult::shouldSkipTraceBody()) {
                     return;
                 }
@@ -184,6 +187,7 @@ class ElasticaInstrumentation
                 if ($exception !== null) {
                     $span->recordException($exception);
                     $span->setStatus(StatusCode::STATUS_ERROR);
+                    $span->setAttribute(TraceAttributes::ERROR_TYPE, get_class($exception));
                 } else {
                     $span->setAttribute(static::ATTRIBUTE_QUERY_TIME, $response->getQueryTime());
                     $span->setStatus(StatusCode::STATUS_OK);
@@ -203,7 +207,9 @@ class ElasticaInstrumentation
 
                 $instrumentation = CachedInstrumentation::getCachedInstrumentation();
                 $context = Context::getCurrent();
-
+                $connection = $client->getConnection();
+                $host = $connection->getHost();
+                $port = $connection->getPort();
                 $indexes = static::getIndexesIndexedByIdsFromDocuments($params[0]);
 
                 $span = $instrumentation->tracer()
@@ -214,6 +220,8 @@ class ElasticaInstrumentation
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(static::ATTRIBUTE_SEARCH_INDEXES, implode(',', $indexes))
                     ->setAttribute(static::ATTRIBUTE_SEARCH_IDS, implode(',', array_keys($indexes)))
+                    ->setAttribute(TraceAttributes::SERVER_ADDRESS, $host)
+                    ->setAttribute(TraceAttributes::SERVER_PORT, (int)$port)
                     ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));
@@ -234,6 +242,7 @@ class ElasticaInstrumentation
                 if ($exception !== null) {
                     $span->recordException($exception);
                     $span->setStatus(StatusCode::STATUS_ERROR);
+                    $span->setAttribute(TraceAttributes::ERROR_TYPE, get_class($exception));
                 } else {
                     $span->setAttribute(static::ATTRIBUTE_QUERY_TIME, $response->getQueryTime());
                     $span->setStatus(StatusCode::STATUS_OK);
@@ -253,7 +262,9 @@ class ElasticaInstrumentation
 
                 $instrumentation = CachedInstrumentation::getCachedInstrumentation();
                 $context = Context::getCurrent();
-
+                $connection = $client->getConnection();
+                $host = $connection->getHost();
+                $port = $connection->getPort();
                 $indexes = static::getIndexesIndexedByIdsFromDocuments($params[0]);
 
                 $span = $instrumentation->tracer()
@@ -264,8 +275,9 @@ class ElasticaInstrumentation
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(static::ATTRIBUTE_SEARCH_INDEXES, implode(',', $indexes))
                     ->setAttribute(static::ATTRIBUTE_SEARCH_IDS, implode(',', array_keys($indexes)))
+                    ->setAttribute(TraceAttributes::SERVER_ADDRESS, $host)
+                    ->setAttribute(TraceAttributes::SERVER_PORT, (int)$port)
                     ->startSpan();
-
                 Context::storage()->attach($span->storeInContext($context));
             },
             post: function (Client $client, array $params, $response, ?Throwable $exception): void {
@@ -284,6 +296,7 @@ class ElasticaInstrumentation
                 if ($exception !== null) {
                     $span->recordException($exception);
                     $span->setStatus(StatusCode::STATUS_ERROR);
+                    $span->setAttribute(TraceAttributes::ERROR_TYPE, get_class($exception));
                 } else {
                     $span->setAttribute(static::ATTRIBUTE_QUERY_TIME, $response->getQueryTime());
                     $span->setStatus(StatusCode::STATUS_OK);
@@ -300,10 +313,11 @@ class ElasticaInstrumentation
                 if (TraceSampleResult::shouldSkipTraceBody()) {
                     return;
                 }
-
                 $instrumentation = CachedInstrumentation::getCachedInstrumentation();
                 $context = Context::getCurrent();
-
+                $connection = $client->getConnection();
+                $host = $connection->getHost();
+                $port = $connection->getPort();
                 $span = $instrumentation->tracer()
                     ->spanBuilder(static::SPAN_NAME_UPDATE_DOCUMENT)
                     ->setSpanKind(SpanKind::KIND_CLIENT)
@@ -312,6 +326,8 @@ class ElasticaInstrumentation
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(static::ATTRIBUTE_SEARCH_ID, $params[0])
                     ->setAttribute(static::ATTRIBUTE_SEARCH_INDEX, $params[2])
+                    ->setAttribute(TraceAttributes::SERVER_ADDRESS, $host)
+                    ->setAttribute(TraceAttributes::SERVER_PORT, (int)$port)
                     ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));
@@ -332,6 +348,7 @@ class ElasticaInstrumentation
                 if ($exception !== null) {
                     $span->recordException($exception);
                     $span->setStatus(StatusCode::STATUS_ERROR);
+                    $span->setAttribute(TraceAttributes::ERROR_TYPE, get_class($exception));
                 } else {
                     $span->setAttribute(static::ATTRIBUTE_QUERY_TIME, $response->getQueryTime());
                     $span->setStatus(StatusCode::STATUS_OK);
@@ -351,7 +368,9 @@ class ElasticaInstrumentation
 
                 $instrumentation = CachedInstrumentation::getCachedInstrumentation();
                 $context = Context::getCurrent();
-
+                $connection = $client->getConnection();
+                $host = $connection->getHost();
+                $port = $connection->getPort();
                 $indexes = static::getIndexesIndexedByIdsFromDocuments($params[0]);
 
                 $span = $instrumentation->tracer()
@@ -362,6 +381,8 @@ class ElasticaInstrumentation
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(static::ATTRIBUTE_SEARCH_INDEXES, implode(',', $indexes))
                     ->setAttribute(static::ATTRIBUTE_SEARCH_IDS, implode(',', array_keys($indexes)))
+                    ->setAttribute(TraceAttributes::SERVER_ADDRESS, $host)
+                    ->setAttribute(TraceAttributes::SERVER_PORT, (int)$port)
                     ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));
@@ -382,6 +403,7 @@ class ElasticaInstrumentation
                 if ($exception !== null) {
                     $span->recordException($exception);
                     $span->setStatus(StatusCode::STATUS_ERROR);
+                    $span->setAttribute(TraceAttributes::ERROR_TYPE, get_class($exception));
                 } else {
                     $span->setAttribute(static::ATTRIBUTE_QUERY_TIME, $response->getQueryTime());
                     $span->setStatus(StatusCode::STATUS_OK);
@@ -401,7 +423,9 @@ class ElasticaInstrumentation
 
                 $instrumentation = CachedInstrumentation::getCachedInstrumentation();
                 $context = Context::getCurrent();
-
+                $connection = $client->getConnection();
+                $host = $connection->getHost();
+                $port = $connection->getPort();
                 $indexes = static::getIndexesIndexedByIdsFromDocuments($params[0]);
 
                 $span = $instrumentation->tracer()
@@ -412,6 +436,8 @@ class ElasticaInstrumentation
                     ->setAttribute(CriticalSpanRatioSampler::IS_CRITICAL_ATTRIBUTE, true)
                     ->setAttribute(static::ATTRIBUTE_SEARCH_INDEXES, implode(',', $indexes))
                     ->setAttribute(static::ATTRIBUTE_SEARCH_IDS, implode(',', array_keys($indexes)))
+                    ->setAttribute(TraceAttributes::SERVER_ADDRESS, $host)
+                    ->setAttribute(TraceAttributes::SERVER_PORT, (int)$port)
                     ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));
@@ -432,6 +458,7 @@ class ElasticaInstrumentation
                 if ($exception !== null) {
                     $span->recordException($exception);
                     $span->setStatus(StatusCode::STATUS_ERROR);
+                    $span->setAttribute(TraceAttributes::ERROR_TYPE, get_class($exception));
                 } else {
                     $span->setAttribute(static::ATTRIBUTE_QUERY_TIME, $response->getQueryTime());
                     $span->setStatus(StatusCode::STATUS_OK);

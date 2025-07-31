@@ -62,12 +62,15 @@ class PropelInstrumentation
             return;
         }
 
+        $dbHost = getenv('SPRYKER_DB_HOST') ?: 'localhost';
+        $dbPort = getenv('SPRYKER_DB_PORT') ?: 3306;
+        $dbName = getenv('SPRYKER_DB_DATABASE') ?: static::UNDEFINED;
         $dbEngine = strtolower((getenv('SPRYKER_DB_ENGINE') ?: '')) ?: 'mysql';
 
         hook(
             class: StatementInterface::class,
             function: static::METHOD_NAME,
-            pre: function (StatementInterface $statement, array $params) use ($dbEngine): void {
+            pre: function (StatementInterface $statement, array $params) use ($dbEngine, $dbHost, $dbPort, $dbName): void {
                 if (TraceSampleResult::shouldSkipTraceBody()) {
                     return;
                 }
@@ -84,6 +87,9 @@ class PropelInstrumentation
                     ->setAttribute(TraceAttributes::DB_SYSTEM_NAME, $dbEngine)
                     ->setAttribute(TraceAttributes::DB_QUERY_TEXT, $query)
                     ->setAttributes(static::getQueryAttributes($statement))
+                    ->setAttribute(TraceAttributes::DB_NAMESPACE, $dbName)
+                    ->setAttribute(TraceAttributes::SERVER_ADDRESS, $dbHost)
+                    ->setAttribute(TraceAttributes::SERVER_PORT, (int)$dbPort)
                     ->startSpan();
 
                 Context::storage()->attach($span->storeInContext($context));
@@ -110,6 +116,7 @@ class PropelInstrumentation
 
                 if ($exception !== null) {
                     $span->recordException($exception);
+                    $span->setAttribute(TraceAttributes::ERROR_TYPE, get_class($exception));
                     $span->setStatus(StatusCode::STATUS_ERROR);
                 } else {
                     $span->setStatus(StatusCode::STATUS_OK);
