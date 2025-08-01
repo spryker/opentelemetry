@@ -43,6 +43,11 @@ class RabbitMqInstrumentation
     /**
      * @var string
      */
+    protected const ATTRIBUTE_EVENT_NAME = 'spr.event.eventName';
+
+    /**
+     * @var string
+     */
     protected const SPAN_NAME_SEND_MESSAGES = 'rabbitmq-sendMessages';
 
     /**
@@ -224,7 +229,8 @@ class RabbitMqInstrumentation
                 if (static::isValidMessage($params)) {
                     $eventQueueSendMessageBodyArray = json_decode($params[1][0]->getBody(), true);
                     if (array_key_exists(EventQueueSendMessageBodyTransfer::EVENT_NAME, $eventQueueSendMessageBodyArray)) {
-                        $span->setAttribute(TraceAttributes::EVENT_NAME, $eventQueueSendMessageBodyArray[EventQueueSendMessageBodyTransfer::EVENT_NAME]);
+                        $span->setAttribute(static::ATTRIBUTE_EVENT_NAME, $eventQueueSendMessageBodyArray[EventQueueSendMessageBodyTransfer::EVENT_NAME]);
+
                     }
                     if (array_key_exists(EventQueueSendMessageBodyTransfer::LISTENER_CLASS_NAME, $eventQueueSendMessageBodyArray)) {
                         $span->setAttribute(static::ATTRIBUTE_EVENT_LISTENER_CLASS_NAME, $eventQueueSendMessageBodyArray[EventQueueSendMessageBodyTransfer::LISTENER_CLASS_NAME]);
