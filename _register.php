@@ -14,6 +14,10 @@ if (!class_exists(Sdk::class)) {
     return;
 }
 
+if (getenv('OTEL_SDK_DISABLED') === false) {
+    return;
+}
+
 if (Sdk::isDisabled()) {
     return;
 }
