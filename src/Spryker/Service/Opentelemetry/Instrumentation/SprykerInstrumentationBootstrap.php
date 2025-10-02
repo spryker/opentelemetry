@@ -67,7 +67,7 @@ class SprykerInstrumentationBootstrap
     /**
      * @var string Version of the instrumentation. Must be equal to the release version. This version is shown in the traces.
      */
-    public const INSTRUMENTATION_VERSION = '1.17.1';
+    public const INSTRUMENTATION_VERSION = '1.17.0';
 
     /**
      * @var string Default span name placeholder for root spans. By default the first placeholder is for HTTP method and the second one for the route.
