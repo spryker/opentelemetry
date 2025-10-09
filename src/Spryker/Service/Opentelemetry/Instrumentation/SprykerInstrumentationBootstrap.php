@@ -67,7 +67,7 @@ class SprykerInstrumentationBootstrap
     /**
      * @var string Version of the instrumentation. Must be equal to the release version. This version is shown in the traces.
      */
-    public const INSTRUMENTATION_VERSION = '1.17.0';
+    public const INSTRUMENTATION_VERSION = '1.18.0';
 
     /**
      * @var string Default span name placeholder for root spans. By default the first placeholder is for HTTP method and the second one for the route.
@@ -98,6 +98,11 @@ class SprykerInstrumentationBootstrap
      * @var string The name of the root span if no other mechanism was executed during the request.
      */
     protected const FINAL_HTTP_ROOT_SPAN_NAME = '/*';
+
+    /**
+     * @var string Attribute to store the host of the request.
+     */
+    protected const HOST_ATTRIBUTE = 'host';
 
     /**
      * @var \Spryker\Service\Opentelemetry\Instrumentation\Resource\ResourceInfo|null
@@ -486,7 +491,9 @@ class SprykerInstrumentationBootstrap
 
         $span->setStatus(static::getSpanStatus());
 
-        $span->setAttributes($customParamsStorage->getAttributes());
+        $attributes = static::ensureValidHostAttribute($customParamsStorage->getAttributes(), $request);
+
+        $span->setAttributes($attributes);
         $span->end();
     }
 
@@ -607,5 +614,35 @@ class SprykerInstrumentationBootstrap
     protected static function getFactoryResolver(): AbstractClassResolver
     {
         return new FactoryResolver();
+    }
+
+    /**
+     * Fixes invalid host attribute in attributes array by replacing it with correct host from request.
+     *
+     * @param array<string, mixed> $attributes
+     * @param \Symfony\Component\HttpFoundation\Request $request
+     *
+     * @return array<string, mixed>
+     */
+    protected static function ensureValidHostAttribute(array $attributes, Request $request): array
+    {
+        $hostAttribute = $attributes[static::HOST_ATTRIBUTE] ?? null;
+        if ($hostAttribute && is_string($hostAttribute) && static::isInvalidHost($hostAttribute)) {
+            $attributes[static::HOST_ATTRIBUTE] = $request->getHost();
+        }
+
+        return $attributes;
+    }
+
+    /**
+     * Checks if host value looks like a path (contains '/') and is therefore invalid.
+     *
+     * @param string $host
+     *
+     * @return bool
+     */
+    protected static function isInvalidHost(string $host): bool
+    {
+        return str_contains($host, '/');
     }
 }
