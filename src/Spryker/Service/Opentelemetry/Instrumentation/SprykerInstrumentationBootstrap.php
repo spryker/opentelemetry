@@ -491,7 +491,7 @@ class SprykerInstrumentationBootstrap
 
         $span->setStatus(static::getSpanStatus());
 
-        $attributes = static::ensureValidHostAttribute($customParamsStorage->getAttributes(), $request);
+        $attributes = static::validateAttributes($customParamsStorage->getAttributes(), $request);
 
         $span->setAttributes($attributes);
         $span->end();
@@ -614,6 +614,21 @@ class SprykerInstrumentationBootstrap
     protected static function getFactoryResolver(): AbstractClassResolver
     {
         return new FactoryResolver();
+    }
+
+    /**
+     * Validates attributes array by ensuring they are valid.
+     *
+     * @param array<string, mixed> $attributes
+     * @param \Symfony\Component\HttpFoundation\Request $request
+     *
+     * @return array<string, mixed>
+     */
+    protected static function validateAttributes(array $attributes, Request $request): array
+    {
+        $attributes = static::ensureValidHostAttribute($attributes, $request);
+
+        return $attributes;
     }
 
     /**
