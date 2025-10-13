@@ -62,7 +62,10 @@ class SpanExporter implements SpanExporterInterface
                 return true;
             })
             ->catch(static function (Throwable $throwable): bool {
-                self::logError('Export failure', ['exception' => $throwable]);
+                self::logError(
+                    sprintf('Export failure: %s', $throwable->getMessage()),
+                    ['error_type' => get_class($throwable)]
+                );
 
                 return false;
             });
