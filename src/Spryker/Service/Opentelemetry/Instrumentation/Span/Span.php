@@ -259,9 +259,9 @@ class Span extends OtelSpan implements ReadWriteSpanInterface, SpanDataInterface
         $timestamp ??= Clock::getDefault()->now();
         $eventAttributesBuilder = $this->spanLimits->getEventAttributesFactory()->builder([
             'exception.type' => $exception::class,
-            'exception.message' => $exception->getMessage(),
-            'exception.previous_message' => $exception->getPrevious()?->getMessage(),
-            'exception.stacktrace' => StackTraceFormatter::format($exception),
+            'exception.message' => $this->sanitizeExceptionMessage($exception->getMessage()),
+            'exception.previous_message' => $this->sanitizeExceptionMessage($exception->getPrevious()?->getMessage()),
+            'exception.stacktrace' => $this->sanitizeExceptionMessage(StackTraceFormatter::format($exception)),
         ]);
 
         foreach ($attributes as $key => $value) {
@@ -520,5 +520,22 @@ class Span extends OtelSpan implements ReadWriteSpanInterface, SpanDataInterface
     public function getTotalDroppedLinks(): int
     {
         return max(0, $this->totalRecordedLinks - count($this->links));
+    }
+
+    /**
+     * Sanitizes exception message by decoding HTML entities.
+     * This ensures proper display in monitoring tools like Grafana/Dynatrace.
+     *
+     * @param string|null $message
+     *
+     * @return string|null
+     */
+    protected function sanitizeExceptionMessage(?string $message): ?string
+    {
+        if ($message === null) {
+            return null;
+        }
+
+        return html_entity_decode($message, ENT_QUOTES | ENT_HTML5, 'UTF-8');
     }
 }
