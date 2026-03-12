@@ -8,55 +8,46 @@
 namespace Spryker\Service\Opentelemetry;
 
 use Spryker\Service\Kernel\AbstractServiceFactory;
-use Spryker\Service\Opentelemetry\Storage\CustomEventsStorage;
-use Spryker\Service\Opentelemetry\Storage\CustomEventsStorageInterface;
-use Spryker\Service\Opentelemetry\Storage\CustomParameterStorage;
-use Spryker\Service\Opentelemetry\Storage\CustomParameterStorageInterface;
-use Spryker\Service\Opentelemetry\Storage\ExceptionStorage;
-use Spryker\Service\Opentelemetry\Storage\ExceptionStorageInterface;
-use Spryker\Service\Opentelemetry\Storage\ResourceNameStorage;
-use Spryker\Service\Opentelemetry\Storage\RootSpanNameStorage;
-use Spryker\Service\Opentelemetry\Storage\RootSpanNameStorageInterface;
+use Spryker\Shared\Opentelemetry\Reader\ResourceNameReader;
+use Spryker\Shared\Opentelemetry\Reader\ResourceNameReaderInterface;
+use Spryker\Shared\Opentelemetry\Storage\CustomEventsStorage;
+use Spryker\Shared\Opentelemetry\Storage\CustomEventsStorageInterface;
+use Spryker\Shared\Opentelemetry\Storage\CustomParameterStorage;
+use Spryker\Shared\Opentelemetry\Storage\CustomParameterStorageInterface;
+use Spryker\Shared\Opentelemetry\Storage\ExceptionStorage;
+use Spryker\Shared\Opentelemetry\Storage\ExceptionStorageInterface;
+use Spryker\Shared\Opentelemetry\Storage\ResourceNameStorage;
+use Spryker\Shared\Opentelemetry\Storage\RootSpanNameStorage;
+use Spryker\Shared\Opentelemetry\Storage\RootSpanNameStorageInterface;
 
 class OpentelemetryServiceFactory extends AbstractServiceFactory
 {
-    /**
-     * @return \Spryker\Service\Opentelemetry\Storage\CustomParameterStorageInterface
-     */
     public function createCustomParameterStorage(): CustomParameterStorageInterface
     {
         return CustomParameterStorage::getInstance();
     }
 
-    /**
-     * @return \Spryker\Service\Opentelemetry\Storage\RootSpanNameStorageInterface
-     */
     public function createRootSpanNameStorage(): RootSpanNameStorageInterface
     {
         return RootSpanNameStorage::getInstance();
     }
 
-    /**
-     * @return \Spryker\Service\Opentelemetry\Storage\ResourceNameStorage
-     */
     public function createResourceNameStorage(): ResourceNameStorage
     {
         return ResourceNameStorage::getInstance();
     }
 
-    /**
-     * @return \Spryker\Service\Opentelemetry\Storage\ExceptionStorageInterface
-     */
     public function createExceptionStorage(): ExceptionStorageInterface
     {
         return ExceptionStorage::getInstance();
     }
-
-    /**
-     * @return \Spryker\Service\Opentelemetry\Storage\CustomEventsStorageInterface
-     */
     public function createCustomEventsStorage(): CustomEventsStorageInterface
     {
         return CustomEventsStorage::getInstance();
+    }
+
+    public function createResourceNameReader(): ResourceNameReaderInterface
+    {
+        return new ResourceNameReader($this->createResourceNameStorage(), $this->createCustomParameterStorage());
     }
 }
