@@ -31,7 +31,7 @@ class ResourceNameReader implements ResourceNameReaderInterface
                 return OpentelemetryInstrumentationConfig::getDefaultServiceName();
             }
 
-            return $resource->getAttributes()[ResourceAttributes::SERVICE_NAME];
+            return $resource->getAttributes()->get(ResourceAttributes::SERVICE_NAME);
         }
 
         $cli = $this->customParameterStorage->getAttribute(OpentelemetryMonitoringExtensionPlugin::ATTRIBUTE_IS_CONSOLE_COMMAND);

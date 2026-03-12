@@ -15,8 +15,6 @@ use Spryker\Shared\Opentelemetry\Reader\ResourceNameReaderInterface;
 
 class OpentelemetryLogProcessor implements ProcessorInterface
 {
-    protected const string RECORD_CONTEXT = 'context';
-
     protected const string FIELD_TRACE_ID = 'trace_id';
 
     protected const string FIELD_SPAN_ID = 'span_id';
@@ -40,15 +38,12 @@ class OpentelemetryLogProcessor implements ProcessorInterface
             return $record;
         }
 
-        $context = $record[static::RECORD_CONTEXT] ?? [];
         $spanContext = Span::getCurrent()->getContext();
 
-        $context[static::FIELD_TRACE_ID] = $spanContext->getTraceId();
-        $context[static::FIELD_SPAN_ID] = $spanContext->getSpanId();
-        $context[static::FIELD_SERVICE_NAME] = $this->resolveServiceName();
-        $context[static::FIELD_SERVICE_NAMESPACE] = $this->resolveServiceNamespace();
-
-        $record[static::RECORD_CONTEXT] = $context;
+        $record[static::FIELD_TRACE_ID] = $spanContext->getTraceId();
+        $record[static::FIELD_SPAN_ID] = $spanContext->getSpanId();
+        $record[static::FIELD_SERVICE_NAME] = $this->resolveServiceName();
+        $record[static::FIELD_SERVICE_NAMESPACE] = $this->resolveServiceNamespace();
 
         return $record;
     }
