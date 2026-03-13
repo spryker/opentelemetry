@@ -146,7 +146,7 @@ class OpentelemetryInstrumentationConfig
      */
     public static function getExporterEndpoint(): string
     {
-        return getenv(static::OTEL_EXPORTER_OTLP_ENDPOINT) ?: 'http://collector:4317';
+        return getenv(static::OTEL_EXPORTER_OTLP_ENDPOINT) ?: 'http://collector:8889';
     }
 
     /**
