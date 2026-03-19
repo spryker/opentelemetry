@@ -55,19 +55,7 @@ class OpentelemetryLogProcessor implements ProcessorInterface
 
     protected function isOtelDisabled(): bool
     {
-        if (!class_exists(Sdk::class)) {
-            return true;
-        }
-
-        if (getenv('OTEL_SDK_DISABLED') === false) {
-            return true;
-        }
-
-        if (Sdk::isDisabled()) {
-            return true;
-        }
-
-        return false;
+        return !class_exists(Sdk::class) || getenv('OTEL_SDK_DISABLED') === false || Sdk::isDisabled();
     }
 
     protected function resolveServiceName(): string
