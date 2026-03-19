@@ -17,7 +17,6 @@ use Spryker\Service\Opentelemetry\Instrumentation\Sampler\CriticalSpanRatioSampl
 use Spryker\Service\Opentelemetry\Instrumentation\Sampler\TraceSampleResult;
 use Spryker\Service\Opentelemetry\Instrumentation\Span\Span;
 use Spryker\Shared\Opentelemetry\Instrumentation\CachedInstrumentation;
-use Spryker\Shared\Opentelemetry\Request\RequestProcessor;
 use Throwable;
 use function OpenTelemetry\Instrumentation\hook;
 
