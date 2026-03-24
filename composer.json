@@ -18,7 +18,7 @@
         "spryker/glue-application": "^1.0.0",
         "spryker/guzzle": "^2.0.0",
         "spryker/kernel": "^3.30.0",
-        "spryker/log-extension": "^1.0.0",
+        "spryker/monolog": "^2.0.0",
         "spryker/monitoring-extension": "^1.1.0",
         "spryker/propel-orm": "^1.0.0",
         "spryker/rabbit-mq": "^2.0.0",
@@ -26,6 +26,7 @@
         "spryker/symfony": "^3.0.0"
     },
     "require-dev": {
+        "spryker/log": "^3.0.0",
         "spryker/code-sniffer": "*",
         "spryker/testify": "^3.47.0"
     },
