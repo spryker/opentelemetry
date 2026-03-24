@@ -30,6 +30,9 @@
         "spryker/code-sniffer": "*",
         "spryker/testify": "^3.47.0"
     },
+    "suggest": {
+        "spryker/log": "If you want to enrich your logs with OpenTelemetry trace and span information."
+    },
     "autoload": {
         "psr-4": {
             "Spryker\\": "src/Spryker/"
