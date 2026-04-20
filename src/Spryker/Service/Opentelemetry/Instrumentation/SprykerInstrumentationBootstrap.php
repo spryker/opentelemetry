@@ -10,6 +10,7 @@ namespace Spryker\Service\Opentelemetry\Instrumentation;
 use OpenTelemetry\API\Common\Time\Clock;
 use OpenTelemetry\API\Signals;
 use OpenTelemetry\API\Trace\Propagation\TraceContextPropagator;
+use OpenTelemetry\API\Trace\SpanContextValidator;
 use OpenTelemetry\API\Trace\SpanInterface;
 use OpenTelemetry\API\Trace\SpanKind;
 use OpenTelemetry\API\Trace\StatusCode;
@@ -172,6 +173,15 @@ class SprykerInstrumentationBootstrap
     public static function getResourceInfo(): ?ResourceInfo
     {
         return static::$resourceInfo;
+    }
+
+    public static function getTraceId(): string
+    {
+        if (!static::$rootSpan) {
+            return SpanContextValidator::INVALID_TRACE;
+        }
+
+        return static::$rootSpan->getTraceId();
     }
 
     /**

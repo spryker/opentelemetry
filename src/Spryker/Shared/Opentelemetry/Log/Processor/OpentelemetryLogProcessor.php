@@ -10,6 +10,7 @@ namespace Spryker\Shared\Opentelemetry\Log\Processor;
 use Monolog\Processor\ProcessorInterface;
 use OpenTelemetry\API\Trace\Span;
 use OpenTelemetry\SDK\Sdk;
+use Spryker\Service\Opentelemetry\Instrumentation\SprykerInstrumentationBootstrap;
 use Spryker\Service\Opentelemetry\OpentelemetryInstrumentationConfig;
 use Spryker\Shared\Opentelemetry\Reader\ResourceNameReaderInterface;
 
@@ -43,7 +44,7 @@ class OpentelemetryLogProcessor implements ProcessorInterface
         $context = $record[static::RECORD_CONTEXT] ?? [];
         $spanContext = Span::getCurrent()->getContext();
 
-        $context[static::FIELD_TRACE_ID] = $spanContext->getTraceId();
+        $context[static::FIELD_TRACE_ID] = SprykerInstrumentationBootstrap::getTraceId(); //Get trace id from the root span as it always the valid one
         $context[static::FIELD_SPAN_ID] = $spanContext->getSpanId();
         $context[static::FIELD_SERVICE_NAME] = $this->resolveServiceName();
         $context[static::FIELD_SERVICE_NAMESPACE] = $this->resolveServiceNamespace();
