@@ -17,6 +17,7 @@ use OpenTelemetry\API\Trace\StatusCode;
 use OpenTelemetry\Context\Context;
 use OpenTelemetry\Context\Propagation\PropagationGetterInterface;
 use OpenTelemetry\Contrib\Grpc\GrpcTransportFactory;
+use OpenTelemetry\Contrib\Otlp\ContentTypes;
 use OpenTelemetry\Contrib\Otlp\OtlpUtil;
 use OpenTelemetry\SDK\Common\Util\ShutdownHandler;
 use OpenTelemetry\SDK\Sdk;
@@ -68,7 +69,7 @@ class SprykerInstrumentationBootstrap
     /**
      * @var string Version of the instrumentation. Must be equal to the release version. This version is shown in the traces.
      */
-    public const INSTRUMENTATION_VERSION = '1.20.4';
+    public const INSTRUMENTATION_VERSION = '1.21.0';
 
     /**
      * @var string Default span name placeholder for root spans. By default the first placeholder is for HTTP method and the second one for the route.
@@ -319,7 +320,13 @@ class SprykerInstrumentationBootstrap
     protected static function createSpanExporter(): SpanExporterInterface
     {
         return new SpanExporter(
-            (new GrpcTransportFactory())->create(OpentelemetryInstrumentationConfig::getExporterEndpoint() . OtlpUtil::method(Signals::TRACE)),
+            (new GrpcTransportFactory())->create(
+                OpentelemetryInstrumentationConfig::getExporterEndpoint() . OtlpUtil::method(Signals::TRACE),
+                ContentTypes::PROTOBUF,
+                [],
+                null,
+                OpentelemetryInstrumentationConfig::getExporterTraceTimeput(),
+            ),
             new SpanConverter(),
         );
     }
