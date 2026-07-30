@@ -6,90 +6,41 @@ use Spryker\Shared\Opentelemetry\OpentelemetryConfig;
 
 class OpentelemetryInstrumentationConfig
 {
-    /**
-     * @var string
-     */
-    protected const OTEL_SERVICE_NAMESPACE = 'OTEL_SERVICE_NAMESPACE';
+    protected const string OTEL_SERVICE_NAMESPACE = 'OTEL_SERVICE_NAMESPACE';
 
-    /**
-     * @var string
-     */
-    protected const OTEL_BSP_MIN_SPAN_DURATION_THRESHOLD = 'OTEL_BSP_MIN_SPAN_DURATION_THRESHOLD';
+    protected const string OTEL_BSP_MIN_SPAN_DURATION_THRESHOLD = 'OTEL_BSP_MIN_SPAN_DURATION_THRESHOLD';
 
-    /**
-     * @var string
-     */
-    protected const OTEL_BSP_MIN_CRITICAL_SPAN_DURATION_THRESHOLD = 'OTEL_BSP_MIN_CRITICAL_SPAN_DURATION_THRESHOLD';
+    protected const string OTEL_BSP_MIN_CRITICAL_SPAN_DURATION_THRESHOLD = 'OTEL_BSP_MIN_CRITICAL_SPAN_DURATION_THRESHOLD';
 
-    /**
-     * @var string
-     */
-    protected const OTEL_EXPORTER_OTLP_ENDPOINT = 'OTEL_EXPORTER_OTLP_ENDPOINT';
+    protected const string OTEL_EXPORTER_OTLP_ENDPOINT = 'OTEL_EXPORTER_OTLP_ENDPOINT';
 
-    /**
-     * @var string
-     */
-    protected const OTEL_PHP_EXCLUDED_URLS = 'OTEL_PHP_EXCLUDED_URLS';
+    protected const string OTEL_PHP_EXCLUDED_URLS = 'OTEL_PHP_EXCLUDED_URLS';
 
-    /**
-     * @var string
-     */
-    protected const OTEL_SERVICE_NAME_MAPPING = 'OTEL_SERVICE_NAME_MAPPING';
+    protected const string OTEL_SERVICE_NAME_MAPPING = 'OTEL_SERVICE_NAME_MAPPING';
 
-    /**
-     * @var string
-     */
-    protected const OTEL_DEFAULT_SERVICE_NAME = 'OTEL_DEFAULT_SERVICE_NAME';
+    protected const string OTEL_DEFAULT_SERVICE_NAME = 'OTEL_DEFAULT_SERVICE_NAME';
 
-    /**
-     * @var string
-     */
-    protected const OTEL_TRACES_SAMPLER_ARG = 'OTEL_TRACES_SAMPLER_ARG';
+    protected const string OTEL_TRACES_SAMPLER_ARG = 'OTEL_TRACES_SAMPLER_ARG';
 
-    /**
-     * @var string
-     */
-    protected const OTEL_TRACES_CRITICAL_SAMPLER_ARG = 'OTEL_TRACES_CRITICAL_SAMPLER_ARG';
+    protected const string OTEL_TRACES_CRITICAL_SAMPLER_ARG = 'OTEL_TRACES_CRITICAL_SAMPLER_ARG';
 
-    /**
-     * @var string
-     */
-    protected const OTEL_TRACES_NON_CRITICAL_SAMPLER_ARG = 'OTEL_TRACES_NON_CRITICAL_SAMPLER_ARG';
+    protected const string OTEL_TRACES_NON_CRITICAL_SAMPLER_ARG = 'OTEL_TRACES_NON_CRITICAL_SAMPLER_ARG';
 
-    /**
-     * @var string
-     */
-    protected const OTEL_BSP_SCHEDULE_DELAY = 'OTEL_BSP_SCHEDULE_DELAY';
+    protected const string OTEL_BSP_SCHEDULE_DELAY = 'OTEL_BSP_SCHEDULE_DELAY';
 
-    /**
-     * @var string
-     */
-    protected const OTEL_BSP_MAX_QUEUE_SIZE = 'OTEL_BSP_MAX_QUEUE_SIZE';
+    protected const string OTEL_BSP_MAX_QUEUE_SIZE = 'OTEL_BSP_MAX_QUEUE_SIZE';
 
-    /**
-     * @string
-     */
-    protected const OTEL_BSP_MAX_EXPORT_BATCH_SIZE = 'OTEL_BSP_MAX_EXPORT_BATCH_SIZE';
+    protected const string OTEL_BSP_MAX_EXPORT_BATCH_SIZE = 'OTEL_BSP_MAX_EXPORT_BATCH_SIZE';
 
-    /**
-     * @string
-     */
-    protected const OTEL_TRACE_PROBABILITY = 'OTEL_TRACE_PROBABILITY';
+    protected const string OTEL_TRACE_PROBABILITY = 'OTEL_TRACE_PROBABILITY';
 
-    /**
-     * @string
-     */
-    protected const OTEL_CLI_TRACE_PROBABILITY = 'OTEL_CLI_TRACE_PROBABILITY';
+    protected const string OTEL_CLI_TRACE_PROBABILITY = 'OTEL_CLI_TRACE_PROBABILITY';
 
-    /**
-     * @string
-     */
-    protected const OTEL_DISTRIBUTED_TRACING_ENABLED = 'OTEL_DISTRIBUTED_TRACING_ENABLED';
+    protected const string OTEL_DISTRIBUTED_TRACING_ENABLED = 'OTEL_DISTRIBUTED_TRACING_ENABLED';
 
-    /**
-     * @string
-     */
-    protected const OTEL_TRACE_PROBABILITY_NON_GET = 'OTEL_TRACE_PROBABILITY_NON_GET';
+    protected const string OTEL_TRACE_PROBABILITY_NON_GET = 'OTEL_TRACE_PROBABILITY_NON_GET';
+
+    protected const string OTEL_EXPORTER_OTLP_TRACES_TIMEOUT = 'OTEL_EXPORTER_OTLP_TRACES_TIMEOUT';
 
     /**
      * Specification:
@@ -388,5 +339,22 @@ class OpentelemetryInstrumentationConfig
     public static function getHooksDir(): string
     {
         return OpentelemetryConfig::getHooksDir();
+    }
+
+    /**
+     * Specification:
+     * - Defines how long exporter waits for the transport when sending traces in seconds.
+     *
+     * @api
+     */
+    public static function getExporterTraceTimeput(): float
+    {
+        $timeout = getenv(static::OTEL_EXPORTER_OTLP_TRACES_TIMEOUT);
+
+        if ($dtEnabled === false) {
+            $timeout = 1000;
+        }
+
+        return $timeout/1000;
     }
 }
