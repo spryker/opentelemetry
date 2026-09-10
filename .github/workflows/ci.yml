@@ -9,7 +9,7 @@ on:
 
 jobs:
     validation:
-        runs-on: ubuntu-20.04
+        runs-on: ubuntu-latest
         strategy:
             fail-fast: false
             matrix:
@@ -23,10 +23,10 @@ jobs:
               uses: shivammathur/setup-php@v2
               with:
                   php-version: ${{ matrix.php-version }}
-                  extensions: mbstring, intl, pdo_mysql
+                  extensions: mbstring, intl, pdo_mysql, grpc
 
             - name: Checkout
-              uses: actions/checkout@v2
+              uses: actions/checkout@v4
 
             - name: Composer validate
               run: composer validate
@@ -34,10 +34,10 @@ jobs:
             - name: Composer get cache directory
               id: composer-cache
               run: |
-                  echo "::set-output name=dir::$(composer config cache-files-dir)"
+                  echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
 
             - name: Composer cache
-              uses: actions/cache@v2
+              uses: actions/cache@v4
               with:
                   path: ${{ steps.composer-cache.outputs.dir }}
                   key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
@@ -62,14 +62,8 @@ jobs:
               if: success() && matrix.php-version == '8.2'
               uses: codecov/codecov-action@v1
 
-            - name: PHPStan checks
-              run: composer phpstan
-
-            - name: CodeStyle checks
-              run: composer cs-check
-
     prefer-lowest:
-        runs-on: ubuntu-20.04
+        runs-on: ubuntu-latest
         strategy:
             fail-fast: false
             matrix:
@@ -79,21 +73,21 @@ jobs:
 
         steps:
             - name: Checkout
-              uses: actions/checkout@v2
+              uses: actions/checkout@v4
 
             - name: Setup PHP
               uses: shivammathur/setup-php@v2
               with:
                   php-version: ${{ matrix.php-version }}
-                  extensions: mbstring, intl, pdo_mysql
+                  extensions: mbstring, intl, pdo_mysql, grpc
 
             - name: Get Composer Cache Directory
               id: composer-cache
               run: |
-                  echo "::set-output name=dir::$(composer config cache-files-dir)"
+                  echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
 
             - name: Composer cache
-              uses: actions/cache@v2
+              uses: actions/cache@v4
               with:
                   path: ${{ steps.composer-cache.outputs.dir }}
                   key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}

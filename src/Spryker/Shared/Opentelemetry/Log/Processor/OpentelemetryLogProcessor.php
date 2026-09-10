@@ -31,17 +31,34 @@ class OpentelemetryLogProcessor implements ProcessorInterface
     }
 
     /**
-     * @param array<string, mixed> $record
+     * @param \Monolog\LogRecord|array<string, mixed> $record
      *
-     * @return array<string, mixed>
+     * @return \Monolog\LogRecord|array<string, mixed>
      */
-    public function __invoke(array $record): array
+    public function __invoke($record)
     {
         if ($this->isOtelDisabled()) {
             return $record;
         }
 
-        $context = $record[static::RECORD_CONTEXT] ?? [];
+        $context = $this->addOtelContext(is_array($record) ? ($record[static::RECORD_CONTEXT] ?? []) : $record->context);
+
+        if (is_array($record)) {
+            $record[static::RECORD_CONTEXT] = $context;
+
+            return $record;
+        }
+
+        return $record->with(context: $context);
+    }
+
+    /**
+     * @param array<string, mixed> $context
+     *
+     * @return array<string, mixed>
+     */
+    protected function addOtelContext(array $context): array
+    {
         $spanContext = Span::getCurrent()->getContext();
 
         $context[static::FIELD_TRACE_ID] = SprykerInstrumentationBootstrap::getTraceId(); //Get trace id from the root span as it always the valid one
@@ -49,9 +66,7 @@ class OpentelemetryLogProcessor implements ProcessorInterface
         $context[static::FIELD_SERVICE_NAME] = $this->resolveServiceName();
         $context[static::FIELD_SERVICE_NAMESPACE] = $this->resolveServiceNamespace();
 
-        $record[static::RECORD_CONTEXT] = $context;
-
-        return $record;
+        return $context;
     }
 
     protected function isOtelDisabled(): bool
