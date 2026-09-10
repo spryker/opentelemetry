@@ -83,29 +83,6 @@ class OpentelemetryLogProcessorTest extends Unit
     /**
      * @return void
      */
-    public function testInvokeReturnsNewLogRecordWithEnrichedContextWhenOtelIsEnabled(): void
-    {
-        // Arrange
-        putenv('OTEL_SDK_DISABLED=false');
-        $processor = $this->createOpentelemetryLogProcessor();
-        $record = $this->createLogRecord(['foo' => 'bar']);
-
-        // Act
-        $result = $processor($record);
-
-        // Assert
-        $this->assertNotSame($record, $result);
-        $this->assertSame('bar', $result->context['foo']);
-        $this->assertArrayHasKey('trace_id', $result->context);
-        $this->assertArrayHasKey('span_id', $result->context);
-        $this->assertSame(static::SERVICE_NAME, $result->context['service.name']);
-        $this->assertSame($record->message, $result->message);
-        $this->assertSame($record->extra, $result->extra);
-    }
-
-    /**
-     * @return void
-     */
     public function testInvokeReturnsArrayRecordUnchangedWhenOtelIsDisabled(): void
     {
         // Arrange
@@ -121,9 +98,37 @@ class OpentelemetryLogProcessorTest extends Unit
     }
 
     /**
+     * Uses whatever record shape the installed Monolog version actually produces:
+     * a \Monolog\LogRecord on Monolog 3 (Symfony 6/7), a plain array on Monolog 2 (Symfony 5).
+     *
      * @return void
      */
-    public function testInvokeReturnsLogRecordUnchangedWhenOtelIsDisabled(): void
+    public function testInvokeEnrichesNativeRecordContextWhenOtelIsEnabled(): void
+    {
+        // Arrange
+        putenv('OTEL_SDK_DISABLED=false');
+        $processor = $this->createOpentelemetryLogProcessor();
+        $record = $this->createLogRecord(['foo' => 'bar']);
+
+        // Act
+        $result = $processor($record);
+
+        // Assert
+        $this->assertNotSame($record, $result);
+
+        $context = $this->extractContext($result);
+        $this->assertSame('bar', $context['foo']);
+        $this->assertArrayHasKey('trace_id', $context);
+        $this->assertArrayHasKey('span_id', $context);
+        $this->assertSame(static::SERVICE_NAME, $context['service.name']);
+        $this->assertSame($this->extractMessage($record), $this->extractMessage($result));
+        $this->assertSame($this->extractExtra($record), $this->extractExtra($result));
+    }
+
+    /**
+     * @return void
+     */
+    public function testInvokeReturnsNativeRecordUnchangedWhenOtelIsDisabled(): void
     {
         // Arrange
         putenv('OTEL_SDK_DISABLED=true');
@@ -149,18 +154,70 @@ class OpentelemetryLogProcessorTest extends Unit
     }
 
     /**
+     * Builds a real \Monolog\LogRecord when the installed Monolog ships an instantiable one
+     * (Monolog 3), or the equivalent array shape when it only ships the forward-compatibility
+     * interface of the same name (Monolog 2.4+, no concrete class to instantiate).
+     *
      * @param array<string, mixed> $context
      *
-     * @return \Monolog\LogRecord
+     * @return array<string, mixed>|\Monolog\LogRecord
      */
-    protected function createLogRecord(array $context): LogRecord
+    protected function createLogRecord(array $context): array|LogRecord
     {
-        return new LogRecord(
-            new DateTimeImmutable(),
-            'test',
-            Level::Info,
-            'test message',
-            $context,
-        );
+        if (!class_exists(LogRecord::class)) {
+            return [
+                'message' => 'test message',
+                'context' => $context,
+                'level' => 200,
+                'level_name' => 'INFO',
+                'channel' => 'test',
+                'datetime' => new DateTimeImmutable(),
+                'extra' => [],
+            ];
+        }
+
+        return new LogRecord(new DateTimeImmutable(), 'test', Level::Info, 'test message', $context);
+    }
+
+    /**
+     * @param array<string, mixed>|\Monolog\LogRecord $record
+     *
+     * @return array<string, mixed>
+     */
+    protected function extractContext(array|LogRecord $record): array
+    {
+        if ($record instanceof LogRecord) {
+            return $record->context;
+        }
+
+        return $record['context'];
+    }
+
+    /**
+     * @param array<string, mixed>|\Monolog\LogRecord $record
+     *
+     * @return string
+     */
+    protected function extractMessage(array|LogRecord $record): string
+    {
+        if ($record instanceof LogRecord) {
+            return $record->message;
+        }
+
+        return $record['message'];
+    }
+
+    /**
+     * @param array<string, mixed>|\Monolog\LogRecord $record
+     *
+     * @return array<string, mixed>
+     */
+    protected function extractExtra(array|LogRecord $record): array
+    {
+        if ($record instanceof LogRecord) {
+            return $record->extra;
+        }
+
+        return $record['extra'];
     }
 }
