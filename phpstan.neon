@@ -14,4 +14,7 @@ parameters:
         -
             identifier: requireOnce.fileNotFound
             path: src/Spryker/Service/Opentelemetry/Instrumentation/SprykerInstrumentationBootstrap.php
+        -
+            identifier: class.notFound
+            path: src/Spryker/Service/Opentelemetry/Instrumentation/RabbitMqInstrumentation.php
     reportUnmatchedIgnoredErrors: false
