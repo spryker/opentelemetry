@@ -4,3 +4,11 @@ parameters:
         - src/
     bootstrapFiles:
         - tests/bootstrap.php
+    ignoreErrors:
+        -
+            message: '#Access to an undefined property Monolog\\LogRecord::\$context\.#'
+            path: src/Spryker/Shared/Opentelemetry/Log/Processor/OpentelemetryLogProcessor.php
+        -
+            message: '#Call to an undefined method Monolog\\LogRecord::with\(\)\.#'
+            path: src/Spryker/Shared/Opentelemetry/Log/Processor/OpentelemetryLogProcessor.php
+    reportUnmatchedIgnoredErrors: false
