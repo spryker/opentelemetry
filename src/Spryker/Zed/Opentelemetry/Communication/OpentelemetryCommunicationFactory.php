@@ -7,6 +7,7 @@
 
 namespace Spryker\Zed\Opentelemetry\Communication;
 
+use Monolog\Processor\ProcessorInterface;
 use Spryker\Shared\Opentelemetry\Log\Processor\OpentelemetryLogProcessor;
 use Spryker\Shared\Opentelemetry\Reader\ResourceNameReader;
 use Spryker\Shared\Opentelemetry\Reader\ResourceNameReaderInterface;
@@ -18,7 +19,7 @@ use Spryker\Zed\Kernel\Communication\AbstractCommunicationFactory;
 
 class OpentelemetryCommunicationFactory extends AbstractCommunicationFactory
 {
-    public function createOpentelemetryLogProcessor(): OpentelemetryLogProcessor
+    public function createOpentelemetryLogProcessor(): ProcessorInterface
     {
         return new OpentelemetryLogProcessor($this->createResourceNameReader());
     }

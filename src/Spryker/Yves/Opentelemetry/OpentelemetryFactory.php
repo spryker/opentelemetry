@@ -7,6 +7,7 @@
 
 namespace Spryker\Yves\Opentelemetry;
 
+use Monolog\Processor\ProcessorInterface;
 use Spryker\Shared\Opentelemetry\Log\Processor\OpentelemetryLogProcessor;
 use Spryker\Shared\Opentelemetry\Reader\ResourceNameReader;
 use Spryker\Shared\Opentelemetry\Reader\ResourceNameReaderInterface;
@@ -18,7 +19,7 @@ use Spryker\Yves\Kernel\AbstractFactory;
 
 class OpentelemetryFactory extends AbstractFactory
 {
-    public function createOpentelemetryLogProcessor(): OpentelemetryLogProcessor
+    public function createOpentelemetryLogProcessor(): ProcessorInterface
     {
         return new OpentelemetryLogProcessor($this->createResourceNameReader());
     }

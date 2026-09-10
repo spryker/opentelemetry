@@ -7,6 +7,7 @@
 
 namespace Spryker\Glue\Opentelemetry;
 
+use Monolog\Processor\ProcessorInterface;
 use Spryker\Glue\Kernel\AbstractFactory;
 use Spryker\Shared\Opentelemetry\Log\Processor\OpentelemetryLogProcessor;
 use Spryker\Shared\Opentelemetry\Reader\ResourceNameReader;
@@ -18,7 +19,7 @@ use Spryker\Shared\Opentelemetry\Storage\ResourceNameStorageInterface;
 
 class OpentelemetryFactory extends AbstractFactory
 {
-    public function createOpentelemetryLogProcessor(): OpentelemetryLogProcessor
+    public function createOpentelemetryLogProcessor(): ProcessorInterface
     {
         return new OpentelemetryLogProcessor($this->createResourceNameReader());
     }
