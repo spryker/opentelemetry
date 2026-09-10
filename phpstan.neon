@@ -1,5 +1,5 @@
 parameters:
-    level: 8
+    level: 1
     paths:
         - src/
     bootstrapFiles:
@@ -11,4 +11,7 @@ parameters:
         -
             message: '#Call to an undefined method Monolog\\LogRecord::with\(\)\.#'
             path: src/Spryker/Shared/Opentelemetry/Log/Processor/OpentelemetryLogProcessor.php
+        -
+            identifier: requireOnce.fileNotFound
+            path: src/Spryker/Service/Opentelemetry/Instrumentation/SprykerInstrumentationBootstrap.php
     reportUnmatchedIgnoredErrors: false

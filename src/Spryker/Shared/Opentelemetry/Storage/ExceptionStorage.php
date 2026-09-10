@@ -9,7 +9,7 @@ namespace Spryker\Shared\Opentelemetry\Storage;
 
 use Throwable;
 
-class ExceptionStorage implements ExceptionStorageInterface
+final class ExceptionStorage implements ExceptionStorageInterface
 {
     /**
      * @var \Spryker\Service\Opentelemetry\Storage\ExceptionStorageInterface|null

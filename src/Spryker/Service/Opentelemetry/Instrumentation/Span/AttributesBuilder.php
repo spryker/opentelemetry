@@ -78,7 +78,7 @@ class AttributesBuilder implements AttributesBuilderInterface
      *
      * @return mixed
      */
-    public function offsetGet($offset)
+    public function offsetGet($offset): mixed
     {
         return $this->attributes[$offset] ?? null;
     }
