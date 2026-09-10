@@ -13,7 +13,7 @@ use OpenTelemetry\API\Trace\TraceFlags;
 use OpenTelemetry\API\Trace\TraceStateInterface;
 use function hex2bin;
 
-final class SpanContext implements SpanContextInterface, SpanIdUpdateAwareSpanContextInterface
+class SpanContext implements SpanContextInterface, SpanIdUpdateAwareSpanContextInterface
 {
     /**
      * @var \OpenTelemetry\API\Trace\SpanContextInterface|null

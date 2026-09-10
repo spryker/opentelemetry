@@ -351,7 +351,7 @@ class OpentelemetryInstrumentationConfig
     {
         $timeout = getenv(static::OTEL_EXPORTER_OTLP_TRACES_TIMEOUT);
 
-        if ($timeout === false) {
+        if ($dtEnabled === false) {
             $timeout = 1000;
         }
 
