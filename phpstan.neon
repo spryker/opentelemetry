@@ -1,20 +1,6 @@
 parameters:
-    level: 1
+    level: 8
     paths:
         - src/
     bootstrapFiles:
         - tests/bootstrap.php
-    ignoreErrors:
-        -
-            message: '#Access to an undefined property Monolog\\LogRecord::\$context\.#'
-            path: src/Spryker/Shared/Opentelemetry/Log/Processor/OpentelemetryLogProcessor.php
-        -
-            message: '#Call to an undefined method Monolog\\LogRecord::with\(\)\.#'
-            path: src/Spryker/Shared/Opentelemetry/Log/Processor/OpentelemetryLogProcessor.php
-        -
-            identifier: requireOnce.fileNotFound
-            path: src/Spryker/Service/Opentelemetry/Instrumentation/SprykerInstrumentationBootstrap.php
-        -
-            identifier: class.notFound
-            path: src/Spryker/Service/Opentelemetry/Instrumentation/RabbitMqInstrumentation.php
-    reportUnmatchedIgnoredErrors: false
