@@ -10,3 +10,10 @@ coverage:
     whitelist:
         include:
             - '../../../../src/*'
+suites:
+    Shared:
+        path: .
+        actor: OpentelemetrySharedTester
+        modules:
+            enabled:
+                - Asserts

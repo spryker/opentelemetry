@@ -27,6 +27,7 @@
     },
     "require-dev": {
         "codeception/module-asserts": "^3.0.0",
+        "phpstan/phpstan": "^1.0 || ^2.0",
         "spryker/code-sniffer": "*",
         "spryker/log": "^3.0.0",
         "spryker/testify": "^3.47.0"
@@ -50,9 +51,9 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "scripts": {
-        "cs-check": "phpcs -p -s --standard=vendor/spryker/code-sniffer/SprykerStrict/ruleset.xml --ignore=/tests/_data/,/_support/ src/ tests/",
-        "cs-fix": "phpcbf -p --standard=vendor/spryker/code-sniffer/SprykerStrict/ruleset.xml --ignore=/tests/_data/,/_support/ src/ tests/",
-        "phpstan": "phpstan analyze",
+        "cs-check": "vendor/bin/phpcs -p -s --standard=vendor/spryker/code-sniffer/SprykerStrict/ruleset.xml --ignore=/tests/_data/,/_support/ src/ tests/",
+        "cs-fix": "vendor/bin/phpcbf -p --standard=vendor/spryker/code-sniffer/SprykerStrict/ruleset.xml --ignore=/tests/_data/,/_support/ src/ tests/",
+        "phpstan": "vendor/bin/phpstan analyze",
         "test": "codecept build && codecept run"
     },
     "extra": {
