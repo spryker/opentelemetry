@@ -4,6 +4,7 @@
     "description": "Opentelemetry module",
     "license": "proprietary",
     "require": {
+        "monolog/monolog": "^2.0.0 || ^3.0.0",
         "open-telemetry/api": "^1.0",
         "open-telemetry/context": "^1.0",
         "open-telemetry/exporter-otlp": "^1.0",
