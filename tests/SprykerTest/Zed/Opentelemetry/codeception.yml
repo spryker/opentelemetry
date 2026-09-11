@@ -17,7 +17,6 @@ suites:
         actor: OpentelemetryBusinessTester
         modules:
             enabled:
-                - Asserts
                 - \SprykerTest\Shared\Testify\Helper\Environment:
                       isolated: true
                 - \SprykerTest\Shared\Testify\Helper\ConfigHelper
