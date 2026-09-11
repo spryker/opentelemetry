@@ -44,6 +44,12 @@ jobs:
                   restore-keys: |
                       ${{ runner.os }}-composer-
 
+            - name: Allow php-http/discovery Composer plugin
+              # Global config only - keeps composer.json free of an allow-plugins entry
+              # that dev:composer:update-json-files (in the suite monorepo) would strip
+              # back out, since it enforces a single fixed allow-plugins entry there.
+              run: composer global config --no-plugins allow-plugins.php-http/discovery true
+
             - name: Composer install
               run: |
                   composer --version
@@ -92,6 +98,12 @@ jobs:
                   path: ${{ steps.composer-cache.outputs.dir }}
                   key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
                   restore-keys: ${{ runner.os }}-composer-
+
+            - name: Allow php-http/discovery Composer plugin
+              # Global config only - keeps composer.json free of an allow-plugins entry
+              # that dev:composer:update-json-files (in the suite monorepo) would strip
+              # back out, since it enforces a single fixed allow-plugins entry there.
+              run: composer global config --no-plugins allow-plugins.php-http/discovery true
 
             - name: Composer prefer-lowest
               run: composer update --prefer-dist --no-interaction --prefer-lowest --prefer-stable -o
