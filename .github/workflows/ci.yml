@@ -44,6 +44,16 @@ jobs:
                   restore-keys: |
                       ${{ runner.os }}-composer-
 
+            - name: Allow php-http/discovery Composer plugin
+              # Writes into the checked-out (uncommitted) composer.json for this CI run
+              # only - never git-added/pushed, so it never lands in the tracked file that
+              # dev:composer:update-json-files (in the suite monorepo) would otherwise strip
+              # this entry back out of, since it enforces one fixed allow-plugins entry there.
+              # `composer global config` was tried first but wasn't honored by every composer
+              # subcommand here (still blocked under `composer update --prefer-lowest`), so the
+              # project-local config is used instead - Composer always respects that directly.
+              run: composer config --no-plugins allow-plugins.php-http/discovery true
+
             - name: Composer install
               run: |
                   composer --version
@@ -92,6 +102,16 @@ jobs:
                   path: ${{ steps.composer-cache.outputs.dir }}
                   key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
                   restore-keys: ${{ runner.os }}-composer-
+
+            - name: Allow php-http/discovery Composer plugin
+              # Writes into the checked-out (uncommitted) composer.json for this CI run
+              # only - never git-added/pushed, so it never lands in the tracked file that
+              # dev:composer:update-json-files (in the suite monorepo) would otherwise strip
+              # this entry back out of, since it enforces one fixed allow-plugins entry there.
+              # `composer global config` was tried first but wasn't honored by every composer
+              # subcommand here (still blocked under `composer update --prefer-lowest`), so the
+              # project-local config is used instead - Composer always respects that directly.
+              run: composer config --no-plugins allow-plugins.php-http/discovery true
 
             - name: Composer prefer-lowest
               run: composer update --prefer-dist --no-interaction --prefer-lowest --prefer-stable -o

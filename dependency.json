@@ -1,0 +1,8 @@
+{
+    "exclude": {
+        "spryker/monolog": true
+    },
+    "include": {
+        "monolog/monolog": true
+    }
+}

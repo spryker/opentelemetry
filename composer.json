@@ -26,7 +26,6 @@
         "spryker/symfony": "^3.0.0"
     },
     "require-dev": {
-        "codeception/module-asserts": "^3.0.0",
         "spryker/code-sniffer": "*",
         "spryker/log": "^3.0.0",
         "spryker/testify": "^3.47.0"
@@ -50,8 +49,8 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "scripts": {
-        "cs-check": "vendor/bin/phpcs -p -s --standard=vendor/spryker/code-sniffer/SprykerStrict/ruleset.xml --ignore=/tests/_data/,/_support/ src/ tests/",
-        "cs-fix": "vendor/bin/phpcbf -p --standard=vendor/spryker/code-sniffer/SprykerStrict/ruleset.xml --ignore=/tests/_data/,/_support/ src/ tests/",
+        "cs-check": "phpcs -p -s --standard=vendor/spryker/code-sniffer/SprykerStrict/ruleset.xml --ignore=/tests/_data/,/_support/ src/ tests/",
+        "cs-fix": "phpcbf -p --standard=vendor/spryker/code-sniffer/SprykerStrict/ruleset.xml --ignore=/tests/_data/,/_support/ src/ tests/",
         "phpstan": "phpstan analyze",
         "test": "codecept build && codecept run"
     },
@@ -63,9 +62,7 @@
     "config": {
         "sort-packages": true,
         "allow-plugins": {
-            "dealerdirect/phpcodesniffer-composer-installer": true,
-            "php-http/discovery": true,
-            "tbachert/spi": false
+            "dealerdirect/phpcodesniffer-composer-installer": true
         }
     },
     "authors": [
