@@ -26,7 +26,6 @@
         "spryker/symfony": "^3.0.0"
     },
     "require-dev": {
-        "codeception/module-asserts": "^3.0.0",
         "spryker/code-sniffer": "*",
         "spryker/log": "^3.0.0",
         "spryker/testify": "^3.47.0"
