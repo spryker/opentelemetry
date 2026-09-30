@@ -65,7 +65,7 @@ class GuzzleInstrumentation
                 $url = (string)$uriObject;
 
                 $span = $instrumentation->tracer()
-                    ->spanBuilder(sprintf('Guzzle %s %s', $method, $url))
+                    ->spanBuilder(sprintf('Guzzle %s', $method))
                     ->setSpanKind(SpanKind::KIND_CLIENT)
                     ->setParent($context)
                     ->setAttribute(CriticalSpanRatioSampler::IS_SYSTEM_ATTRIBUTE, true)
