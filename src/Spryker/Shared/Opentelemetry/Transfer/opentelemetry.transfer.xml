@@ -9,6 +9,7 @@
     </transfer>
 
     <transfer name="QueueSendMessage">
+        <property name="body" type="string"/>
     </transfer>
 
 </transfers>
