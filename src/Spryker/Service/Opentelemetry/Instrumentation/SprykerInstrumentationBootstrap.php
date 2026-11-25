@@ -433,7 +433,7 @@ class SprykerInstrumentationBootstrap
             ->setAttribute(TraceAttributes::HTTP_REQUEST_METHOD, $request->getMethod())
             ->setAttribute(TraceAttributes::SERVER_PORT, $request->getPort())
             ->setAttribute(TraceAttributes::SERVER_ADDRESS, $request->getHost())
-            ->setAttribute(TraceAttributes::HTTP_ROUTE, $request->attributes->get('_route'))
+            ->setAttribute(TraceAttributes::HTTP_ROUTE, static::$route)
             ->setAttribute(TraceAttributes::URL_QUERY, $request->getQueryString())
             ->setAttribute(TraceAttributes::CLIENT_ADDRESS, $request->getClientIp())
             ->setAttribute(TraceAttributes::HTTP_RESPONSE_STATUS_CODE, http_response_code());
