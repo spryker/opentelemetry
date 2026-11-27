@@ -54,11 +54,6 @@ class SpanBuilder implements SpanBuilderInterface
     protected int $startEpochNanos = 0;
 
     /**
-     * @var array<string, string>
-     */
-    protected static $parentMapping = [];
-
-    /**
      * @param string $spanName
      * @param \OpenTelemetry\SDK\Common\Instrumentation\InstrumentationScopeInterface $instrumentationScope
      * @param \OpenTelemetry\SDK\Trace\TracerSharedState $tracerSharedState
@@ -192,17 +187,12 @@ class SpanBuilder implements SpanBuilderInterface
         );
 
         if (!in_array($samplingDecision, [SamplingResult::RECORD_AND_SAMPLE, SamplingResult::RECORD_ONLY], true)) {
-            static::$parentMapping[$spanId] = $parentSpanContext->getSpanId();
-
+            // The unsampled span takes over its parent's id, so spans started under it are parented to the sampled ancestor.
             if ($spanContext instanceof SpanIdUpdateAwareSpanContextInterface) {
                 $spanContext->updateSpanId($parentSpanContext->getSpanId());
             }
 
             return Span::wrap($spanContext);
-        }
-
-        if (isset(static::$parentMapping[$parentSpanContext->getSpanId()]) && $parentSpanContext instanceof SpanIdUpdateAwareSpanContextInterface) {
-            $parentSpanContext->updateSpanId(static::$parentMapping[$parentSpanContext->getSpanId()]);
         }
 
         return Span::startSpan(

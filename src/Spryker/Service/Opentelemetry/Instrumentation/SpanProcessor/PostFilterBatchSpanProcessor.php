@@ -12,6 +12,7 @@ use OpenTelemetry\API\Behavior\LogsMessagesTrait;
 use OpenTelemetry\API\Common\Time\ClockInterface;
 use OpenTelemetry\API\Metrics\MeterProviderInterface;
 use OpenTelemetry\API\Metrics\ObserverInterface;
+use OpenTelemetry\API\Trace\SpanContextInterface;
 use OpenTelemetry\API\Trace\StatusCode;
 use OpenTelemetry\Context\Context;
 use OpenTelemetry\Context\ContextInterface;
@@ -24,6 +25,7 @@ use OpenTelemetry\SDK\Trace\SpanProcessorInterface;
 use SplQueue;
 use Spryker\Service\Opentelemetry\Instrumentation\Sampler\CriticalSpanRatioSampler;
 use Spryker\Service\Opentelemetry\Instrumentation\Span\SpanIdUpdateAwareSpanContextInterface;
+use Spryker\Service\Opentelemetry\Instrumentation\SprykerInstrumentationBootstrap;
 use Spryker\Service\Opentelemetry\OpentelemetryInstrumentationConfig;
 use Throwable;
 
@@ -75,6 +77,14 @@ class PostFilterBatchSpanProcessor implements SpanProcessorInterface
      * @var array<string, string>
      */
     protected const ATTRIBUTES_FREE = self::ATTRIBUTES_PROCESSOR + ['state' => 'free'];
+
+    /**
+     * Upper bound for each static parent span id registry. The oldest entries are evicted first;
+     * an evicted entry can only result in an orphaned span in the trace, never in a lost span.
+     *
+     * @var int
+     */
+    protected const MAX_PARENT_SPAN_ID_REGISTRY_SIZE = 10000;
 
     /**
      * @var int
@@ -147,9 +157,18 @@ class PostFilterBatchSpanProcessor implements SpanProcessorInterface
     protected bool $closed = false;
 
     /**
+     * Dropped span id => its parent span id. Only dropped spans that have a buffered kept descendant are recorded.
+     *
      * @var array<string, string>
      */
     protected static $parentSpanIdMapping = [];
+
+    /**
+     * Ids of spans that have a buffered kept descendant, either directly or through dropped spans.
+     *
+     * @var array<string, bool>
+     */
+    protected static array $spanIdsWithKeptDescendants = [];
 
     /**
      * @var int
@@ -229,23 +248,22 @@ class PostFilterBatchSpanProcessor implements SpanProcessorInterface
             && $span->getStatus()->getCode() === StatusCode::STATUS_OK
         ) {
             $this->dropped++;
-            static::$parentSpanIdMapping[$span->getSpanId()] = $span->getParentContext()->getSpanId();
+            $this->registerDroppedSpan($span);
 
             return;
         }
 
-        if ($this->queueSize === $this->maxQueueSize) {
+        // The root span ends last, so in long-running processes the queue is usually full by then; without it the trace has no root.
+        if ($this->queueSize >= $this->maxQueueSize && $span->getAttribute(SprykerInstrumentationBootstrap::ROOT_ATTRIBUTE) !== true) {
             $this->dropped++;
+            $this->registerDroppedSpan($span);
 
             return;
         }
 
         $this->queueSize++;
         static::$processedSpans++;
-
-        if (isset(static::$parentSpanIdMapping[$span->getParentContext()->getSpanId()]) && $span->getParentContext() instanceof SpanIdUpdateAwareSpanContextInterface) {
-            $span->getParentContext()->updateSpanId(static::$parentSpanIdMapping[$span->getParentContext()->getSpanId()]);
-        }
+        $this->registerKeptSpan($span);
 
         $this->batch[] = $span;
         $this->nextScheduledRun ??= $this->clock->now() + $this->scheduledDelayNanos;
@@ -456,7 +474,9 @@ class PostFilterBatchSpanProcessor implements SpanProcessorInterface
                 $scope = $this->exportContext->activate();
 
                 try {
-                    $this->exporter->export($this->queue->dequeue())->await();
+                    $batch = $this->queue->dequeue();
+                    $this->resolveParentSpanIds($batch);
+                    $this->exporter->export($batch)->await();
                 } catch (Throwable $e) {
                     self::logError('Unhandled export error', ['exception' => $e]);
                 } finally {
@@ -467,6 +487,12 @@ class PostFilterBatchSpanProcessor implements SpanProcessorInterface
             }
         } finally {
             $this->running = false;
+        }
+
+        if ($this->batch === [] && $this->queue->isEmpty()) {
+            // Entries are only needed to re-parent buffered spans; with nothing buffered they can never be used again.
+            static::$parentSpanIdMapping = [];
+            static::$spanIdsWithKeptDescendants = [];
         }
 
         if ($exception !== null) {
@@ -496,5 +522,110 @@ class PostFilterBatchSpanProcessor implements SpanProcessorInterface
         $this->queue->enqueue($this->batch);
         $this->batch = [];
         $this->nextScheduledRun = null;
+    }
+
+    /**
+     * Spans end children-first, so the kept descendants of a span are already buffered when it ends.
+     *
+     * @param \OpenTelemetry\SDK\Trace\ReadableSpanInterface $span
+     *
+     * @return void
+     */
+    protected function registerKeptSpan(ReadableSpanInterface $span): void
+    {
+        unset(static::$spanIdsWithKeptDescendants[$span->getContext()->getSpanId()]);
+
+        $this->markSpanAsHavingKeptDescendant($span->getParentContext());
+    }
+
+    /**
+     * Records the parent of a dropped span only when a buffered kept span has to be re-parented over it.
+     *
+     * @param \OpenTelemetry\SDK\Trace\ReadableSpanInterface $span
+     *
+     * @return void
+     */
+    protected function registerDroppedSpan(ReadableSpanInterface $span): void
+    {
+        $spanId = $span->getContext()->getSpanId();
+
+        if (!isset(static::$spanIdsWithKeptDescendants[$spanId])) {
+            return;
+        }
+
+        unset(static::$spanIdsWithKeptDescendants[$spanId]);
+
+        $parentSpanContext = $span->getParentContext();
+        if (!$parentSpanContext->isValid()) {
+            return;
+        }
+
+        static::$parentSpanIdMapping[$spanId] = $parentSpanContext->getSpanId();
+        if (count(static::$parentSpanIdMapping) > static::MAX_PARENT_SPAN_ID_REGISTRY_SIZE) {
+            unset(static::$parentSpanIdMapping[array_key_first(static::$parentSpanIdMapping)]);
+        }
+
+        $this->markSpanAsHavingKeptDescendant($parentSpanContext);
+    }
+
+    /**
+     * @param \OpenTelemetry\API\Trace\SpanContextInterface $spanContext
+     *
+     * @return void
+     */
+    protected function markSpanAsHavingKeptDescendant(SpanContextInterface $spanContext): void
+    {
+        if (!$spanContext->isValid()) {
+            return;
+        }
+
+        static::$spanIdsWithKeptDescendants[$spanContext->getSpanId()] = true;
+        if (count(static::$spanIdsWithKeptDescendants) > static::MAX_PARENT_SPAN_ID_REGISTRY_SIZE) {
+            unset(static::$spanIdsWithKeptDescendants[array_key_first(static::$spanIdsWithKeptDescendants)]);
+        }
+    }
+
+    /**
+     * Re-parents spans to their closest not dropped ancestor right before the export,
+     * when the drop decision is known for every ancestor that has already ended.
+     *
+     * @param list<\OpenTelemetry\SDK\Trace\ReadableSpanInterface> $spans
+     *
+     * @return void
+     */
+    protected function resolveParentSpanIds(array $spans): void
+    {
+        if (static::$parentSpanIdMapping === []) {
+            return;
+        }
+
+        foreach ($spans as $span) {
+            $parentSpanContext = $span->getParentContext();
+            if (!$parentSpanContext instanceof SpanIdUpdateAwareSpanContextInterface) {
+                continue;
+            }
+
+            $parentSpanId = $this->findClosestNotDroppedAncestorSpanId($parentSpanContext->getSpanId());
+            if ($parentSpanId !== $parentSpanContext->getSpanId()) {
+                $parentSpanContext->updateSpanId($parentSpanId);
+            }
+        }
+    }
+
+    /**
+     * @param string $spanId
+     *
+     * @return string
+     */
+    protected function findClosestNotDroppedAncestorSpanId(string $spanId): string
+    {
+        $visitedSpanIds = [];
+
+        while (isset(static::$parentSpanIdMapping[$spanId]) && !isset($visitedSpanIds[$spanId])) {
+            $visitedSpanIds[$spanId] = true;
+            $spanId = static::$parentSpanIdMapping[$spanId];
+        }
+
+        return $spanId;
     }
 }

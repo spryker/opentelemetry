@@ -89,7 +89,7 @@ class SprykerInstrumentationBootstrap
     /**
      * @var string Attribute to mark a span as a root span. Required as the span that is considered as root, can be a child span if the trace is collected from multiple services, e.g. Yves call to Zed.
      */
-    protected const ROOT_ATTRIBUTE = 'spr.root';
+    public const ROOT_ATTRIBUTE = 'spr.root';
 
     /**
      * @var string Attribute to store the number of spans in the trace.
